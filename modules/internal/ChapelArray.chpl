@@ -2241,6 +2241,7 @@ module ChapelArray {
     // associative array interface
     /* Yield the domain indices in sorted order */
     iter sorted(comparator:?t = chpl_defaultComparator()) {
+      warning("Array.sorted is deprecated");
       for i in _value.dsiSorted(comparator) {
         yield i;
       }
@@ -3394,6 +3395,7 @@ module ChapelArray {
 
     /* Reverse the order of the values in the array. */
     proc reverse() {
+      warning("Array.reverse is deprecated");
       if (!chpl__isDense1DArray()) then
         compilerError("reverse() is only supported on dense 1D arrays");
       const lo = this.domain.low,
@@ -3409,6 +3411,7 @@ module ChapelArray {
        tuple containing ``false`` and an unspecified value is returned.
      */
     proc find(val: this.eltType): (bool, index(this.domain)) {
+      warning("Array.reverse is deprecated");
       for i in this.domain {
         if this[i] == val then return (true, i);
       }
