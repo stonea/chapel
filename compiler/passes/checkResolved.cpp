@@ -34,6 +34,7 @@
 #include "type.h"
 #include "TryStmt.h"
 #include "wellknown.h"
+#include "view.h"
 
 #include <set>
 
