@@ -144,4 +144,6 @@ void    blockSummary(int id);
 void    blockSummary(BaseAST* ast);
 void    blockSummary(BlockStmt* block, Symbol* sym);
 
+void pp();
+
 #endif

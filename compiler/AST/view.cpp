@@ -46,7 +46,11 @@
 #include "virtualDispatch.h"
 #include "WhileStmt.h"
 
+#include <sys/stat.h>
 #include <inttypes.h>
+#include <array>
+#include <iostream>
+#include <fstream>
 
 int  debugShortLoc  = true;
 bool whocalls_nview = false;
@@ -1436,4 +1440,60 @@ FnSymbol* debugGetTheIteratorFn(BaseAST* ast) {
            ast->astTagAsString(), ast->id);
     return NULL;
   }
+}
+
+static bool doesFileExist(const std::string& path) {
+  struct stat s;
+  return stat(path.c_str(), &s) == 0;
+}
+
+static int runCmd(const std::string &cmd, std::string *output = nullptr) {
+  INT_ASSERT(doesFileExist(cmd.substr(0,cmd.find(" "))));
+
+  FILE* in = popen(cmd.c_str(), "r");
+  INT_ASSERT(in);
+
+  std::array<char, 128> buffer;
+  while (fgets(buffer.data(), 128, in) != nullptr) {
+    if(output != nullptr) {
+      *output += buffer.data();
+    }
+  }
+  return pclose(in);
+}
+
+static void nprint_userMods() {
+  forv_Vec(ModuleSymbol, module, userModules) {
+      nprint_view(module);
+    }
+}
+
+static std::string cwd() {
+  // TODO: avoid buffer overflow error
+  char buff[0xFF];
+  getcwd(buff, 0xFF);
+  std::string cwd(buff);
+  return cwd;
+}
+
+static void stringToFile(const std::string &filePath, const std::string &content) {
+  std::ofstream outputFile(filePath);
+  outputFile << content;
+  outputFile.close();
+}
+
+void pp() {
+  // The way I'm redirecting stdout here is a total hack (and will likely break things if chpl output is being
+  // piped or redirected somewhere else.
+  // TODO: come up with a better solution.
+  std::string nprintFilePath = cwd() + "/nprint.txt";
+  std::string htmlFilePath = cwd() + "/pp.html";
+  std::string toolLogFilePath = cwd() + "/pp.log";
+
+  freopen(nprintFilePath.c_str(),"w",stdout);
+  nprint_userMods();
+  std::string cmd = "/Users/stonea_local/pp2/nprint_to_html.py " + nprintFilePath + " " + htmlFilePath;
+  std::string out;
+  runCmd(cmd, &out);
+  stringToFile(toolLogFilePath, out);
 }
