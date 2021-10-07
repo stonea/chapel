@@ -86,11 +86,27 @@ INTEROP_DEPS = interopWithC.chpl cHelper.h cHelper.c fact.h fact.c
 interopWithC: $(INTEROP_DEPS)
 	+$(CHPL) -o $@ $^
 
-
 lib/Makefile.interopWithC:
 	+$(CHPL) $(INTEROP_DEPS) $(INTEROP_LIB_OPTS)
 
--include lib/Makefile.interopWithC
+ifeq ($(MAKECMDGOALS),)
+  ifneq ($(filter cClient, $(TARGETS)),)
+    BUILD_CLIENT = true
+  endif
+endif
+ifeq ($(MAKECMDGOALS),all)
+  ifneq ($(filter cClient, $(TARGETS)),)
+    BUILD_CLIENT = true
+  endif
+endif
+ifneq ($(filter cClient, $(MAKECMDGOALS)),)
+  BUILD_CLIENT = true
+endif
+
+ifeq ($(BUILD_CLIENT),true)
+  -include lib/Makefile.interopWithC
+endif
+
 
 cClient: cClient.test.c interopWithC.chpl
 	+$(CHPL_COMPILER) $(CHPL_CFLAGS) -o $@ $< $(CHPL_LDFLAGS)
