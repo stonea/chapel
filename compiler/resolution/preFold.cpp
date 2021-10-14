@@ -2631,6 +2631,13 @@ static Expr* resolveTupleIndexing(CallExpr* call, Symbol* baseVar) {
 // determine field associated with query expression
 //
 static Symbol* determineQueriedField(CallExpr* call) {
+  if(call->id == 1323844) {
+    auto a = call->get(1);
+    auto b = a->getValType();
+    auto c = canonicalClassType(b);
+    auto d = toAggregateType(c);
+  }
+
   AggregateType* at     =
     toAggregateType(canonicalClassType(call->get(1)->getValType()));
   SymExpr*       last   = toSymExpr(call->get(call->numActuals()));

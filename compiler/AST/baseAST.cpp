@@ -333,7 +333,7 @@ int lastNodeIDUsed() {
 // This is here so that we can break on the creation of a particular
 // BaseAST instance in gdb.
 static void checkid(int id) {
-  if (id == breakOnID) {
+  if (id == breakOnID /*|| id == 466460 || id == 1323845 || id == 466551*/) {
     gdbShouldBreakHere();
   }
 }

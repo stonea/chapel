@@ -1492,7 +1492,7 @@ void pp() {
 
   freopen(nprintFilePath.c_str(),"w",stdout);
   nprint_userMods();
-  std::string cmd = "/Users/stonea_local/pp2/nprint_to_html.py " + nprintFilePath + " " + htmlFilePath;
+  std::string cmd = "/usr/local/bin/python3 /Users/stonea_local/pp2/nprint_to_html.py " + nprintFilePath + " " + htmlFilePath;
   std::string out;
   runCmd(cmd, &out);
   stringToFile(toolLogFilePath, out);
