@@ -2523,6 +2523,14 @@ static void codegenPartTwo() {
       }
     }
 
+    // When doing codegen for programs that have GPU kernels we launch two
+    // threads: in one gCodegenGPU is true and we generate a .fatbin file,
+    // in the other gCodegenGpu is false and we'll consume the fatbin file
+    // and embed its contents into the generated code.
+    if (localeUsesGPU() && !gCodegenGPU) {
+      embedGpuCode();
+    }
+
     prepareCodegenLLVM();
 #endif
   } else {
@@ -2637,12 +2645,7 @@ static void codegenPartTwo() {
     fprintf(stderr, "Statements emitted: %d\n", gStmtCount);
   }
 
-  // If we're generating GPU kernels, but we're in the main thread for codegenPartTwo.
-  // When gCodegenGPU is true we'll generate a .fatbin file, when its false we'll consume
-  // it and embed its contents into the generated code.
-  if(localeUsesGPU() && !gCodegenGPU) {
-    embedGpuCode();
-  }
+
 }
 
 void codegen() {
