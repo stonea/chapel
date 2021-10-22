@@ -2637,7 +2637,12 @@ static void codegenPartTwo() {
     fprintf(stderr, "Statements emitted: %d\n", gStmtCount);
   }
 
-
+  // If we're generating GPU kernels, but we're in the main thread for codegenPartTwo.
+  // When gCodegenGPU is true we'll generate a .fatbin file, when its false we'll consume
+  // it and embed its contents into the generated code.
+  if(localeUsesGPU() && !gCodegenGPU) {
+    embedGpuCode();
+  }
 }
 
 void codegen() {
@@ -2675,13 +2680,7 @@ void makeBinary(void) {
 
   if(fLlvmCodegen) {
 #ifdef HAVE_LLVM
-    // If we're generating GPU kernels, but we're in the main thread for codegenPartTwo.
-    // When gCodegenGPU is true we'll generate a .fatbin file, when its false we'll consume
-    // it and embed its contents into the generated code.
-    if(localeUsesGPU() && !gCodegenGPU) {
-      embedGpuCode();
-    }
-    makeBinaryLLVM();
+   makeBinaryLLVM();
 #endif
   } else {
     const char* makeflags = printSystemCommands ? "-f " : "-s -f ";
