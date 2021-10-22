@@ -24,6 +24,7 @@
 #include "chpl-gpu.h"
 #include "chpl-tasks.h"
 #include "error.h"
+#include "chplcgfns.h"
 
 #ifdef HAS_GPU_LOCALE
 
@@ -386,4 +387,8 @@ void chpl_gpu_mem_free(void* memAlloc, int32_t lineno, int32_t filename) {
 }
 
 #endif // HAS_GPU_LOCALE
+
+void chpl_gpu_test() {
+  printf("Message from GPU codegen is: %s\n", gpuBinary);
+}
 

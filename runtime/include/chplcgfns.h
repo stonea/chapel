@@ -108,6 +108,8 @@ extern int64_t chpl_gen_main(chpl_main_argument* const _arg);
 /* used for config vars: */
 extern void CreateConfigVarTable(void);
 
+extern const char *gpuBinary;
+
 #ifdef __cplusplus
 }
 #endif

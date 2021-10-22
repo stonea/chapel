@@ -3797,8 +3797,20 @@ static std::string getLibraryOutputPath();
 static void moveGeneratedLibraryFile(const char* tmpbinname);
 static void moveResultFromTmp(const char* resultName, const char* tmpbinname);
 
-void makeBinaryLLVM(void) {
+static void insertGpuCode(const char *value) {
+  //const char value[] = "Hello world!";
+  const char cname[] = "gpuBinary";
+  GenInfo* info = gGenInfo;
+  llvm::GlobalVariable *globalString = llvm::cast<llvm::GlobalVariable>(
+      info->module->getOrInsertGlobal(
+        cname, llvm::IntegerType::getInt8PtrTy(info->module->getContext())));
+  globalString->setInitializer(llvm::cast<llvm::GlobalVariable>(
+        new_CStringSymbol(value)->codegen().val)->getInitializer());
+  globalString->setConstant(true);
+  info->lvt->addGlobalValue(cname, globalString, GEN_PTR, true);
+}
 
+void makeBinaryLLVM(void) {
   GenInfo* info = gGenInfo;
   INT_ASSERT(info);
   ClangInfo* clangInfo = info->clangInfo;
@@ -4109,6 +4121,26 @@ void makeBinaryLLVM(void) {
 
       mysystem(fatbinaryCmd.c_str(), "object file to fatbinary");
 
+      //read in fatbin and store in buffer
+      char * buffer = 0;
+      long length;
+      FILE * f = fopen (fatbinFilename.c_str(), "rb");
+      if (f)
+      {
+        fseek (f, 0, SEEK_END);
+        length = ftell (f);
+        fseek (f, 0, SEEK_SET);
+        buffer = (char* )chpl_malloc (length);
+        if (buffer)
+        {
+          fread (buffer, 1, length, f);
+        }
+        fclose (f);
+      } else {
+        printf("Attempt to open file: %s\n", fatbinFile);
+        chpl_internal_error("Unable to open fatbin file.");
+      }
+      insertGpuCode(buffer);
     }
   }
 
