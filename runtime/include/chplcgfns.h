@@ -91,6 +91,9 @@ extern const int32_t chpl_sizeSymTable;
 
 extern char* chpl_executionCommand;
 
+// Stores embedded code for GPU kernels.
+extern const char *chpl_gpuBinary;
+
 /* generated */
 extern const chpl_fn_p chpl_ftable[];
 extern const chpl_fn_info chpl_finfo[];
@@ -107,9 +110,6 @@ extern int64_t chpl_gen_main(chpl_main_argument* const _arg);
 
 /* used for config vars: */
 extern void CreateConfigVarTable(void);
-
-extern const int gpuBinaryLen;
-extern const char *gpuBinary;
 
 #ifdef __cplusplus
 }

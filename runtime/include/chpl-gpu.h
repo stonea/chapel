@@ -60,8 +60,6 @@ bool chpl_gpu_is_device_ptr(void* ptr);
                            
 #endif // HAS_GPU_LOCALE
 
-void chpl_gpu_test();
-
 #ifdef __cplusplus
 }
 #endif

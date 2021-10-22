@@ -4035,9 +4035,6 @@ static void fixupQueryFormals(FnSymbol* fn) {
     introduceConstrainedTypes(fn);
     return;
   }
-  if(!strcmp(fn->name, "foo")) {
-    gdbShouldBreakHere();
-  }
   for_formals(formal, fn) {
     if (BlockStmt* typeExpr = formal->typeExpr) {
       Expr* tail = typeExpr->body.tail;

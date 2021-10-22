@@ -29,7 +29,6 @@
 #include "stmt.h"
 #include "stlUtil.h"
 #include "stringutil.h"
-#include "view.h"
 
 
 static void checkNamedArguments(CallExpr* call);
@@ -62,7 +61,6 @@ checkParsed() {
   if (fDocs) {
     return;
   }
-
 
   setupForCheckExplicitDeinitCalls();
 

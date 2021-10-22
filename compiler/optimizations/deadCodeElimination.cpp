@@ -30,6 +30,7 @@
 #include "LoopStmt.h"
 #include "ModuleSymbol.h"
 #include "passes.h"
+#include "resolveFunction.h"
 #include "stlUtil.h"
 #include "stmt.h"
 #include "WhileStmt.h"
@@ -40,8 +41,6 @@
 #include <set>
 #include <algorithm>
 #include <cstdio>
-#include <cstdlib>
-
 
 typedef std::set<BasicBlock*> BasicBlockSet;
 
@@ -820,13 +819,16 @@ static void outlineGPUKernels() {
   }
 }
 
+
 void deadCodeElimination() {
   if (!fNoDeadCodeElimination) {
     deadBlockElimination();
 
     deadStringLiteralElimination();
 
+
     forv_Vec(FnSymbol, fn, gFnSymbols) {
+
       // 2014/10/17   Noakes and Elliot
       // Dead Block Elimination may convert valid loops to "malformed" loops.
       // Some of these will break BasicBlock construction. Clean them up.
