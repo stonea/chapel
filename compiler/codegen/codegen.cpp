@@ -2587,13 +2587,6 @@ static void codegenPartTwo() {
       currentModule->codegenDef();
     }
 
-    // If we're generating GPU kernels, but we're in the main thread for codegenPartTwo.
-    // When gCodegenGPU is true we'll generate a .fatbin file, when its false we'll consume
-    // it and embed its contents into the generated code.
-    if(localeUsesGPU() && !gCodegenGPU) {
-      embedGpuCode();
-    }
-
     finishCodegenLLVM();
 #endif
   } else {
@@ -2677,6 +2670,12 @@ void makeBinary(void) {
 
   if(fLlvmCodegen) {
 #ifdef HAVE_LLVM
+    // If we're generating GPU kernels, but we're in the main thread for codegenPartTwo.
+    // When gCodegenGPU is true we'll generate a .fatbin file, when its false we'll consume
+    // it and embed its contents into the generated code.
+    if(localeUsesGPU() && !gCodegenGPU) {
+      embedGpuCode();
+    }
     makeBinaryLLVM();
 #endif
   } else {
