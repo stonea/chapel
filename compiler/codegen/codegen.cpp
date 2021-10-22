@@ -227,10 +227,10 @@ static void
 genGlobalString(const char *cname, const char *value, long length) {
   GenInfo* info = gGenInfo;
   if( info->cfile ) {
-    INT_FATAL(length != -1); // Length of -1 indicates this is a normal, null-terminated C-String. Non negative
-                             // length is used for strings that may contain zero bytes in the middle. Currently, we
-                             // only do this for the global "gpu fatbin" variable (chpl_gpuBinary),  which only occurs
-                             // on the LLVM codegen path.
+    INT_ASSERT(length != -1); // Length of -1 indicates this is a normal, null-terminated C-String. Non negative
+                              // length is used for strings that may contain zero bytes in the middle. Currently, we
+                              // only do this for the global "gpu fatbin" variable (chpl_gpuBinary),  which only occurs
+                              // on the LLVM codegen path.
     fprintf(info->cfile, "const char* %s = \"%s\";\n", cname, value);
   } else {
 #ifdef HAVE_LLVM
