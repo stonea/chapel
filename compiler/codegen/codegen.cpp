@@ -2443,7 +2443,8 @@ static void embedGpuCode() {
     USR_FATAL("Could not open GPU kernel fatbin file %s", fatbinFilename.c_str());
   }
   std::string buffer = std::string((std::istreambuf_iterator<char>(fatbinFile)), std::istreambuf_iterator<char>());
-  genGlobalString("chpl_gpuBinary", buffer.c_str(), buffer.size());
+  printf("Size is: ", buffer.length());
+  genGlobalString("chpl_gpuBinary", buffer.c_str(), buffer.length());
 }
 
 // Do this for GPU and then do for CPU
