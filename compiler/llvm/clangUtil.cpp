@@ -4034,7 +4034,7 @@ void makeBinaryLLVM(void) {
       //read in fatbin and store in buffer
       char * buffer = 0;
       long length;
-      /*FILE * f = fopen (fatbinFilename.c_str(), "rb");
+      FILE * f = fopen (fatbinFilename.c_str(), "rb");
       if (f)
       {
         fseek (f, 0, SEEK_END);
@@ -4048,10 +4048,10 @@ void makeBinaryLLVM(void) {
         fclose (f);
       } else {
         printf("Attempt to open file: %s\n", fatbinFilename.c_str());
-      }*/
-      length = 5;
-      buffer = (char*)malloc(length);
-      buffer[0] = 1; buffer[1] = 2; buffer[2] = 0; buffer[3] = 4; buffer[4] = 2;
+      }
+      //length = 5;
+      //buffer = (char*)malloc(length);
+      //buffer[0] = 1; buffer[1] = 2; buffer[2] = 0; buffer[3] = 4; buffer[4] = 2;
       printf("Inserting GPU Code!\n");
       for(int i = 0; i < length; i++) {
         printf("buffer:%d  = %u\n", i, (unsigned int)buffer[i]);
