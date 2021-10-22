@@ -100,7 +100,7 @@ static void* chpl_gpu_getKernel(const char* fatbinFile, const char* kernelName) 
   CUfunction  function;
 
   //read in fatbin and store in buffer
-  char * buffer = 0;
+  /*char * buffer = 0;
   long length;
   FILE * f = fopen (fatbinFile, "rb");
 
@@ -118,10 +118,10 @@ static void* chpl_gpu_getKernel(const char* fatbinFile, const char* kernelName) 
   } else {
     printf("Attempt to open file: %s\n", fatbinFile);
     chpl_internal_error("Unable to open fatbin file.");
-  }
+  }*/
 
   // Create module for object
-  CUDA_CALL(cuModuleLoadData(&cudaModule, buffer));
+  CUDA_CALL(cuModuleLoadData(&cudaModule, gpuBinary));
 
   // Get kernel function
   CUDA_CALL(cuModuleGetFunction(&function, cudaModule, kernelName));
@@ -389,6 +389,10 @@ void chpl_gpu_mem_free(void* memAlloc, int32_t lineno, int32_t filename) {
 #endif // HAS_GPU_LOCALE
 
 void chpl_gpu_test() {
-  printf("Message from GPU codegen is: %s\n", gpuBinary);
+  for(int i = 0; i < 10; i++) {
+    printf("char:%d is %u\n", i, (unsigned int)gpuBinary[i]);
+  }
+
+  //printf("Message from GPU codegen is: %s\n", gpuBinary);
 }
 

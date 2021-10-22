@@ -3836,8 +3836,9 @@ void makeBinaryLLVM(void) {
     opt2Filename = genIntermediateFilename("chpl__gpu_module-opt2.bc");
     asmFilename = genIntermediateFilename("chpl__gpu_ptx.s");
     ptxObjectFilename = genIntermediateFilename("chpl__gpu_ptx.o");
-    fatbinFilename = genIntermediateFilename("chpl__gpu.fatbin");
+    //fatbinFilename = genIntermediateFilename("chpl__gpu.fatbin");
   }
+  fatbinFilename = genIntermediateFilename("chpl__gpu.fatbin"); // !!!
 
   if( saveCDir[0] != '\0' ) {
     std::error_code tmpErr;
@@ -4031,6 +4032,30 @@ void makeBinaryLLVM(void) {
     bool disableVerify = !developer;
 
     if (gCodegenGPU == false) {
+      //read in fatbin and store in buffer
+      char * buffer = 0;
+      long length;
+      FILE * f = fopen (fatbinFilename.c_str(), "rb");
+      if (f)
+      {
+        fseek (f, 0, SEEK_END);
+        length = ftell (f);
+        fseek (f, 0, SEEK_SET);
+        buffer = (char*)malloc(length);
+        if (buffer)
+        {
+          fread (buffer, 1, length, f);
+        }
+        fclose (f);
+      } else {
+        printf("Attempt to open file: %s\n", fatbinFilename);
+      }
+      printf("Inserting GPU Code!\n");
+      for(int i = 0; i < 10; i++) {
+        printf("buffer:%d  = %u\n", i, (unsigned int)buffer[i]);
+      }
+      insertGpuCode(buffer);
+
       llvm::raw_fd_ostream outputOfile(moduleFilename, error, flags);
       if (error || outputOfile.has_error())
         USR_FATAL("Could not open output file %s", moduleFilename.c_str());
@@ -4121,26 +4146,6 @@ void makeBinaryLLVM(void) {
 
       mysystem(fatbinaryCmd.c_str(), "object file to fatbinary");
 
-      //read in fatbin and store in buffer
-      char * buffer = 0;
-      long length;
-      FILE * f = fopen (fatbinFilename.c_str(), "rb");
-      if (f)
-      {
-        fseek (f, 0, SEEK_END);
-        length = ftell (f);
-        fseek (f, 0, SEEK_SET);
-        buffer = (char* )chpl_malloc (length);
-        if (buffer)
-        {
-          fread (buffer, 1, length, f);
-        }
-        fclose (f);
-      } else {
-        printf("Attempt to open file: %s\n", fatbinFile);
-        chpl_internal_error("Unable to open fatbin file.");
-      }
-      insertGpuCode(buffer);
     }
   }
 
