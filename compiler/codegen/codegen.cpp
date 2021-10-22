@@ -227,10 +227,10 @@ static void
 genGlobalString(const char *cname, const char *value, long length = -1) {
   GenInfo* info = gGenInfo;
   if( info->cfile ) {
-    INT_ASSERT(length == -1); // Length of -1 indicates this is a normal, null-terminated C-String. Non negative
-                              // length is used for strings that may contain zero bytes in the middle. Currently, we
-                              // only do this for the global "gpu fatbin" variable (chpl_gpuBinary),  which only occurs
-                              // on the LLVM codegen path.
+    INT_ASSERT(length == -1); // Length of -1 indicates this is a normal, null-terminated C-String. Non-negative
+                              // length is used for strings that may contain chars equal to \0 in the middle. Currently,
+                              // we only do this for the global "gpu fatbin" variable (chpl_gpuBinary),  which only
+                              // occurs on the LLVM codegen path.
     fprintf(info->cfile, "const char* %s = \"%s\";\n", cname, value);
   } else {
 #ifdef HAVE_LLVM
@@ -2437,6 +2437,9 @@ static void embedGpuCode() {
   // The compiled chapel program then calls into the runtime library, which reads this variable,
   // sends the code off to the GPU, and launches kernels as needed.
 
+  astlocT prevloc = currentAstLoc;
+  currentAstLoc = astlocT(0, astr("<internal>"));
+
   std::string fatbinFilename = genIntermediateFilename("chpl__gpu.fatbin");
   std::ifstream fatbinFile(fatbinFilename);
   if(fatbinFile.fail()) {
@@ -2445,6 +2448,8 @@ static void embedGpuCode() {
   std::string buffer = std::string((std::istreambuf_iterator<char>(fatbinFile)), std::istreambuf_iterator<char>());
   printf("Size is: %lu\n", buffer.length());
   genGlobalString("chpl_gpuBinary", buffer.c_str(), buffer.length());
+
+  currentAstLoc = prevloc;
 }
 
 // Do this for GPU and then do for CPU
