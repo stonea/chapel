@@ -3798,7 +3798,7 @@ static void moveGeneratedLibraryFile(const char* tmpbinname);
 static void moveResultFromTmp(const char* resultName, const char* tmpbinname);
 
 static void insertGpuCode(const char *value, long length) {
-  const char cname[] = "gpuBinary";
+  const char cname[] = "chpl_gpuBinary";
   GenInfo* info = gGenInfo;
   llvm::GlobalVariable *globalString = llvm::cast<llvm::GlobalVariable>(
       info->module->getOrInsertGlobal(
