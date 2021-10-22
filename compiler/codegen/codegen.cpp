@@ -68,6 +68,7 @@
 
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <fstream>
 
 // function prototypes
 static bool compareSymbol(const void* v1, const void* v2);
@@ -2425,11 +2426,50 @@ static fileinfo strconfig  = { NULL, NULL, NULL };
 static fileinfo modulefile = { NULL, NULL, NULL };
 
 
+static void embedGpuCode() {
+  // Codegen forks a thread to generate a .fatbin file that packages assembled GPU kernel code.
+  // This function (embedGpuCode) is called by the main thread after the forked thread rejoins and
+  // reads this .fatbin file and dumps its contents into a global variable in the generated code.
+  // The compiled chapel program then calls into the runtime library, which reads this variable,
+  // sends the code off to the GPU, and launches kernels as needed.
+
+  std::string fatbinFilename = genIntermediateFilename("chpl__gpu.fatbin");
+  std::ifstream fatbinFile(fatbinFilename);
+  if(fatbinFile.fail()) {
+    USR_FATAL("Could not open GPU kernel fatbin file %s", fatbinFilename.c_str());
+  }
+  std::stringstream buffer;
+  buffer << fatbinFile.rdbuf();
+  genGlobalString("chpl_gpuBinary", buffer.str().c_str());
+
+  /*
+   *
+  const char *value;
+  long length;
+   * const char cname[] = "chpl_gpuBinary";
+  GenInfo* info = gGenInfo;
+  llvm::GlobalVariable *globalString = llvm::cast<llvm::GlobalVariable>(
+          info->module->getOrInsertGlobal(
+                  cname, llvm::IntegerType::getInt8PtrTy(info->module->getContext())));
+  globalString->setInitializer(llvm::cast<llvm::GlobalVariable>(
+          new_CStringSymbol(value, length)->codegen().val)->getInitializer());
+  globalString->setConstant(true);
+  info->lvt->addGlobalValue(cname, globalString, GEN_PTR, true);*/
+}
+
 // Do this for GPU and then do for CPU
 static void codegenPartTwo() {
-
   // Initialize the global gGenInfo for C code generation.
   gGenInfo = new GenInfo();
+
+  std::ifstream t("file.txt");
+  std::stringstream buffer;
+  buffer << t.rdbuf();
+
+  // If we're generating GPU kernels but we're in the main thread for codegenPartTwo for
+  if(localeUsesGPU() && !gCodegenGPU) {
+    embedGpuCode();
+  }
 
   if (fMultiLocaleInterop) {
     codegenMultiLocaleInteropWrappers();

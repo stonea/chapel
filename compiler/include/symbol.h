@@ -697,7 +697,10 @@ VarSymbol *new_BytesSymbol(const char *s);
 // Creates a new string or bytes literal with the given value.
 VarSymbol *new_StringOrBytesSymbol(const char *s, AggregateType *at);
 
-// Creates a new C string literal with the given value.
+// Creates a new C string literal with the given value. If size is -1 we'll
+// use strlen internally to determine the length of the string. Pass in the
+// size manually if the string isn't null terminating and could contains any
+// zero bytes.
 VarSymbol *new_CStringSymbol(const char *s, long size=-1);
 
 // Creates a new boolean literal with the given value and bit-width.
