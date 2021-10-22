@@ -224,9 +224,13 @@ genGlobalDefClassId(const char* cname, int id, bool isHeader) {
   }
 }
 static void
-genGlobalString(const char* cname, const char* value) {
+genGlobalString(const char *cname, const char *value, long length) {
   GenInfo* info = gGenInfo;
   if( info->cfile ) {
+    INT_FATAL(length != -1); // Length of -1 indicates this is a normal, null-terminated C-String. Non negative
+                             // length is used for strings that may contain zero bytes in the middle. Currently, we
+                             // only do this for the global "gpu fatbin" variable (chpl_gpuBinary),  which only occurs
+                             // on the LLVM codegen path.
     fprintf(info->cfile, "const char* %s = \"%s\";\n", cname, value);
   } else {
 #ifdef HAVE_LLVM
@@ -235,7 +239,7 @@ genGlobalString(const char* cname, const char* value) {
           info->module->getOrInsertGlobal(
             cname, llvm::IntegerType::getInt8PtrTy(info->module->getContext())));
       globalString->setInitializer(llvm::cast<llvm::GlobalVariable>(
-            new_CStringSymbol(value)->codegen().val)->getInitializer());
+            new_CStringSymbol(value, length)->codegen().val)->getInitializer());
       globalString->setConstant(true);
       info->lvt->addGlobalValue(cname, globalString, GEN_PTR, true);
     }
@@ -1134,17 +1138,17 @@ static void genConfigGlobalsAndAbout() {
     fprintf(info->cfile, "\n#include \"chpltypes.h\"\n\n");
   }
 
-  genGlobalString("chpl_compileCommand", compileCommand);
-  genGlobalString("chpl_compileVersion", compileVersion);
-  genGlobalString("chpl_compileDirectory", getCwd());
+  genGlobalString("chpl_compileCommand", compileCommand, -1);
+  genGlobalString("chpl_compileVersion", compileVersion, -1);
+  genGlobalString("chpl_compileDirectory", getCwd(), -1);
   if (strcmp(saveCDir, "") != 0) {
     char *actualPath = realpath(saveCDir, NULL);
-    genGlobalString("chpl_saveCDir", actualPath);
+    genGlobalString("chpl_saveCDir", actualPath, -1);
   } else {
-    genGlobalString("chpl_saveCDir", "");
+    genGlobalString("chpl_saveCDir", "", -1);
   }
 
-  genGlobalString("CHPL_HOME", CHPL_HOME);
+  genGlobalString("CHPL_HOME", CHPL_HOME, -1);
 
   genGlobalInt("CHPL_STACK_CHECKS", !fNoStackChecks, false);
   genGlobalInt("CHPL_CACHE_REMOTE", fCacheRemote, false);
@@ -1152,7 +1156,7 @@ static void genConfigGlobalsAndAbout() {
 
   for (std::map<std::string, const char*>::iterator env=envMap.begin(); env!=envMap.end(); ++env) {
     if (env->first != "CHPL_HOME") {
-      genGlobalString(env->first.c_str(), env->second);
+      genGlobalString(env->first.c_str(), env->second, -1);
     }
   }
 
@@ -2440,7 +2444,7 @@ static void embedGpuCode() {
   }
   std::stringstream buffer;
   buffer << fatbinFile.rdbuf();
-  genGlobalString("chpl_gpuBinary", buffer.str().c_str());
+  genGlobalString("chpl_gpuBinary", buffer.str().c_str(), -1);
 }
 
 // Do this for GPU and then do for CPU
