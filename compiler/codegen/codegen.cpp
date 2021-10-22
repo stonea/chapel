@@ -2441,35 +2441,12 @@ static void embedGpuCode() {
   std::stringstream buffer;
   buffer << fatbinFile.rdbuf();
   genGlobalString("chpl_gpuBinary", buffer.str().c_str());
-
-  /*
-   *
-  const char *value;
-  long length;
-   * const char cname[] = "chpl_gpuBinary";
-  GenInfo* info = gGenInfo;
-  llvm::GlobalVariable *globalString = llvm::cast<llvm::GlobalVariable>(
-          info->module->getOrInsertGlobal(
-                  cname, llvm::IntegerType::getInt8PtrTy(info->module->getContext())));
-  globalString->setInitializer(llvm::cast<llvm::GlobalVariable>(
-          new_CStringSymbol(value, length)->codegen().val)->getInitializer());
-  globalString->setConstant(true);
-  info->lvt->addGlobalValue(cname, globalString, GEN_PTR, true);*/
 }
 
 // Do this for GPU and then do for CPU
 static void codegenPartTwo() {
   // Initialize the global gGenInfo for C code generation.
   gGenInfo = new GenInfo();
-
-  std::ifstream t("file.txt");
-  std::stringstream buffer;
-  buffer << t.rdbuf();
-
-  // If we're generating GPU kernels but we're in the main thread for codegenPartTwo for
-  if(localeUsesGPU() && !gCodegenGPU) {
-    embedGpuCode();
-  }
 
   if (fMultiLocaleInterop) {
     codegenMultiLocaleInteropWrappers();
@@ -2604,6 +2581,13 @@ static void codegenPartTwo() {
     checkAdjustedDataLayout();
     forv_Vec(ModuleSymbol, currentModule, allModules) {
       currentModule->codegenDef();
+    }
+
+    // If we're generating GPU kernels, but we're in the main thread for codegenPartTwo.
+    // When gCodegenGPU is true we'll generate a .fatbin file, when its false we'll consume
+    // it and embed its contents into the generated code.
+    if(localeUsesGPU() && !gCodegenGPU) {
+      embedGpuCode();
     }
 
     finishCodegenLLVM();
