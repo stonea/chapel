@@ -224,7 +224,7 @@ genGlobalDefClassId(const char* cname, int id, bool isHeader) {
   }
 }
 static void
-genGlobalString(const char *cname, const char *value, long length) {
+genGlobalString(const char *cname, const char *value, long length = -1) {
   GenInfo* info = gGenInfo;
   if( info->cfile ) {
     INT_ASSERT(length != -1); // Length of -1 indicates this is a normal, null-terminated C-String. Non negative
@@ -1138,17 +1138,17 @@ static void genConfigGlobalsAndAbout() {
     fprintf(info->cfile, "\n#include \"chpltypes.h\"\n\n");
   }
 
-  genGlobalString("chpl_compileCommand", compileCommand, -1);
-  genGlobalString("chpl_compileVersion", compileVersion, -1);
-  genGlobalString("chpl_compileDirectory", getCwd(), -1);
+  genGlobalString("chpl_compileCommand", compileCommand);
+  genGlobalString("chpl_compileVersion", compileVersion);
+  genGlobalString("chpl_compileDirectory", getCwd());
   if (strcmp(saveCDir, "") != 0) {
     char *actualPath = realpath(saveCDir, NULL);
-    genGlobalString("chpl_saveCDir", actualPath, -1);
+    genGlobalString("chpl_saveCDir", actualPath);
   } else {
-    genGlobalString("chpl_saveCDir", "", -1);
+    genGlobalString("chpl_saveCDir", "");
   }
 
-  genGlobalString("CHPL_HOME", CHPL_HOME, -1);
+  genGlobalString("CHPL_HOME", CHPL_HOME);
 
   genGlobalInt("CHPL_STACK_CHECKS", !fNoStackChecks, false);
   genGlobalInt("CHPL_CACHE_REMOTE", fCacheRemote, false);
@@ -1156,7 +1156,7 @@ static void genConfigGlobalsAndAbout() {
 
   for (std::map<std::string, const char*>::iterator env=envMap.begin(); env!=envMap.end(); ++env) {
     if (env->first != "CHPL_HOME") {
-      genGlobalString(env->first.c_str(), env->second, -1);
+      genGlobalString(env->first.c_str(), env->second);
     }
   }
 
