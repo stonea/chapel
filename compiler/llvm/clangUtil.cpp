@@ -3797,15 +3797,14 @@ static std::string getLibraryOutputPath();
 static void moveGeneratedLibraryFile(const char* tmpbinname);
 static void moveResultFromTmp(const char* resultName, const char* tmpbinname);
 
-static void insertGpuCode(const char *value) {
-  //const char value[] = "Hello world!";
+static void insertGpuCode(const char *value, long length) {
   const char cname[] = "gpuBinary";
   GenInfo* info = gGenInfo;
   llvm::GlobalVariable *globalString = llvm::cast<llvm::GlobalVariable>(
       info->module->getOrInsertGlobal(
         cname, llvm::IntegerType::getInt8PtrTy(info->module->getContext())));
   globalString->setInitializer(llvm::cast<llvm::GlobalVariable>(
-        new_CStringSymbol(value)->codegen().val)->getInitializer());
+        new_CStringSymbol(value, length)->codegen().val)->getInitializer());
   globalString->setConstant(true);
   info->lvt->addGlobalValue(cname, globalString, GEN_PTR, true);
 }
@@ -4035,7 +4034,7 @@ void makeBinaryLLVM(void) {
       //read in fatbin and store in buffer
       char * buffer = 0;
       long length;
-      FILE * f = fopen (fatbinFilename.c_str(), "rb");
+      /*FILE * f = fopen (fatbinFilename.c_str(), "rb");
       if (f)
       {
         fseek (f, 0, SEEK_END);
@@ -4048,13 +4047,16 @@ void makeBinaryLLVM(void) {
         }
         fclose (f);
       } else {
-        printf("Attempt to open file: %s\n", fatbinFilename);
-      }
+        printf("Attempt to open file: %s\n", fatbinFilename.c_str());
+      }*/
+      length = 5;
+      buffer = (char*)malloc(length);
+      buffer[0] = 1; buffer[1] = 2; buffer[2] = 0; buffer[3] = 4; buffer[4] = 2;
       printf("Inserting GPU Code!\n");
-      for(int i = 0; i < 10; i++) {
+      for(int i = 0; i < length; i++) {
         printf("buffer:%d  = %u\n", i, (unsigned int)buffer[i]);
       }
-      insertGpuCode(buffer);
+      insertGpuCode(buffer, length);
 
       llvm::raw_fd_ostream outputOfile(moduleFilename, error, flags);
       if (error || outputOfile.has_error())
