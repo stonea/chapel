@@ -367,11 +367,3 @@ void chpl_gpu_mem_free(void* memAlloc, int32_t lineno, int32_t filename) {
 
 #endif // HAS_GPU_LOCALE
 
-void chpl_gpu_test() {
-  for(int i = 0; i < 10; i++) {
-    printf("char:%d is %u\n", i, (unsigned int)gpuBinary[i]);
-  }
-
-  //printf("Message from GPU codegen is: %s\n", gpuBinary);
-}
-
