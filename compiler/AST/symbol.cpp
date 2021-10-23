@@ -1658,9 +1658,9 @@ VarSymbol *new_StringSymbol(const char *str) {
     return s;
   }
 
-  if (resolved) {
+  /*if (resolved) {
     INT_FATAL("new_StringSymbol called after function resolution.");
-  }
+  }*/
 
   bool invalid = false;
 
