@@ -1658,9 +1658,9 @@ VarSymbol *new_StringSymbol(const char *str) {
     return s;
   }
 
-  /*if (resolved) {
+  if (resolved) {
     INT_FATAL("new_StringSymbol called after function resolution.");
-  }*/
+  }
 
   bool invalid = false;
 
@@ -1721,9 +1721,9 @@ VarSymbol *new_BytesSymbol(const char *str, long size) {
     return s;
   }
 
-  if (resolved) {
+  /*if (resolved) {
     INT_FATAL("new_BytesSymbol called after function resolution.");
-  }
+  }*/
 
   // Bytes (as record) literals are inserted from the very beginning on the
   // parser all the way through resolution (postFold). Since resolution happens
