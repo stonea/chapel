@@ -1707,9 +1707,14 @@ VarSymbol *new_StringSymbol(const char *str) {
   return s;
 }
 
+VarSymbol *new_BytesSymbol(const char *str, long size) {
+  size_t len = 0;
+  if (size == -1) {
+      len = strlen(str);
+  } else {
+    len = (size_t)size;
+  }
 
-VarSymbol *new_BytesSymbol(const char *str) {
-  size_t len = strlen(str);
   Immediate imm(gContext, str, len, STRING_KIND_BYTES);
   VarSymbol *s = bytesLiteralsHash.get(&imm);
   if (s) {
@@ -1760,13 +1765,8 @@ VarSymbol *new_StringOrBytesSymbol(const char *str, AggregateType *t) {
   }
 }
 
-VarSymbol *new_CStringSymbol(const char *str, long size) {
-  size_t len = 0;
-  if (size == -1) {
-    len = strlen(str);
-  } else {
-    len = (size_t)size;
-  }
+VarSymbol *new_CStringSymbol(const char *str) {
+  size_t len = strlen(str);
   Immediate imm(gContext, str, len, STRING_KIND_C_STRING);
   VarSymbol *s = uniqueConstantsHash.get(&imm);
   PrimitiveType* dtRetType = dtStringC;

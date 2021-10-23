@@ -223,6 +223,29 @@ genGlobalDefClassId(const char* cname, int id, bool isHeader) {
 #endif
   }
 }
+
+static void
+genGlobalBytes(const char *cname, const char *value, size_t length) {
+  GenInfo* info = gGenInfo;
+  if( info->cfile ) {
+    INT_FATAL("Unexpected code path: genGlobalBytes for cFile codegen");
+    // Currently, we only do this for the global "gpu fatbin" variable (chpl_gpuBinary),  which only
+    // occurs on the LLVM codegen path.
+  } else {
+#ifdef HAVE_LLVM
+    if(gCodegenGPU == false) {
+      llvm::GlobalVariable *globalString = llvm::cast<llvm::GlobalVariable>(
+              info->module->getOrInsertGlobal(
+                      cname, llvm::IntegerType::getInt8PtrTy(info->module->getContext())));
+      globalString->setInitializer(llvm::cast<llvm::GlobalVariable>(
+              new_BytesSymbol(value, length)->codegen().val)->getInitializer());
+      globalString->setConstant(true);
+      info->lvt->addGlobalValue(cname, globalString, GEN_PTR, true);
+    }
+#endif
+  }
+}
+
 static void
 genGlobalString(const char *cname, const char *value, long length = -1) {
   GenInfo* info = gGenInfo;
@@ -239,7 +262,7 @@ genGlobalString(const char *cname, const char *value, long length = -1) {
           info->module->getOrInsertGlobal(
             cname, llvm::IntegerType::getInt8PtrTy(info->module->getContext())));
       globalString->setInitializer(llvm::cast<llvm::GlobalVariable>(
-            new_CStringSymbol(value, length)->codegen().val)->getInitializer());
+            new_CStringSymbol(value)->codegen().val)->getInitializer());
       globalString->setConstant(true);
       info->lvt->addGlobalValue(cname, globalString, GEN_PTR, true);
     }
@@ -2644,8 +2667,6 @@ static void codegenPartTwo() {
   {
     fprintf(stderr, "Statements emitted: %d\n", gStmtCount);
   }
-
-
 }
 
 void codegen() {
