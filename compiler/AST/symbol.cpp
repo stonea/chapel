@@ -1707,23 +1707,18 @@ VarSymbol *new_StringSymbol(const char *str) {
   return s;
 }
 
-VarSymbol *new_BytesSymbol(const char *str, long size) {
-  size_t len = 0;
-  if (size == -1) {
-      len = strlen(str);
-  } else {
-    len = (size_t)size;
-  }
 
+VarSymbol *new_BytesSymbol(const char *str) {
+  size_t len = strlen(str);
   Immediate imm(gContext, str, len, STRING_KIND_BYTES);
   VarSymbol *s = bytesLiteralsHash.get(&imm);
   if (s) {
     return s;
   }
 
-  /*if (resolved) {
+  if (resolved) {
     INT_FATAL("new_BytesSymbol called after function resolution.");
-  }*/
+  }
 
   // Bytes (as record) literals are inserted from the very beginning on the
   // parser all the way through resolution (postFold). Since resolution happens
@@ -1746,7 +1741,7 @@ VarSymbol *new_BytesSymbol(const char *str, long size) {
 
   // String literal init function should be not created yet.
   // Otherwise, the new bytes global will not be initialized.
-  //INT_ASSERT(initStringLiterals == NULL);
+  INT_ASSERT(initStringLiterals == NULL);
 
   return s;
 }
@@ -1774,6 +1769,21 @@ VarSymbol *new_CStringSymbol(const char *str) {
     return s;
   }
   s = new VarSymbol(astr("_cstr_literal_", istr(literal_id++)), dtRetType);
+  rootModule->block->insertAtTail(new DefExpr(s));
+  s->immediate = new Immediate;
+  *s->immediate = imm;
+  uniqueConstantsHash.put(s->immediate, s);
+  return s;
+}
+
+VarSymbol *new_RawStringSymbol(const char *str, size_t len) {
+  Immediate imm(gContext, str, len, STRING_KIND_BYTES);
+  VarSymbol *s = uniqueConstantsHash.get(&imm);
+  PrimitiveType* dtRetType = dtStringC;
+  if (s) {
+    return s;
+  }
+  s = new VarSymbol(astr("_rawstring_literal_", istr(literal_id++)), dtRetType);
   rootModule->block->insertAtTail(new DefExpr(s));
   s->immediate = new Immediate;
   *s->immediate = imm;

@@ -238,7 +238,7 @@ genGlobalBytes(const char *cname, const char *value, size_t length) {
               info->module->getOrInsertGlobal(
                       cname, llvm::IntegerType::getInt8PtrTy(info->module->getContext())));
       globalString->setInitializer(llvm::cast<llvm::GlobalVariable>(
-              new_BytesSymbol(value, length)->codegen().val)->getInitializer());
+              new_BytesSymbol(value)->codegen().val)->getInitializer());
       globalString->setConstant(true);
       info->lvt->addGlobalValue(cname, globalString, GEN_PTR, true);
     }
@@ -265,6 +265,28 @@ genGlobalString(const char *cname, const char *value) {
 #endif
   }
 }
+
+static void genGlobalRawString(const char *cname, const char *value, size_t len) {
+  GenInfo* info = gGenInfo;
+  if( info->cfile ) {
+    // TODO: Currently we don't have this codepath. Maybe one day we will. If so we should
+    // scan through value and escape null characters.
+    INT_FATAL("Do not expect to see this codepath");
+  } else {
+#ifdef HAVE_LLVM
+    if(gCodegenGPU == false) {
+      llvm::GlobalVariable *globalString = llvm::cast<llvm::GlobalVariable>(
+              info->module->getOrInsertGlobal(
+                      cname, llvm::IntegerType::getInt8PtrTy(info->module->getContext())));
+      globalString->setInitializer(llvm::cast<llvm::GlobalVariable>(
+              new_RawStringSymbol(value, len)->codegen().val)->getInitializer());
+      globalString->setConstant(true);
+      info->lvt->addGlobalValue(cname, globalString, GEN_PTR, true);
+    }
+#endif
+  }
+}
+
 static void
 genGlobalInt(const char* cname, int value, bool isHeader) {
   GenInfo* info = gGenInfo;
@@ -2466,7 +2488,7 @@ static void embedGpuCode() {
   }
   std::string buffer = std::string((std::istreambuf_iterator<char>(fatbinFile)), std::istreambuf_iterator<char>());
   printf("Size is: %lu\n", buffer.length());
-  genGlobalBytes("chpl_gpuBinary", buffer.c_str(), buffer.length());
+  genGlobalRawString("chpl_gpuBinary", buffer.c_str(), buffer.length());
 
   currentAstLoc = prevloc;
 }
