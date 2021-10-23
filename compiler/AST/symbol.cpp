@@ -1746,7 +1746,7 @@ VarSymbol *new_BytesSymbol(const char *str, long size) {
 
   // String literal init function should be not created yet.
   // Otherwise, the new bytes global will not be initialized.
-  INT_ASSERT(initStringLiterals == NULL);
+  //INT_ASSERT(initStringLiterals == NULL);
 
   return s;
 }
