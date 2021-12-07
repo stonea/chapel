@@ -4910,23 +4910,6 @@ DEFINE_PRIM(GPU_ALLOC_SHARED) {
 #ifdef HAVE_LLVM
   GenInfo* info = gGenInfo;
 
-#if 0
-  llvm::Type *llvmReturnType =
-          llvm::Type::getArrayNumElements()
-          llvm::Type::getInt8PtrTy(gGenInfo->llvmContext);
-  llvm::GlobalVariable* gvar_ptr_abc = new llvm::GlobalVariable(
-          /*Module=*/*info->module,
-          /*Type=*/llvmReturnType,
-          /*isConstant=*/false,
-          /*Linkage=*/llvm::GlobalValue::InternalLinkage,
-          /*Initializer=*/0, // has initializer, specified below
-          /*Name=*/"abc",
-          /*InsertBefore=*/nullptr,
-          /*ThreadLocalModel=*/llvm::GlobalValue::NotThreadLocal,
-          /*AddressSoace=*/3,
-          /*IsExternallyInitialized=*/false);
-#endif
-
   llvm::ArrayType* arrayTy = llvm::ArrayType::get(llvm::IntegerType::get(gGenInfo->llvmContext, 32), 4);
   llvm::GlobalVariable* glob = new llvm::GlobalVariable(
     *info->module, arrayTy, false, llvm::GlobalValue::InternalLinkage,
@@ -4934,14 +4917,13 @@ DEFINE_PRIM(GPU_ALLOC_SHARED) {
     "my_array", nullptr, llvm::GlobalValue::NotThreadLocal/*, 3, false*/); // Uncomment 3, false to do in shared mem
 
   print_llvm(glob);
-
   //llvm::Value* loadedValue = gGenInfo->irBuilder->CreateLoad(glob);
   //print_llvm(loadedValue);
   llvm::Type* castType = info->irBuilder->getInt8PtrTy();
 
   ret.val = gGenInfo->irBuilder->CreateBitCast(glob, castType);
   ret.isLVPtr = GEN_VAL;
-  ret.chplType = dtCVoidPtr;
+  ret.chplType = dt_c_uintptr;
   print_llvm(ret.val);
 
   //llvm::AttributeList attrs = func->getAttributes();
