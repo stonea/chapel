@@ -4927,7 +4927,7 @@ DEFINE_PRIM(GPU_ALLOC_SHARED) {
           /*IsExternallyInitialized=*/false);
 #endif
 
-  llvm::ArrayType* arrayTy = llvm::ArrayType::get(llvm::IntegerType::get(gGenInfo->llvmContext, 32), 2);
+  llvm::ArrayType* arrayTy = llvm::ArrayType::get(llvm::IntegerType::get(gGenInfo->llvmContext, 32), 4);
   llvm::GlobalVariable* glob = new llvm::GlobalVariable(
     *info->module, arrayTy, false, llvm::GlobalValue::InternalLinkage,
     llvm::ConstantDataArray::get(gGenInfo->llvmContext, *(new llvm::ArrayRef<uint32_t>({0,1,2,3}))),
