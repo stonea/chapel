@@ -45,7 +45,8 @@ returnInfoCVoidPtr(CallExpr* call) {
 
 static QualifiedType
 returnInfoCUintPtr(CallExpr* call) {
-  return QualifiedType(dt_c_uintptr, QUAL_VAL);
+  return QualifiedType(
+          dt_c_uintptr, QUAL_VAL);
 }
 
 static QualifiedType

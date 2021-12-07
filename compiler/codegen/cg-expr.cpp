@@ -4910,10 +4910,10 @@ DEFINE_PRIM(GPU_ALLOC_SHARED) {
 #ifdef HAVE_LLVM
   GenInfo* info = gGenInfo;
 
-  llvm::ArrayType* arrayTy = llvm::ArrayType::get(llvm::IntegerType::get(gGenInfo->llvmContext, 32), 4);
+  llvm::ArrayType* arrayTy = llvm::ArrayType::get(llvm::IntegerType::get(gGenInfo->llvmContext, 64), 4);
   llvm::GlobalVariable* glob = new llvm::GlobalVariable(
     *info->module, arrayTy, false, llvm::GlobalValue::InternalLinkage,
-    llvm::ConstantDataArray::get(gGenInfo->llvmContext, *(new llvm::ArrayRef<uint32_t>({0,1,2,3}))),
+    llvm::ConstantDataArray::get(gGenInfo->llvmContext, *(new llvm::ArrayRef<uint64_t>({0,1,2,3}))),
     "my_array", nullptr, llvm::GlobalValue::NotThreadLocal/*, 3, false*/); // Uncomment 3, false to do in shared mem
 
   print_llvm(glob);
