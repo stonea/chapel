@@ -4912,7 +4912,7 @@ DEFINE_PRIM(GPU_ALLOC_SHARED) {
   llvm::GlobalVariable* glob = new llvm::GlobalVariable(
     *info->module, arrayTy, false, llvm::GlobalValue::InternalLinkage,
     llvm::ConstantDataArray::get(gGenInfo->llvmContext, *(new llvm::ArrayRef<uint64_t>({111,222,333,444}))),
-    "my_array", nullptr, llvm::GlobalValue::NotThreadLocal, 3, false); // Uncomment 3, false to do in shared mem
+    "my_array", nullptr, llvm::GlobalValue::NotThreadLocal); //, 3, false); // Uncomment 3, false to do in shared mem
 
   print_llvm(glob);
   print_llvm(glob->getType());
@@ -4930,7 +4930,6 @@ DEFINE_PRIM(GPU_ALLOC_SHARED) {
   //ret.val = gGenInfo->irBuilder->CreateBitCast(glob, castType);
 
   ret.isLVPtr = GEN_VAL;
-  //ret.chplType = dt_c_uintptr;
   ret.chplType = dtCVoidPtr;
   print_llvm(ret.val);
 #endif
