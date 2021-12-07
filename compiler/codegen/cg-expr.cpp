@@ -4925,20 +4925,6 @@ DEFINE_PRIM(GPU_ALLOC_SHARED) {
   ret.isLVPtr = GEN_VAL;
   ret.chplType = dt_c_uintptr;
   print_llvm(ret.val);
-
-  //llvm::AttributeList attrs = func->getAttributes();
-  //c->setAttributes(attrs);
-
-  /*llvm::Function* fun = gGenInfo->module->getFunction(fcnName);
-  if(!fun) {
-    llvm::FunctionType *fun_type = llvm::FunctionType::get(llvmReturnType, false);
-    fun = llvm::Function::Create(fun_type, llvm::GlobalValue::ExternalLinkage, fcnName, gGenInfo->module);
-    INT_ASSERT(fun);
-  }
-
-  ret.val = gGenInfo->irBuilder->CreateCall(fun);
-  ret.isLVPtr = GEN_VAL;
-  ret.chplType = chplReturnType;*/
 #endif
 }
 
