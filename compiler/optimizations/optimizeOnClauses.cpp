@@ -77,6 +77,7 @@ classifyPrimitive(CallExpr *call) {
 
       default:
         nprint_view(call);
+        std::cout << "Prim Tag Name = " << primTagToName(call->primitive->tag);
         INT_FATAL("primitive should have been removed from the tree by now.");
     }
     break;
