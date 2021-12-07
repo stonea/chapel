@@ -4915,14 +4915,23 @@ DEFINE_PRIM(GPU_ALLOC_SHARED) {
     "my_array", nullptr, llvm::GlobalValue::NotThreadLocal/*, 3, false*/); // Uncomment 3, false to do in shared mem
 
   print_llvm(glob);
+  print_llvm(glob->getType());
+
+  ret.val = glob;
+
   //llvm::Value* loadedValue = gGenInfo->irBuilder->CreateLoad(glob);
-  //print_llvm(loadedValue);
+  //ret.val = loadedValue;
+
   //llvm::Type* castType = info->irBuilder->getInt8PtrTy();
   //ret.val = gGenInfo->irBuilder->CreateBitCast(glob, castType);
 
-  ret.val = glob;
+  //const llvm::DataLayout& DL = info->module->getDataLayout();
+  //llvm::Type* castType = DL.getIntPtrType(gGenInfo->llvmContext, 0); // Change to 3 for SharedMem address space
+  //ret.val = gGenInfo->irBuilder->CreateBitCast(glob, castType);
+
   ret.isLVPtr = GEN_VAL;
-  ret.chplType = dt_c_uintptr;
+  //ret.chplType = dt_c_uintptr;
+  ret.chplType = dtCVoidPtr;
   print_llvm(ret.val);
 #endif
 }
