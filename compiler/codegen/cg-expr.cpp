@@ -4874,9 +4874,7 @@ static GenRet codegenCallToPtxTgtIntrinsic(const char *fcnName) {
   return ret;
 }
 
-DEFINE_PRIM(GPU_THREADIDX_X) {
-  ret = codegenCallToPtxTgtIntrinsic("llvm.nvvm.read.ptx.sreg.tid.x");
-}
+DEFINE_PRIM(GPU_THREADIDX_X) { ret = codegenCallToPtxTgtIntrinsic("llvm.nvvm.read.ptx.sreg.tid.x"); }
 DEFINE_PRIM(GPU_THREADIDX_Y) { ret = codegenCallToPtxTgtIntrinsic("llvm.nvvm.read.ptx.sreg.tid.y"); }
 DEFINE_PRIM(GPU_THREADIDX_Z) { ret = codegenCallToPtxTgtIntrinsic("llvm.nvvm.read.ptx.sreg.tid.z"); }
 DEFINE_PRIM(GPU_BLOCKIDX_X)  { ret = codegenCallToPtxTgtIntrinsic("llvm.nvvm.read.ptx.sreg.ctaid.x"); }
@@ -4913,15 +4911,16 @@ DEFINE_PRIM(GPU_ALLOC_SHARED) {
   llvm::ArrayType* arrayTy = llvm::ArrayType::get(llvm::IntegerType::get(gGenInfo->llvmContext, 64), 4);
   llvm::GlobalVariable* glob = new llvm::GlobalVariable(
     *info->module, arrayTy, false, llvm::GlobalValue::InternalLinkage,
-    llvm::ConstantDataArray::get(gGenInfo->llvmContext, *(new llvm::ArrayRef<uint64_t>({0,1,2,3}))),
+    llvm::ConstantDataArray::get(gGenInfo->llvmContext, *(new llvm::ArrayRef<uint64_t>({111,222,333,444}))),
     "my_array", nullptr, llvm::GlobalValue::NotThreadLocal/*, 3, false*/); // Uncomment 3, false to do in shared mem
 
   print_llvm(glob);
   //llvm::Value* loadedValue = gGenInfo->irBuilder->CreateLoad(glob);
   //print_llvm(loadedValue);
-  llvm::Type* castType = info->irBuilder->getInt8PtrTy();
+  //llvm::Type* castType = info->irBuilder->getInt8PtrTy();
+  //ret.val = gGenInfo->irBuilder->CreateBitCast(glob, castType);
 
-  ret.val = gGenInfo->irBuilder->CreateBitCast(glob, castType);
+  ret.val = glob;
   ret.isLVPtr = GEN_VAL;
   ret.chplType = dt_c_uintptr;
   print_llvm(ret.val);
