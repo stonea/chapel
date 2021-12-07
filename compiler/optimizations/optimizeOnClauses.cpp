@@ -33,6 +33,7 @@
 #include "stlUtil.h"
 #include "stmt.h"
 #include "wellknown.h"
+#include "view.h"
 
 #include <vector>
 
@@ -75,6 +76,7 @@ classifyPrimitive(CallExpr *call) {
         return LOCAL_NOT_FAST;
 
       default:
+        nprint_view(call);
         INT_FATAL("primitive should have been removed from the tree by now.");
     }
     break;
