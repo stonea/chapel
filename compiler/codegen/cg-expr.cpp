@@ -4874,7 +4874,9 @@ static GenRet codegenCallToPtxTgtIntrinsic(const char *fcnName) {
   return ret;
 }
 
-DEFINE_PRIM(GPU_THREADIDX_X) { ret = codegenCallToPtxTgtIntrinsic("llvm.nvvm.read.ptx.sreg.tid.x"); }
+DEFINE_PRIM(GPU_THREADIDX_X) {
+  ret = codegenCallToPtxTgtIntrinsic("llvm.nvvm.read.ptx.sreg.tid.x");
+}
 DEFINE_PRIM(GPU_THREADIDX_Y) { ret = codegenCallToPtxTgtIntrinsic("llvm.nvvm.read.ptx.sreg.tid.y"); }
 DEFINE_PRIM(GPU_THREADIDX_Z) { ret = codegenCallToPtxTgtIntrinsic("llvm.nvvm.read.ptx.sreg.tid.z"); }
 DEFINE_PRIM(GPU_BLOCKIDX_X)  { ret = codegenCallToPtxTgtIntrinsic("llvm.nvvm.read.ptx.sreg.ctaid.x"); }
@@ -4886,6 +4888,75 @@ DEFINE_PRIM(GPU_BLOCKDIM_Z)  { ret = codegenCallToPtxTgtIntrinsic("llvm.nvvm.rea
 DEFINE_PRIM(GPU_GRIDDIM_X)   { ret = codegenCallToPtxTgtIntrinsic("llvm.nvvm.read.ptx.sreg.nctaid.x"); }
 DEFINE_PRIM(GPU_GRIDDIM_Y)   { ret = codegenCallToPtxTgtIntrinsic("llvm.nvvm.read.ptx.sreg.nctaid.y"); }
 DEFINE_PRIM(GPU_GRIDDIM_Z)   { ret = codegenCallToPtxTgtIntrinsic("llvm.nvvm.read.ptx.sreg.nctaid.z"); }
+DEFINE_PRIM(GPU_SYNC_THREADS) {
+#ifdef HAVE_LLVM
+  llvm::Type *llvmReturnType = llvm::Type::getVoidTy(gGenInfo->llvmContext);
+  Type *chplReturnType = dtVoid;
+
+  llvm::Function* fun = gGenInfo->module->getFunction("llvm.nvvm.barrier0");
+  if(!fun) {
+    llvm::FunctionType *fun_type = llvm::FunctionType::get(llvmReturnType, false);
+    fun = llvm::Function::Create(fun_type, llvm::GlobalValue::ExternalLinkage, "llvm.nvvm.barrier0", gGenInfo->module);
+    INT_ASSERT(fun);
+  }
+
+  ret.val = gGenInfo->irBuilder->CreateCall(fun);
+  ret.isLVPtr = GEN_VAL;
+  ret.chplType = chplReturnType;
+#endif
+}
+
+DEFINE_PRIM(GPU_ALLOC_SHARED) {
+#ifdef HAVE_LLVM
+  GenInfo* info = gGenInfo;
+
+#if 0
+  llvm::Type *llvmReturnType =
+          llvm::Type::getArrayNumElements()
+          llvm::Type::getInt8PtrTy(gGenInfo->llvmContext);
+  llvm::GlobalVariable* gvar_ptr_abc = new llvm::GlobalVariable(
+          /*Module=*/*info->module,
+          /*Type=*/llvmReturnType,
+          /*isConstant=*/false,
+          /*Linkage=*/llvm::GlobalValue::InternalLinkage,
+          /*Initializer=*/0, // has initializer, specified below
+          /*Name=*/"abc",
+          /*InsertBefore=*/nullptr,
+          /*ThreadLocalModel=*/llvm::GlobalValue::NotThreadLocal,
+          /*AddressSoace=*/3,
+          /*IsExternallyInitialized=*/false);
+#endif
+
+  llvm::ArrayType* arrayTy = llvm::ArrayType::get(llvm::IntegerType::get(gGenInfo->llvmContext, 32), 2);
+  llvm::GlobalVariable* glob = new llvm::GlobalVariable(
+    *info->module, arrayTy, false, llvm::GlobalValue::InternalLinkage,
+    llvm::ConstantDataArray::get(gGenInfo->llvmContext, *(new llvm::ArrayRef<uint32_t>({0,1,2,3}))),
+    "my_array", nullptr, llvm::GlobalValue::NotThreadLocal, 3, false);
+  llvm::Value* loadedValue = gGenInfo->irBuilder->CreateLoad(glob);
+  ret.val = loadedValue;
+
+  ret.isLVPtr = GEN_VAL;
+  ret.chplType = dtCVoidPtr;
+
+  print_llvm(loadedValue);
+
+
+  //llvm::AttributeList attrs = func->getAttributes();
+  //c->setAttributes(attrs);
+
+  /*llvm::Function* fun = gGenInfo->module->getFunction(fcnName);
+  if(!fun) {
+    llvm::FunctionType *fun_type = llvm::FunctionType::get(llvmReturnType, false);
+    fun = llvm::Function::Create(fun_type, llvm::GlobalValue::ExternalLinkage, fcnName, gGenInfo->module);
+    INT_ASSERT(fun);
+  }
+
+  ret.val = gGenInfo->irBuilder->CreateCall(fun);
+  ret.isLVPtr = GEN_VAL;
+  ret.chplType = chplReturnType;*/
+#endif
+}
+
 DEFINE_PRIM(GET_REQUESTED_SUBLOC) { ret = codegenCallExpr("chpl_task_getRequestedSubloc"); }
 
 static void codegenPutGet(CallExpr* call, GenRet &ret) {

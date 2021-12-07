@@ -21,8 +21,6 @@
 #ifndef _configured_prefix_H_
 #define _configured_prefix_H_
 
-static const char* CONFIGURED_PREFIX =
-#include "CONFIGURED_PREFIX"
-;
+static const char* CONFIGURED_PREFIX = "";
 
 #endif
