@@ -4932,11 +4932,14 @@ DEFINE_PRIM(GPU_ALLOC_SHARED) {
     *info->module, arrayTy, false, llvm::GlobalValue::InternalLinkage,
     llvm::ConstantDataArray::get(gGenInfo->llvmContext, *(new llvm::ArrayRef<uint32_t>({0,1,2,3}))),
     "my_array", nullptr, llvm::GlobalValue::NotThreadLocal, 3, false);
-  llvm::Value* loadedValue = gGenInfo->irBuilder->CreateLoad(glob);
-  print_llvm(loadedValue);
+
+  print_llvm(glob);
+
+  //llvm::Value* loadedValue = gGenInfo->irBuilder->CreateLoad(glob);
+  //print_llvm(loadedValue);
   llvm::Type* castType = info->irBuilder->getInt8PtrTy();
 
-  ret.val = gGenInfo->irBuilder->CreateBitCast(loadedValue, castType);
+  ret.val = gGenInfo->irBuilder->CreateBitCast(glob, castType);
   ret.isLVPtr = GEN_VAL;
   ret.chplType = dtCVoidPtr;
   print_llvm(ret.val);
