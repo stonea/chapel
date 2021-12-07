@@ -4931,7 +4931,7 @@ DEFINE_PRIM(GPU_ALLOC_SHARED) {
   llvm::GlobalVariable* glob = new llvm::GlobalVariable(
     *info->module, arrayTy, false, llvm::GlobalValue::InternalLinkage,
     llvm::ConstantDataArray::get(gGenInfo->llvmContext, *(new llvm::ArrayRef<uint32_t>({0,1,2,3}))),
-    "my_array", nullptr, llvm::GlobalValue::NotThreadLocal, 3, false);
+    "my_array", nullptr, llvm::GlobalValue::NotThreadLocal/*, 3, false*/); // Uncomment 3, false to do in shared mem
 
   print_llvm(glob);
 
@@ -4943,7 +4943,6 @@ DEFINE_PRIM(GPU_ALLOC_SHARED) {
   ret.isLVPtr = GEN_VAL;
   ret.chplType = dtCVoidPtr;
   print_llvm(ret.val);
-
 
   //llvm::AttributeList attrs = func->getAttributes();
   //c->setAttributes(attrs);
