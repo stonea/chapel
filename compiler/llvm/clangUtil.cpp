@@ -2344,9 +2344,9 @@ void runClang(const char* just_parse_filename) {
                 "$CHPL_HOME/util/printchplenv and request support for this "
                 "configuration.");
     } else {
-      USR_FATAL("The runtime has not been built for this configuration. "
+/*      USR_FATAL("The runtime has not been built for this configuration. "
                 "Check $CHPL_HOME/util/printchplenv and try rebuilding "
-                "with $CHPL_MAKE from $CHPL_HOME.");
+                "with $CHPL_MAKE from $CHPL_HOME.");*/
     }
   }
 

@@ -2484,7 +2484,7 @@ static void codegenPartTwo() {
     USR_FATAL("This compiler was built without LLVM support");
 #else
     INT_ASSERT(gGenInfo != NULL);
-    runClang(NULL);
+    runClang(NULL); //Why are we running clang here?
 #endif
   }
 
