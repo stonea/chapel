@@ -719,7 +719,7 @@ module ChapelDomain {
 
   // This function exists to avoid communication from computing _value when
   // the result is param.
-  private proc domainDistIsLayout(d: domain) param {
+  proc domainDistIsLayout(d: domain) param {
     return d.dist._value.dsiIsLayout();
   }
 
