@@ -1307,7 +1307,6 @@ module ChapelDomain {
 
       chpl_incRefCountsForDomainsInArrayEltTypes(x, x.eltType);
 
-      writeln("HELLO BLAH!");
       return _newArray(x);
     }
 
