@@ -2684,6 +2684,7 @@ void codegen() {
       // child process
       gCodegenGPU = true;
       codegenPartTwo();
+      std::cout << "CCC" << std::endl;
       makeBinary();
       clean_exit(0);
     } else {
@@ -2692,6 +2693,9 @@ void codegen() {
       int status = 0;
       while (wait(&status) != pid) {
         // wait for child process
+      }
+      if(status != 0) {
+        clean_exit(status);
       }
     }
   }

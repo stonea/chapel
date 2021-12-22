@@ -1532,6 +1532,10 @@ static void setGPUFlags() {
       fNoCastChecks = true;
       fNoDivZeroChecks = true;
     }
+
+    if(strcmp(CHPL_COMM, "none") != 0) {
+      USR_FATAL("The prototype GPU support does not work when CHPL_COMM is not set to \"none\".");
+    }
   }
 }
 
