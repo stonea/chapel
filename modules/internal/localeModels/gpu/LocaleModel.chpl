@@ -42,7 +42,7 @@ module LocaleModel {
   private inline
   proc runningOnGPUSublocale(): bool {
     extern proc chpl_gpu_has_context(): bool;
-    return chpl_gpu_has_context() && chpl_task_getRequestedSubloc()>0;
+    return chpl_gpu_has_context() && chpl_task_getRequestedSubloc()>=0;
   }
 
   private inline
@@ -215,7 +215,7 @@ module LocaleModel {
     return execution_subloc;  // no info needed from full sublocale
   }
 
-  class CPULocale : AbstractLocaleModel {
+  /*class CPULocale : AbstractLocaleModel {
     const sid: chpl_sublocID_t;
     const name: string;
 
@@ -252,7 +252,7 @@ module LocaleModel {
       halt("requesting a child from a CPULocale locale");
       return new locale(this);
     }
-  }
+  }*/
 
   class GPULocale : AbstractLocaleModel {
     const sid: chpl_sublocID_t;
@@ -284,7 +284,7 @@ module LocaleModel {
 
     override proc writeThis(f) throws {
       parent.writeThis(f);
-      f <~> '.'+name;
+      f <~> '.'+name + " (gpu locale)";
     }
 
     override proc getChildCount(): int { return 0; }
@@ -314,7 +314,7 @@ module LocaleModel {
 
     var numSublocales: int;
     var GPU: unmanaged GPULocale?;
-    var CPU: unmanaged CPULocale?;
+    //var CPU: unmanaged CPULocale?;
 
     const childSpace: domain(1);
 
@@ -336,7 +336,7 @@ module LocaleModel {
       cudaGetDeviceCount(nDevices);
 
       //1 cpu and number of GPU devices on a node
-      numSublocales = 1 + nDevices;
+      numSublocales = nDevices;
       childSpace = {0..#numSublocales};
 
       this.complete();
@@ -358,7 +358,7 @@ module LocaleModel {
       cudaGetDeviceCount(nDevices);
 
       //1 cpu and number of GPU devices on a node
-      numSublocales = 1 + nDevices;
+      numSublocales = nDevices;
       childSpace = {0..#numSublocales};
 
       this.complete();
@@ -403,7 +403,7 @@ module LocaleModel {
     //- Implementation (private)
     //-
     proc setup() {
-      helpSetupLocaleGPU(this, local_name, numSublocales, CPULocale, GPULocale);
+      helpSetupLocaleGPU(this, local_name, numSublocales, GPULocale);
     }
     //------------------------------------------------------------------------}
   }
@@ -422,6 +422,7 @@ module LocaleModel {
     var myLocales: [myLocaleSpace] locale;
 
     proc init() {
+      writeln("Init RootLocale for GPU locale model");
       super.init(nilLocale);
       nPUsPhysAcc = 0;
       nPUsPhysAll = 0;
@@ -449,7 +450,7 @@ module LocaleModel {
     proc local_name() return "rootLocale";
 
     override proc writeThis(f) throws {
-      f <~> name;
+      f <~> "rootLocale:" + name;
     }
 
     override proc getChildCount() return this.myLocaleSpace.size;
