@@ -299,6 +299,8 @@ module LocaleModel {
       halt("requesting a child from a GPULocale locale");
       return new locale(this);
     }
+
+    override proc isGpu() : bool { return true; }
   }
 
   const chpl_emptyLocaleSpace: domain(1) = {1..0};
@@ -378,12 +380,21 @@ module LocaleModel {
 
     override proc getChildCount() return numSublocales;
 
+    override proc numGpus() : int { return getChildCount(); }
+
     iter getChildIndices() : int {
       for idx in {0..#numSublocales} do // chpl_emptyLocaleSpace do
         yield idx;
     }
 
     override proc getChild(idx:int) : locale {
+      if boundsChecking then
+        if (idx < 0) || (idx >= numSublocales) then
+          halt("sublocale child index out of bounds (",idx,")");
+      return new locale(childLocales[idx]);
+    }
+
+    override proc getGpu(idx:int) : locale {
       if boundsChecking then
         if (idx < 0) || (idx >= numSublocales) then
           halt("sublocale child index out of bounds (",idx,")");
