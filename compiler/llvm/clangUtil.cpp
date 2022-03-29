@@ -1316,6 +1316,8 @@ class CCodeGenConsumer final : public ASTConsumer {
           info->clangInfo->codegenOptions,
           info->llvmContext);
 
+        printf("BUILDER = %p\n", Builder);
+
         INT_ASSERT(Builder);
         INT_ASSERT(!info->module);
         info->module = Builder->GetModule();
@@ -2633,7 +2635,6 @@ void runClang(const char* just_parse_filename) {
       install_fatal_error_handler(handleErrorLLVM);
     }
 
-    printf("C12 %p\n", gGenInfo->module);
     // Run the Start Generation action
     // Now initialize a code generator...
     // this will enable us to ask for addresses of static (inline) functions
@@ -2643,7 +2644,6 @@ void runClang(const char* just_parse_filename) {
     clangInfo->cCodeGenAction = new CCodeGenAction();
     printf("C12.1 %p\n", gGenInfo->module);
     if (!clangInfo->Clang->ExecuteAction(*clangInfo->cCodeGenAction)) {
-      printf("C12.2 %p\n", gGenInfo->module);
       if (parseOnly) {
         USR_FATAL("error running clang on extern block");
       } else {
