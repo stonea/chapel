@@ -1326,9 +1326,7 @@ class CCodeGenConsumer final : public ASTConsumer {
       }
     }
 
-    ~CCodeGenConsumer() override {
-      delete Builder;
-    }
+    ~CCodeGenConsumer() override = default;
 
     // Start ASTVisitor Overrides
     void Initialize(ASTContext &Context) override {
@@ -1541,6 +1539,8 @@ static void finishClang(ClangInfo* clangInfo){
 }
 
 static void deleteClang(ClangInfo* clangInfo){
+  printf("Calling deleteClang!\n");
+
   if( clangInfo->cCodeGen ) {
     delete clangInfo->cCodeGen;
     clangInfo->cCodeGen = NULL;
