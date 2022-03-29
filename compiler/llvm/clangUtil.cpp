@@ -2362,8 +2362,6 @@ void runClang(const char* just_parse_filename) {
   // find the path to clang and clang++
   std::string clangCC, clangCXX;
 
-  printf("C1 %p\n", gGenInfo->module);
-
   // get any args passed to CC/CXX and add them to the builtin clang invocation
   splitStringWhitespace(CHPL_LLVM_CLANG_C, split);
   // set clangCC / clangCXX to just the first argument
@@ -2381,8 +2379,6 @@ void runClang(const char* just_parse_filename) {
   if (split.size() > 0) {
     clangCXX = split[0];
   }
-
-  printf("C2 %p\n", gGenInfo->module);
 
   // add -fPIC if CHPL_LIB_PIC indicates we should
   if (strcmp(CHPL_LIB_PIC, "pic") == 0) {
@@ -2409,8 +2405,6 @@ void runClang(const char* just_parse_filename) {
     addFilteredArgs(clangCCArgs, args, parseOnly);
   }
 
-  printf("C3 %p\n", gGenInfo->module);
-
   // add a -I. so we can find headers named on command line in same dir
   clangCCArgs.push_back("-I.");
 
@@ -2435,8 +2429,6 @@ void runClang(const char* just_parse_filename) {
     clangCCArgs.push_back(clang_opt);
     clangCCArgs.push_back("-DCHPL_OPTIMIZE");
   }
-
-  printf("C4 %p\n", gGenInfo->module);
 
   // Add specialization flags
   if (specializeCCode &&
@@ -2467,8 +2459,6 @@ void runClang(const char* just_parse_filename) {
     }
   }
 
-  printf("C5 %p\n", gGenInfo->module);
-
   // Passing -ffast-math is important to get approximate versions
   // of cabs but it appears to slow down simple complex multiplication.
   if (ffloatOpt > 0) // --no-ieee-float
@@ -2491,8 +2481,6 @@ void runClang(const char* just_parse_filename) {
   if (!fMultiLocaleInterop) {
     clangCCArgs.push_back("-DCHPL_GEN_CODE");
   }
-
-  printf("C6 %p\n", gGenInfo->module);
 
   // add -pthread since we will use pthreads
   clangCCArgs.push_back("-pthread");
@@ -2522,8 +2510,6 @@ void runClang(const char* just_parse_filename) {
   // behaviour of macros!
   clangOtherArgs.push_back("-include");
   clangOtherArgs.push_back("sys_basic.h");
-
-  printf("C7 %p\n", gGenInfo->module);
 
   if (!parseOnly) {
     if (localeUsesGPU()) {
@@ -2595,8 +2581,6 @@ void runClang(const char* just_parse_filename) {
     clangOtherArgs.push_back("-include");
     clangOtherArgs.push_back(just_parse_filename);
   }
-  printf("C8 %p\n", gGenInfo->module);
-
   if( printSystemCommands ) {
     if (parseOnly)
       printf("<internal clang parsing %s> ", just_parse_filename);
@@ -2624,8 +2608,6 @@ void runClang(const char* just_parse_filename) {
     // Should have already been initialized for us.
     INT_ASSERT(gGenInfo != NULL);
   }
-  printf("C9 %p\n", gGenInfo->module);
-
   gGenInfo->lvt = std::make_unique<LayeredValueTable>();
 
 
@@ -2640,17 +2622,18 @@ void runClang(const char* just_parse_filename) {
   std::string rtmain = home + "/runtime/etc/rtmain.c";
 
   setupClang(gGenInfo, rtmain);
-  printf("C10 %p\n", gGenInfo->module);
 
   if( fLlvmCodegen || fAllowExternC )
   {
     GenInfo *info = gGenInfo;
+    printf("C11 %p\n", gGenInfo->module);
 
     // Install an LLVM Fatal Error Handler.
     if (!is_installed_fatal_error_handler) {
       is_installed_fatal_error_handler = true;
       install_fatal_error_handler(handleErrorLLVM);
     }
+    printf("C12 %p\n", gGenInfo->module);
 
     // Run the Start Generation action
     // Now initialize a code generator...
@@ -2666,6 +2649,7 @@ void runClang(const char* just_parse_filename) {
         USR_FATAL("error running clang during code generation");
       }
     }
+    printf("C13 %p\n", gGenInfo->module);
     if( ! parseOnly ) {
       // LLVM module should have been created by CCodeGenConsumer
       INT_ASSERT(gGenInfo->module);
@@ -2689,6 +2673,7 @@ void runClang(const char* just_parse_filename) {
         llvm::BasicBlock::Create(info->module->getContext(), "entry", F);
       info->irBuilder->SetInsertPoint(block);
     }
+    printf("C14 %p\n", gGenInfo->module);
     // read macros. May call IRBuilder methods to codegen a string,
     // so needs to happen after we set the insert point.
     readMacrosClang();
@@ -2696,6 +2681,7 @@ void runClang(const char* just_parse_filename) {
     if( ! parseOnly ) {
       info->irBuilder->CreateRetVoid();
     }
+    printf("C15 %p\n", gGenInfo->module);
   }
 }
 
