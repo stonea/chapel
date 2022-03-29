@@ -1315,6 +1315,15 @@ class CCodeGenConsumer final : public ASTConsumer {
           info->clangInfo->Clang->getPreprocessorOpts(),
           info->clangInfo->codegenOptions,
           info->llvmContext);
+        printf("Builder A = %p\n", Builder);
+        Builder = CreateLLVMCodeGen(
+                *Diags,
+                LLVM_MODULE_NAME,
+                info->clangInfo->Clang->getHeaderSearchOpts(),
+                info->clangInfo->Clang->getPreprocessorOpts(),
+                info->clangInfo->codegenOptions,
+                info->llvmContext);
+        printf("Builder B = %p\n", Builder);
 
         INT_ASSERT(Builder);
         INT_ASSERT(!info->module);
@@ -1539,14 +1548,15 @@ static void finishClang(ClangInfo* clangInfo){
 }
 
 static void deleteClang(ClangInfo* clangInfo){
-  printf("Calling deleteClang!\n");
-
   if( clangInfo->cCodeGen ) {
     delete clangInfo->cCodeGen;
     clangInfo->cCodeGen = NULL;
   }
   delete clangInfo->Clang;
   clangInfo->Clang = NULL;
+
+  delete clangInfo->cCodeGenAction
+
   delete clangInfo->cCodeGenAction;
   clangInfo->cCodeGenAction = NULL;
 }
