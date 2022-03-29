@@ -2711,7 +2711,7 @@ void codegen() {
     // name uses the PID).
     ensureTmpDirExists();
 
-    pid_t pid = fork();
+    //pid_t pid = fork();
 
     //if (pid == 0) {
       // child process
