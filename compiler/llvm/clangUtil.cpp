@@ -1555,8 +1555,6 @@ static void deleteClang(ClangInfo* clangInfo){
   delete clangInfo->Clang;
   clangInfo->Clang = NULL;
 
-  delete clangInfo->cCodeGenAction
-
   delete clangInfo->cCodeGenAction;
   clangInfo->cCodeGenAction = NULL;
 }
