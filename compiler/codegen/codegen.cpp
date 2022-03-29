@@ -2715,25 +2715,26 @@ void codegen() {
 
     pid_t pid = fork();
 
-    if (pid == 0) {
+    //if (pid == 0) {
       // child process
       gCodegenGPU = true;
       codegenPartTwo();
       makeBinary();
-      clean_exit(0);
-    } else {
+      //clean_exit(0);
+    //} else {
       // parent process
-      INT_ASSERT(!gCodegenGPU);
-      int status = 0;
-      while (wait(&status) != pid) {
+    gCodegenGPU = false;
+    //INT_ASSERT(!gCodegenGPU);
+      //int status = 0;
+      //while (wait(&status) != pid) {
         // wait for child process
-      }
+      //}
       // If there was an error in GPU code generation then the .fatbin file (containing
       // the generated GPU code) was not created and we won't be able to continue.
-      if(status != 0) {
-        clean_exit(status);
-      }
-    }
+      //if(status != 0) {
+        //clean_exit(status);
+      //}
+    //}
   }
 
   codegenPartTwo();
