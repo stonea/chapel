@@ -1316,8 +1316,6 @@ class CCodeGenConsumer final : public ASTConsumer {
           info->clangInfo->codegenOptions,
           info->llvmContext);
 
-        printf("BUILDER = %p\n", Builder);
-
         INT_ASSERT(Builder);
         INT_ASSERT(!info->module);
         info->module = Builder->GetModule();
@@ -1328,7 +1326,9 @@ class CCodeGenConsumer final : public ASTConsumer {
       }
     }
 
-    ~CCodeGenConsumer() override = default;
+    ~CCodeGenConsumer() override {
+      delete Builder;
+    }
 
     // Start ASTVisitor Overrides
     void Initialize(ASTContext &Context) override {
