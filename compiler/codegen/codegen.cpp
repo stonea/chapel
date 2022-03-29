@@ -2519,7 +2519,7 @@ static void codegenPartTwo() {
     codegenMultiLocaleInteropWrappers();
   }
 
-  print("A %p\n", gGenInfo->module);
+  printf("A %p\n", gGenInfo->module);
   if (fLlvmCodegen) {
 #ifndef HAVE_LLVM
     USR_FATAL("This compiler was built without LLVM support");
@@ -2528,7 +2528,7 @@ static void codegenPartTwo() {
     runClang(NULL);
 #endif
   }
-  print("B %p\n", gGenInfo->module);
+  printf("B %p\n", gGenInfo->module);
 
   SET_LINENO(rootModule);
 
