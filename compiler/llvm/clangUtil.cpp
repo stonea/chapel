@@ -2626,15 +2626,14 @@ void runClang(const char* just_parse_filename) {
   if( fLlvmCodegen || fAllowExternC )
   {
     GenInfo *info = gGenInfo;
-    printf("C11 %p\n", gGenInfo->module);
 
     // Install an LLVM Fatal Error Handler.
     if (!is_installed_fatal_error_handler) {
       is_installed_fatal_error_handler = true;
       install_fatal_error_handler(handleErrorLLVM);
     }
-    printf("C12 %p\n", gGenInfo->module);
 
+    printf("C12 %p\n", gGenInfo->module);
     // Run the Start Generation action
     // Now initialize a code generator...
     // this will enable us to ask for addresses of static (inline) functions
@@ -2642,7 +2641,9 @@ void runClang(const char* just_parse_filename) {
     // CCodeGenAction is defined above. It traverses the C AST
     // and does the code generation.
     clangInfo->cCodeGenAction = new CCodeGenAction();
+    printf("C12.1 %p\n", gGenInfo->module);
     if (!clangInfo->Clang->ExecuteAction(*clangInfo->cCodeGenAction)) {
+      printf("C12.2 %p\n", gGenInfo->module);
       if (parseOnly) {
         USR_FATAL("error running clang on extern block");
       } else {
@@ -2673,7 +2674,6 @@ void runClang(const char* just_parse_filename) {
         llvm::BasicBlock::Create(info->module->getContext(), "entry", F);
       info->irBuilder->SetInsertPoint(block);
     }
-    printf("C14 %p\n", gGenInfo->module);
     // read macros. May call IRBuilder methods to codegen a string,
     // so needs to happen after we set the insert point.
     readMacrosClang();
@@ -2681,7 +2681,6 @@ void runClang(const char* just_parse_filename) {
     if( ! parseOnly ) {
       info->irBuilder->CreateRetVoid();
     }
-    printf("C15 %p\n", gGenInfo->module);
   }
 }
 
