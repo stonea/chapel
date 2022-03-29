@@ -2519,6 +2519,7 @@ static void codegenPartTwo() {
     codegenMultiLocaleInteropWrappers();
   }
 
+  print("A %p\n", gGenInfo->module);
   if (fLlvmCodegen) {
 #ifndef HAVE_LLVM
     USR_FATAL("This compiler was built without LLVM support");
@@ -2527,6 +2528,7 @@ static void codegenPartTwo() {
     runClang(NULL);
 #endif
   }
+  print("B %p\n", gGenInfo->module);
 
   SET_LINENO(rootModule);
 
@@ -2715,7 +2717,9 @@ void codegen() {
 
     //if (pid == 0) {
       // child process
-      gCodegenGPU = true;
+
+
+    gCodegenGPU = true;
       codegenPartTwo();
       makeBinary();
       //clean_exit(0);
