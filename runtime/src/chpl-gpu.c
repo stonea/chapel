@@ -64,6 +64,8 @@ static void chpl_gpu_cuda_check(int err, const char* file, int line) {
 
 CUcontext *chpl_gpu_primary_ctx;
 
+void setChplNodeId(c_nodeid_t id);
+
 void chpl_gpu_init() {
   int         num_devices;
 
@@ -84,6 +86,11 @@ void chpl_gpu_init() {
     CUDA_CALL(cuDevicePrimaryCtxRetain(&context, device));
 
     chpl_gpu_primary_ctx[i] = context;
+
+    CUDA_CALL(cuCtxPushCurrent(context));
+    setChplNodeId(1337);
+    CUcontext popped;
+    CUDA_CALL(cuCtxPopCurrent(&popped));
   }
 }
 

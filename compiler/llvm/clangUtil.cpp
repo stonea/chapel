@@ -1557,7 +1557,9 @@ CCodeGenAction::CreateASTConsumer(CompilerInstance &CI, StringRef InFile) {
 static void finishClang(ClangInfo* clangInfo){
   if( clangInfo->cCodeGen ) {
     // This should call Builder->Release()
+    printf(">> Before call to HandleTranslationUnit\n");
     clangInfo->cCodeGen->HandleTranslationUnit(*clangInfo->Ctx);
+	printf(">> After call to HandleTranslationUnit\n");
   }
   clangInfo->Diags.reset();
   clangInfo->DiagID.reset();

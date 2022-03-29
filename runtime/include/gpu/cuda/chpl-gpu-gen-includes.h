@@ -26,6 +26,15 @@
 #include "chpltypes.h"
 #include "chpl-comm.h"
 
+__constant__ static c_nodeid_t chpl_nodeId;
+
+extern "C" {
+  void setChplNodeId(c_nodeid_t id);
+  void setChplNodeId(c_nodeid_t id) {
+    printf("Set node id to: %i\n", id);
+    cudaMemcpyToSymbol(chpl_nodeId, &id, sizeof(c_nodeid_t), 0, cudaMemcpyHostToDevice);
+  }
+}
 
 // General TODO
 // This file is included in the application executable only. It mirrors
@@ -48,7 +57,9 @@ __device__ static inline c_sublocid_t chpl_task_getRequestedSubloc(void)
   // design, the subloc ID that this function is supposed to return is the same
   // as the device ID. So, maybe we call some device function to grab that and
   // return it?
-  return 0;
+
+  printf("get Requested subloc! Value is %i\n", chpl_nodeId);
+  return chpl_nodeId;
 }
 
 // TODO Rest of the functions are relatively boilerplate once we have everything
