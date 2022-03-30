@@ -2740,7 +2740,11 @@ void codegen() {
     //}
   }
 
-  codegenPartTwo();
+  // Clear up types
+  forv_Vec(TypeSymbol, ts, gTypeSymbols) {
+      ts->llvmTbaaTypeDescriptor = nullptr;
+  }
+      codegenPartTwo();
 }
 
 void makeBinary(void) {
