@@ -539,15 +539,18 @@ llvm::StoreInst* codegenStoreLLVM(llvm::Value* val,
       tbaa = valType->symbol->llvmTbaaAccessTag;
     }
   }
-  if (tbaa)
+  if (tbaa) {
     printf("ZA %p\n", tbaa);
     ret->setMetadata(llvm::LLVMContext::MD_tbaa, tbaa);
-  if (aliasScope)
+  }
+  if (aliasScope) {
     printf("ZB %p\n", aliasScope);
     ret->setMetadata(llvm::LLVMContext::MD_alias_scope, aliasScope);
-  if (noalias)
+  }
+  if (noalias) {
     printf("ZC %p\n", noalias);
     ret->setMetadata(llvm::LLVMContext::MD_noalias, noalias);
+  }
 
 
   if (isStoreOfLocalVar == false && !info->loopStack.empty()) {
