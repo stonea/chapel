@@ -2729,6 +2729,7 @@ void FnSymbol::codegenDef() {
       // is called.
 
       printf("node context = %p\n", &func->getContext());
+      printf("MDNode context = %p\n", func->getMetadata()->getContext());
       if( ! debug_info )
         problems = llvm::verifyFunction(*func, &llvm::errs());
       if( problems ) {
