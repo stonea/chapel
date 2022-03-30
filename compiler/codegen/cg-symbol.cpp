@@ -2729,7 +2729,15 @@ void FnSymbol::codegenDef() {
       // is called.
 
       printf("node context = %p\n", &func->getContext());
-      printf("MDNode context = %p\n", func->getMetadata()->getContext());
+
+      llvm::SmallVector<std::pair<unsigned, llvm::MDNode *>, 4> MDs;
+      func->getAllMetadata(MDs);
+      for (auto &MD : MDs) {
+        if (llvm::MDNode *N = MD.second) {
+          printf("MDNode context = %p\n", &N->getContext());
+        }
+      }
+
       if( ! debug_info )
         problems = llvm::verifyFunction(*func, &llvm::errs());
       if( problems ) {
