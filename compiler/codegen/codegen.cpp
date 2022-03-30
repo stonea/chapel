@@ -2742,7 +2742,16 @@ void codegen() {
 
   // Clear up types
   forv_Vec(TypeSymbol, ts, gTypeSymbols) {
+      ts->llvmType = nullptr;
       ts->llvmTbaaTypeDescriptor = nullptr;
+      ts->llvmTbaaAccessTag = nullptr;
+      ts->llvmConstTbaaAccessTag = nullptr;
+      ts->llvmTbaaAggTypeDescriptor = nullptr;
+      ts->llvmTbaaAggAccessTag = nullptr;
+      ts->llvmConstTbaaAggAccessTag = nullptr;
+      ts->llvmTbaaStructCopyNode = nullptr;
+      ts->llvmConstTbaaStructCopyNode = nullptr;
+      ts->llvmDIType = nullptr;
   }
       codegenPartTwo();
 }
