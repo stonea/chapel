@@ -536,22 +536,15 @@ llvm::StoreInst* codegenStoreLLVM(llvm::Value* val,
                surroundingStruct->symbol->llvmTbaaAggTypeDescriptor,
                fieldTbaaTypeDescriptor, fieldOffset);
     } else {
-      //printf("222");
       tbaa = valType->symbol->llvmTbaaAccessTag;
     }
   }
-  if (tbaa) {
-    //printf("ZA %p\n", tbaa);
+  if (tbaa)
     ret->setMetadata(llvm::LLVMContext::MD_tbaa, tbaa);
-  }
-  if (aliasScope) {
-    //printf("ZB %p\n", aliasScope);
+  if (aliasScope)
     ret->setMetadata(llvm::LLVMContext::MD_alias_scope, aliasScope);
-  }
-  if (noalias) {
-    //printf("ZC %p\n", noalias);
+  if (noalias)
     ret->setMetadata(llvm::LLVMContext::MD_noalias, noalias);
-  }
 
 
   if (isStoreOfLocalVar == false && !info->loopStack.empty()) {
@@ -563,7 +556,6 @@ llvm::StoreInst* codegenStoreLLVM(llvm::Value* val,
   if(addInvariantStart)
     codegenInvariantStart(val->getType(), ptr);
 
-  //printf("Generated LLVM Store instruction: %p\n", ret);
   return ret;
 }
 
@@ -647,8 +639,6 @@ llvm::LoadInst* codegenLoadLLVM(llvm::Value* ptr,
     ret->setMetadata(llvm::LLVMContext::MD_alias_scope, aliasScope);
   if (noalias)
     ret->setMetadata(llvm::LLVMContext::MD_noalias, noalias);
-
-  //printf("Create Load %p\n", ret);
   return ret;
 }
 

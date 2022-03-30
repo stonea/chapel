@@ -2519,7 +2519,6 @@ static void codegenPartTwo() {
     codegenMultiLocaleInteropWrappers();
   }
 
-  printf("A %p\n", gGenInfo->module);
   if (fLlvmCodegen) {
 #ifndef HAVE_LLVM
     USR_FATAL("This compiler was built without LLVM support");
@@ -2528,7 +2527,6 @@ static void codegenPartTwo() {
     runClang(NULL);
 #endif
   }
-  printf("B %p\n", gGenInfo->module);
 
   SET_LINENO(rootModule);
 
@@ -2632,7 +2630,6 @@ static void codegenPartTwo() {
 
   // This dumps the generated sources into the build directory.
   info->cfile = hdrfile.fptr;
-  printf("===== codegen header =======\n");
   codegen_header(cnames, types, functions, globals);
 
   // Prepare the LLVM IR dumper for code generation
@@ -2700,6 +2697,8 @@ static void codegenPartTwo() {
   {
     fprintf(stderr, "Statements emitted: %d\n", gStmtCount);
   }
+
+
 }
 
 void codegen() {
@@ -2719,7 +2718,6 @@ void codegen() {
     //if (pid == 0) {
       // child process
 
-
     gCodegenGPU = true;
       codegenPartTwo();
       makeBinary();
@@ -2738,21 +2736,22 @@ void codegen() {
         //clean_exit(status);
       //}
     //}
+
+    // Clear up types
+    forv_Vec(TypeSymbol, ts, gTypeSymbols) {
+        ts->llvmType = nullptr;
+        ts->llvmTbaaTypeDescriptor = nullptr;
+        ts->llvmTbaaAccessTag = nullptr;
+        ts->llvmConstTbaaAccessTag = nullptr;
+        ts->llvmTbaaAggTypeDescriptor = nullptr;
+        ts->llvmTbaaAggAccessTag = nullptr;
+        ts->llvmConstTbaaAggAccessTag = nullptr;
+        ts->llvmTbaaStructCopyNode = nullptr;
+        ts->llvmConstTbaaStructCopyNode = nullptr;
+        ts->llvmDIType = nullptr;
+      }
   }
 
-  // Clear up types
-  forv_Vec(TypeSymbol, ts, gTypeSymbols) {
-      ts->llvmType = nullptr;
-      ts->llvmTbaaTypeDescriptor = nullptr;
-      ts->llvmTbaaAccessTag = nullptr;
-      ts->llvmConstTbaaAccessTag = nullptr;
-      ts->llvmTbaaAggTypeDescriptor = nullptr;
-      ts->llvmTbaaAggAccessTag = nullptr;
-      ts->llvmConstTbaaAggAccessTag = nullptr;
-      ts->llvmTbaaStructCopyNode = nullptr;
-      ts->llvmConstTbaaStructCopyNode = nullptr;
-      ts->llvmDIType = nullptr;
-  }
       codegenPartTwo();
 }
 

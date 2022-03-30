@@ -1315,15 +1315,6 @@ class CCodeGenConsumer final : public ASTConsumer {
           info->clangInfo->Clang->getPreprocessorOpts(),
           info->clangInfo->codegenOptions,
           info->llvmContext);
-        Builder = CreateLLVMCodeGen(
-                *Diags,
-                LLVM_MODULE_NAME,
-                info->clangInfo->Clang->getHeaderSearchOpts(),
-                info->clangInfo->Clang->getPreprocessorOpts(),
-                info->clangInfo->codegenOptions,
-                info->llvmContext);
-
-        printf("Module context = %p\n", &info->llvmContext);
 
         INT_ASSERT(Builder);
         INT_ASSERT(!info->module);
@@ -1554,7 +1545,6 @@ static void deleteClang(ClangInfo* clangInfo){
   }
   delete clangInfo->Clang;
   clangInfo->Clang = NULL;
-
   delete clangInfo->cCodeGenAction;
   clangInfo->cCodeGenAction = NULL;
 }
@@ -2047,10 +2037,6 @@ static void setupModule()
 
   // Also setup some basic TBAA metadata nodes.
   info->mdBuilder = new llvm::MDBuilder(info->module->getContext());
-
-  printf("MDBUILDER ==== %p\n", info->mdBuilder);
-  printf("CONTEXT   ==== %p\n", &info->module->getContext());
-
   // Create the TBAA root node and unions node.
   info->tbaaRootNode = info->mdBuilder->createTBAARoot("Chapel types");
   info->tbaaUnionsNode =
@@ -2394,6 +2380,7 @@ void runClang(const char* just_parse_filename) {
     clangCXX = split[0];
   }
 
+
   // add -fPIC if CHPL_LIB_PIC indicates we should
   if (strcmp(CHPL_LIB_PIC, "pic") == 0) {
     clangCCArgs.push_back("-fPIC");
@@ -2595,6 +2582,7 @@ void runClang(const char* just_parse_filename) {
     clangOtherArgs.push_back("-include");
     clangOtherArgs.push_back(just_parse_filename);
   }
+
   if( printSystemCommands ) {
     if (parseOnly)
       printf("<internal clang parsing %s> ", just_parse_filename);
@@ -2622,6 +2610,7 @@ void runClang(const char* just_parse_filename) {
     // Should have already been initialized for us.
     INT_ASSERT(gGenInfo != NULL);
   }
+
   gGenInfo->lvt = std::make_unique<LayeredValueTable>();
 
 
@@ -2654,7 +2643,6 @@ void runClang(const char* just_parse_filename) {
     // CCodeGenAction is defined above. It traverses the C AST
     // and does the code generation.
     clangInfo->cCodeGenAction = new CCodeGenAction();
-    printf("C12.1 %p\n", gGenInfo->module);
     if (!clangInfo->Clang->ExecuteAction(*clangInfo->cCodeGenAction)) {
       if (parseOnly) {
         USR_FATAL("error running clang on extern block");
@@ -2662,7 +2650,6 @@ void runClang(const char* just_parse_filename) {
         USR_FATAL("error running clang during code generation");
       }
     }
-    printf("C13 %p\n", gGenInfo->module);
     if( ! parseOnly ) {
       // LLVM module should have been created by CCodeGenConsumer
       INT_ASSERT(gGenInfo->module);

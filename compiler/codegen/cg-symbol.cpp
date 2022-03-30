@@ -1391,8 +1391,6 @@ void TypeSymbol::codegenDef() {
 }
 
 void TypeSymbol::codegenMetadata() {
-  //assert(false);
-
 #ifdef HAVE_LLVM
   // Don't do anything if we've already visited this type,
   // or the type is void so we don't need metadata.
@@ -1519,9 +1517,6 @@ void TypeSymbol::codegenMetadata() {
       info->mdBuilder->createTBAAStructTagNode(llvmTbaaTypeDescriptor,
                                                llvmTbaaTypeDescriptor,
                                                /*Offset=*/0);
-
-   // printf("ZZZZZZ Created llvmTbaaAccessTag: %p\n", llvmTbaaAccessTag);
-
     llvmConstTbaaAccessTag =
       info->mdBuilder->createTBAAStructTagNode(llvmTbaaTypeDescriptor,
                                                llvmTbaaTypeDescriptor,
@@ -2732,26 +2727,6 @@ void FnSymbol::codegenDef() {
       // Debug info generation creates metadata nodes that won't be
       // finished until the whole codegen is complete and finalize
       // is called.
-
-      //printf("node context = %p\n", &func->getContext());
-      //print_llvm(func);
-     /* llvm::SmallVector<std::pair<unsigned, llvm::MDNode *>, 4> MDForInst;
-      for(llvm::Function::iterator BB = func->begin(), E = func->end(); BB!=E; ++BB) {
-        for(llvm::BasicBlock::iterator I = BB->begin(), E = BB->end(); I != E; ++I){
-          I->getAllMetadata(MDForInst);
-          for(unsigned i = 0, e = MDForInst.size(); i!=e; ++i){
-            llvm::MDNode* mdNode = MDForInst[i].second;
-            llvm::Instruction* instr = &(*I);
-            printf("Metadata context: %p  mdNode: %p  node: %p op: %s\n", &mdNode->getContext(), mdNode, instr, instr->getOpcodeName());
-
-            //printf("Printout is:");
-            //mdNode->print(llvm::dbgs(), NULL);
-            //I->print(llvm::dbgs(), NULL);
-          }
-          MDForInst.clear();
-        }
-      }*/
-
       if( ! debug_info )
         problems = llvm::verifyFunction(*func, &llvm::errs());
       if( problems ) {
