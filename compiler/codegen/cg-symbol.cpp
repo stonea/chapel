@@ -2730,6 +2730,7 @@ void FnSymbol::codegenDef() {
 
       printf("node context = %p\n", &func->getContext());
 
+      print_llvm(func);
       llvm::SmallVector<std::pair<unsigned, llvm::MDNode *>, 4> MDForInst;
       for(llvm::Function::iterator BB = func->begin(), E = func->end(); BB!=E; ++BB) {
         for(llvm::BasicBlock::iterator I = BB->begin(), E = BB->end(); I != E; ++I){
