@@ -647,6 +647,8 @@ llvm::LoadInst* codegenLoadLLVM(llvm::Value* ptr,
     ret->setMetadata(llvm::LLVMContext::MD_alias_scope, aliasScope);
   if (noalias)
     ret->setMetadata(llvm::LLVMContext::MD_noalias, noalias);
+
+  printf("Create Load %p\n", ret);
   return ret;
 }
 
