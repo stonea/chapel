@@ -563,6 +563,7 @@ llvm::StoreInst* codegenStoreLLVM(llvm::Value* val,
   if(addInvariantStart)
     codegenInvariantStart(val->getType(), ptr);
 
+  printf("Generated LLVM Store instruction: %p\n", ret);
   return ret;
 }
 
