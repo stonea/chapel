@@ -1517,6 +1517,9 @@ void TypeSymbol::codegenMetadata() {
       info->mdBuilder->createTBAAStructTagNode(llvmTbaaTypeDescriptor,
                                                llvmTbaaTypeDescriptor,
                                                /*Offset=*/0);
+
+    printf("ZZZZZZ Created llvmTbaaAccessTag: %p\n", llvmTbaaAccessTag);
+
     llvmConstTbaaAccessTag =
       info->mdBuilder->createTBAAStructTagNode(llvmTbaaTypeDescriptor,
                                                llvmTbaaTypeDescriptor,
