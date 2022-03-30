@@ -2734,24 +2734,12 @@ void FnSymbol::codegenDef() {
       llvm::SmallVector<std::pair<unsigned, llvm::MDNode *>, 4> MDForInst;
       for(llvm::Function::iterator BB = func->begin(), E = func->end(); BB!=E; ++BB) {
         for(llvm::BasicBlock::iterator I = BB->begin(), E = BB->end(); I != E; ++I){
-          //get the Metadata declared in the llvm intrinsic functions such as llvm.dbg.declare()
-          /*if(llvm::CallInst* CI = dyn_cast<CallInst>(I)){
-            if(Function *F = CI->getCalledFunction()){
-              if(F->getName().startswith("llvm.")){
-                for(unsigned i = 0, e = I->getNumOperands(); i!=e; ++i){
-                  if(MDNode *N = dyn_cast_or_null<MDNode>(I->getOperand(i))){
-                    createMetadataSlot(N);
-                  }
-                }
-              }
-            }
-          }*/
-
-          //Get all the mdnodes attached to each instruction
           I->getAllMetadata(MDForInst);
           for(unsigned i = 0, e = MDForInst.size(); i!=e; ++i){
             llvm::MDNode* mdNode = MDForInst[i].second;
             printf("Metadata context: %p\n", &mdNode->getContext());
+            printf("Node is:");
+            print_llvm(mdNode);
           }
           MDForInst.clear();
         }
