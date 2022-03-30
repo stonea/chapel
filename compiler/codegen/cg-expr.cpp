@@ -532,10 +532,12 @@ llvm::StoreInst* codegenStoreLLVM(llvm::Value* val,
       (isClass(valType) || !valType->symbol->llvmTbaaStructCopyNode)) {
     if (surroundingStruct) {
       INT_ASSERT(fieldTbaaTypeDescriptor != info->tbaaRootNode);
+      printf("111");
       tbaa = info->mdBuilder->createTBAAStructTagNode(
                surroundingStruct->symbol->llvmTbaaAggTypeDescriptor,
                fieldTbaaTypeDescriptor, fieldOffset);
     } else {
+      printf("222");
       tbaa = valType->symbol->llvmTbaaAccessTag;
     }
   }
