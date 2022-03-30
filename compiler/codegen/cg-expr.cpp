@@ -540,10 +540,13 @@ llvm::StoreInst* codegenStoreLLVM(llvm::Value* val,
     }
   }
   if (tbaa)
+    printf("ZA %p\n", tbaa);
     ret->setMetadata(llvm::LLVMContext::MD_tbaa, tbaa);
   if (aliasScope)
+    printf("ZB %p\n", aliasScope);
     ret->setMetadata(llvm::LLVMContext::MD_alias_scope, aliasScope);
   if (noalias)
+    printf("ZC %p\n", noalias);
     ret->setMetadata(llvm::LLVMContext::MD_noalias, noalias);
 
 
