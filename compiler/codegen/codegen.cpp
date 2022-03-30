@@ -2632,6 +2632,7 @@ static void codegenPartTwo() {
 
   // This dumps the generated sources into the build directory.
   info->cfile = hdrfile.fptr;
+  printf("===== codegen header =======")
   codegen_header(cnames, types, functions, globals);
 
   // Prepare the LLVM IR dumper for code generation

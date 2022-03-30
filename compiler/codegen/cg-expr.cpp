@@ -541,15 +541,15 @@ llvm::StoreInst* codegenStoreLLVM(llvm::Value* val,
     }
   }
   if (tbaa) {
-    printf("ZA %p\n", tbaa);
+    //printf("ZA %p\n", tbaa);
     ret->setMetadata(llvm::LLVMContext::MD_tbaa, tbaa);
   }
   if (aliasScope) {
-    printf("ZB %p\n", aliasScope);
+    //printf("ZB %p\n", aliasScope);
     ret->setMetadata(llvm::LLVMContext::MD_alias_scope, aliasScope);
   }
   if (noalias) {
-    printf("ZC %p\n", noalias);
+    //printf("ZC %p\n", noalias);
     ret->setMetadata(llvm::LLVMContext::MD_noalias, noalias);
   }
 
@@ -563,7 +563,7 @@ llvm::StoreInst* codegenStoreLLVM(llvm::Value* val,
   if(addInvariantStart)
     codegenInvariantStart(val->getType(), ptr);
 
-  printf("Generated LLVM Store instruction: %p\n", ret);
+  //printf("Generated LLVM Store instruction: %p\n", ret);
   return ret;
 }
 
@@ -648,7 +648,7 @@ llvm::LoadInst* codegenLoadLLVM(llvm::Value* ptr,
   if (noalias)
     ret->setMetadata(llvm::LLVMContext::MD_noalias, noalias);
 
-  printf("Create Load %p\n", ret);
+  //printf("Create Load %p\n", ret);
   return ret;
 }
 
