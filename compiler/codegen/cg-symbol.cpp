@@ -2750,7 +2750,7 @@ void FnSymbol::codegenDef() {
           I->getAllMetadata(MDForInst);
           for(unsigned i = 0, e = MDForInst.size(); i!=e; ++i){
             llvm::MDNode* mdNode = MDForInst[i].second;
-            printf("Metadata context: %p\n", mdNode->getContext());
+            printf("Metadata context: %p\n", &mdNode->getContext());
           }
           MDForInst.clear();
         }
