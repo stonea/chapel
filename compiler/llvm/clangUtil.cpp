@@ -2049,7 +2049,7 @@ static void setupModule()
   info->mdBuilder = new llvm::MDBuilder(info->module->getContext());
 
   printf("MDBUILDER ==== %p\n", info->mdBuilder);
-
+  printf("CONTEXT   ==== %p\n", &info->module->getContext());
 
   // Create the TBAA root node and unions node.
   info->tbaaRootNode = info->mdBuilder->createTBAARoot("Chapel types");
