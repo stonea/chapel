@@ -1323,7 +1323,7 @@ class CCodeGenConsumer final : public ASTConsumer {
                 info->clangInfo->codegenOptions,
                 info->llvmContext);
 
-        printf("Module context = %p\n", info->llvmContext);
+        printf("Module context = %p\n", &info->llvmContext);
 
         INT_ASSERT(Builder);
         INT_ASSERT(!info->module);
