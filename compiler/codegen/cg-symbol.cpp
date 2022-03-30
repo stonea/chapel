@@ -1391,7 +1391,7 @@ void TypeSymbol::codegenDef() {
 }
 
 void TypeSymbol::codegenMetadata() {
-  assert(false);
+  //assert(false);
 
 #ifdef HAVE_LLVM
   // Don't do anything if we've already visited this type,
