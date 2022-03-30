@@ -2728,8 +2728,8 @@ void FnSymbol::codegenDef() {
       // finished until the whole codegen is complete and finalize
       // is called.
 
-      /*printf("node context = %p\n", &func->getContext());
-      print_llvm(func);
+      //printf("node context = %p\n", &func->getContext());
+      //print_llvm(func);
       llvm::SmallVector<std::pair<unsigned, llvm::MDNode *>, 4> MDForInst;
       for(llvm::Function::iterator BB = func->begin(), E = func->end(); BB!=E; ++BB) {
         for(llvm::BasicBlock::iterator I = BB->begin(), E = BB->end(); I != E; ++I){
@@ -2743,7 +2743,7 @@ void FnSymbol::codegenDef() {
           }
           MDForInst.clear();
         }
-      }*/
+      }
 
       if( ! debug_info )
         problems = llvm::verifyFunction(*func, &llvm::errs());
