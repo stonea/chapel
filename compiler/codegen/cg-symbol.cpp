@@ -1520,7 +1520,7 @@ void TypeSymbol::codegenMetadata() {
                                                llvmTbaaTypeDescriptor,
                                                /*Offset=*/0);
 
-    printf("ZZZZZZ Created llvmTbaaAccessTag: %p\n", llvmTbaaAccessTag);
+   // printf("ZZZZZZ Created llvmTbaaAccessTag: %p\n", llvmTbaaAccessTag);
 
     llvmConstTbaaAccessTag =
       info->mdBuilder->createTBAAStructTagNode(llvmTbaaTypeDescriptor,
@@ -2735,7 +2735,7 @@ void FnSymbol::codegenDef() {
 
       //printf("node context = %p\n", &func->getContext());
       //print_llvm(func);
-      llvm::SmallVector<std::pair<unsigned, llvm::MDNode *>, 4> MDForInst;
+     /* llvm::SmallVector<std::pair<unsigned, llvm::MDNode *>, 4> MDForInst;
       for(llvm::Function::iterator BB = func->begin(), E = func->end(); BB!=E; ++BB) {
         for(llvm::BasicBlock::iterator I = BB->begin(), E = BB->end(); I != E; ++I){
           I->getAllMetadata(MDForInst);
@@ -2750,7 +2750,7 @@ void FnSymbol::codegenDef() {
           }
           MDForInst.clear();
         }
-      }
+      }*/
 
       if( ! debug_info )
         problems = llvm::verifyFunction(*func, &llvm::errs());

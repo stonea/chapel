@@ -536,7 +536,7 @@ llvm::StoreInst* codegenStoreLLVM(llvm::Value* val,
                surroundingStruct->symbol->llvmTbaaAggTypeDescriptor,
                fieldTbaaTypeDescriptor, fieldOffset);
     } else {
-      printf("222");
+      //printf("222");
       tbaa = valType->symbol->llvmTbaaAccessTag;
     }
   }
