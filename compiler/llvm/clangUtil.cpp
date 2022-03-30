@@ -1315,7 +1315,6 @@ class CCodeGenConsumer final : public ASTConsumer {
           info->clangInfo->Clang->getPreprocessorOpts(),
           info->clangInfo->codegenOptions,
           info->llvmContext);
-        printf("Builder A = %p\n", Builder);
         Builder = CreateLLVMCodeGen(
                 *Diags,
                 LLVM_MODULE_NAME,
@@ -1323,7 +1322,8 @@ class CCodeGenConsumer final : public ASTConsumer {
                 info->clangInfo->Clang->getPreprocessorOpts(),
                 info->clangInfo->codegenOptions,
                 info->llvmContext);
-        printf("Builder B = %p\n", Builder);
+
+        printf("Module context = %p\n", info->llvmContext);
 
         INT_ASSERT(Builder);
         INT_ASSERT(!info->module);

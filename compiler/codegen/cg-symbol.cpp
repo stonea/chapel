@@ -2727,6 +2727,8 @@ void FnSymbol::codegenDef() {
       // Debug info generation creates metadata nodes that won't be
       // finished until the whole codegen is complete and finalize
       // is called.
+
+      printf("node context = %p\n", &func->getContext());
       if( ! debug_info )
         problems = llvm::verifyFunction(*func, &llvm::errs());
       if( problems ) {
