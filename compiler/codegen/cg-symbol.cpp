@@ -2734,7 +2734,7 @@ void FnSymbol::codegenDef() {
       func->getAllMetadata(MDs);
       for (auto &MD : MDs) {
         if (llvm::MDNode *N = MD.second) {
-          printf("MDNode context = %p\n", &N->getContext());
+          printf("  MDNode context = %p\n", &N->getContext());
         }
       }
 
