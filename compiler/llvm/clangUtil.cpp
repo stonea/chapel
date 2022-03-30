@@ -2047,6 +2047,10 @@ static void setupModule()
 
   // Also setup some basic TBAA metadata nodes.
   info->mdBuilder = new llvm::MDBuilder(info->module->getContext());
+
+  printf("MDBUILDER ==== %p\n", info->mdBuilder);
+
+
   // Create the TBAA root node and unions node.
   info->tbaaRootNode = info->mdBuilder->createTBAARoot("Chapel types");
   info->tbaaUnionsNode =
