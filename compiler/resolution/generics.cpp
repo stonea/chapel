@@ -215,7 +215,15 @@ checkInstantiationLimit(FnSymbol* fn) {
                 " the instantiation limit from %d", instantiation_limit);
       USR_STOP();
     }
-    // printf("Incrementing instantiation count for %s (%p)\n", fn->name, fn);
+    if(!strcmp(fn->name, "isArrayValue")) {
+      static int count = 0;
+      count++;
+      if(count >= 3) {
+        int z = 0;
+        z = z + 1;
+      }
+      printf("Incrementing instantiation count for %s (%p)\n", fn->name, fn);
+    }
     instantiationLimitMap.put(fn, instantiationLimitMap.get(fn)+1);
   }
 }
@@ -234,7 +242,9 @@ void popInstantiationLimit(FnSymbol* fn) {
   }
 
   if (trackInstantiationsForFn(fn)) {
-    // printf("Decrementing instantiation count for %s (%p)\n", fn->name, fn);
+    if(!strcmp(fn->name, "isArrayValue")) {
+      printf("Decrementing instantiation count for %s (%p)\n", fn->name, fn);
+    }
     int count = instantiationLimitMap.get(fn);
     if (count > 0) {
       instantiationLimitMap.put(fn, instantiationLimitMap.get(fn)-1);
