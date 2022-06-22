@@ -1,4 +1,4 @@
-
+use Sort;
 use LinkedLists;
 
 config var filename="graph.dat";
@@ -580,7 +580,7 @@ proc readGraph(filename) {
   var N: domain(1) = {1..ND.size};
   var E: domain(1) = {1..ED.size};
 
-  var X: [N] unmanaged Node? = NameMap.sorted();
+  var X: [N] unmanaged Node? = sorted(NameMap);
   var Y: [E] unmanaged Edge? = EdgeMap.sorted();
 
   [ i in N ] X(i)!.id = i;

@@ -550,14 +550,20 @@ proc isSorted(Data: [?Dom] ?eltType, comparator:?rec=defaultComparator)
 
  */
 iter sorted(x, comparator:?rec=defaultComparator) {
-  if Reflection.canResolveMethod(x._value, "dsiSorted", comparator) {
+  if (isClassValue(x) || isRecordValue(x)) &&
+    Reflection.hasField(x.type, "_value") &&
+    Reflection.canResolveMethod(x._value, "dsiSorted", comparator)
+  {
     for i in x._value.dsiSorted(comparator) {
       yield i;
     }
-  } else if !isArrayValue(x) then {
-    compilerError("Sort.sorted called on non-iterable");
+    return;
+  } 
+
+  var y = x; // need to do before isArrayValue test in case x is an iterable
+  if !isArrayValue(y) then {
+    compilerError("Sort.sorted called on non-iterable type is: " + x.type : string);
   } else {
-    var y = x;
     sort(y, comparator=comparator);
     for i in y do
       yield i;
