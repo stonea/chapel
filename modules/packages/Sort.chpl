@@ -550,13 +550,18 @@ proc isSorted(Data: [?Dom] ?eltType, comparator:?rec=defaultComparator)
 
  */
 iter sorted(x, comparator:?rec=defaultComparator) {
-  var y = x;
-  if !isArrayValue(y) then
+  if Reflection.canResolveMethod(x._value, "dsiSorted", comparator) {
+    for i in x._value.dsiSorted(comparator) {
+      yield i;
+    }
+  } else if !isArrayValue(x) then {
     compilerError("Sort.sorted called on non-iterable");
-
-  sort(y, comparator=comparator);
-  for i in y do
-    yield i;
+  } else {
+    var y = x;
+    sort(y, comparator=comparator);
+    for i in y do
+      yield i;
+  }
 }
 
 pragma "no doc"

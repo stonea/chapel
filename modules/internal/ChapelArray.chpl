@@ -1590,7 +1590,8 @@ module ChapelArray {
     }
 
     /* Yield the array elements in sorted order. */
-    /*iter sorted(comparator:?t = chpl_defaultComparator()) {
+    deprecated "sorted is deprecated"
+    iter sorted(comparator:?t = chpl_defaultComparator()) {
       if Reflection.canResolveMethod(_value, "dsiSorted", comparator) {
         for i in _value.dsiSorted(comparator) {
           yield i;
@@ -1604,7 +1605,7 @@ module ChapelArray {
         for ind in copy do
           yield ind;
       }
-    }*/
+    }
 
     pragma "no doc"
     proc displayRepresentation() { _value.dsiDisplayRepresentation(); }
