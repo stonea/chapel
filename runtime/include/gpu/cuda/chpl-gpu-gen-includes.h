@@ -70,6 +70,20 @@ __device__ static inline c_nodeid_t get_chpl_nodeID(void) {
   return 0;
 }
 
+__device__ static inline void chpl_gpu_signal_cpu(void* ptr) {
+  /*printf("*************** In chpl_gpu_signal_cpu with ptr = %p\n", ptr);
+  *(int*)ptr = 42;
+  while(*(int*)ptr != 52) {}
+  printf("*************** Signal moved to 52\n");*/
+}
+
+__device__ static inline
+void chpl_gen_comm_get(void *addr, c_nodeid_t node, void* raddr,
+                           size_t size, int32_t commID, int ln, int32_t fn)
+{
+  printf("*************** in chpl_gen_comm_get\n");
+}
+
 #endif // HAS_GPU_LOCALE
 
 #endif // _CHPL_GPU_GEN_INCLUDES_H

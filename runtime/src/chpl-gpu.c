@@ -63,6 +63,15 @@ static void chpl_gpu_cuda_check(int err, const char* file, int line) {
 
 CUcontext *chpl_gpu_primary_ctx;
 
+int* deviceCommPtr = NULL;
+static volatile int pollingRunning;
+static volatile int pollingQuit;
+static bool pollingStarted = false;
+
+static void checkDeviceSignal(void);
+static void polling(void* x);
+static void chpl_gpu_start_polling(void);
+
 void chpl_gpu_init() {
   int         num_devices;
 
@@ -83,6 +92,52 @@ void chpl_gpu_init() {
     CUDA_CALL(cuDevicePrimaryCtxRetain(&context, device));
 
     chpl_gpu_primary_ctx[i] = context;
+  }
+
+  if (!__atomic_test_and_set(&pollingStarted, 0)) {
+    // Allocate and initialize an integer in unified memory that can be used
+    // as a flag to communicate from the device to the CPU
+    CUDA_CALL(cudaMallocManaged((void**)&deviceCommPtr, sizeof(int), 1));
+    *deviceCommPtr = 0;
+
+    // Create a polling task that watches the location in unified memory.
+    chpl_gpu_start_polling();
+  }
+}
+
+static void chpl_gpu_start_polling(void) {
+  pollingRunning = 0;
+  pollingQuit = 0;
+
+  if (chpl_task_createCommTask(polling, NULL)) {
+    chpl_internal_error("unable to start polling task for gpu");
+  }
+
+  while (!pollingRunning) {
+    sched_yield();
+  }
+}
+
+static void polling(void* x) {
+  pollingRunning = 1;
+  CHPL_GPU_DEBUG("Polling started\n");
+  while (!pollingQuit) {
+    checkDeviceSignal();
+    chpl_task_yield();
+  }
+
+  pollingRunning = 0;
+}
+
+static void checkDeviceSignal() {
+  if (*deviceCommPtr == 42) {
+    CHPL_GPU_DEBUG("Got signal from GPU");
+    *deviceCommPtr = 52;
+  } else if (*deviceCommPtr == 52) {
+  } else if (*deviceCommPtr != 0) {
+    // This was changed by the accelerator, do whatever task it is requesting
+    // As a first step, lets just assume it asked for a halt.
+    chpl_error("gpu asked us to halt", -1, -1);
   }
 }
 
@@ -189,8 +244,9 @@ static void chpl_gpu_launch_kernel_help(int ln,
   int i;
   void* function = chpl_gpu_getKernel(fatbinData, name);
   // TODO: this should use chpl_mem_alloc
-  void*** kernel_params = chpl_malloc(nargs*sizeof(void**));
-
+  void*** kernel_params = chpl_malloc((nargs+1)*sizeof(void**));
+  //void*** kernel_params = chpl_malloc(nargs*sizeof(void**));
+  
   assert(function);
   assert(kernel_params);
 
@@ -220,6 +276,10 @@ static void chpl_gpu_launch_kernel_help(int ln,
     }
   }
 
+  void **deviceCommPtrPtr = (void**)(&deviceCommPtr);
+  kernel_params[nargs] = deviceCommPtrPtr;
+  CHPL_GPU_DEBUG("deviceCommPtrLoc = %p\n", kernel_params[nargs]);
+
   chpl_gpu_diags_verbose_launch(ln, fn, chpl_task_getRequestedSubloc());
   chpl_gpu_diags_incr(kernel_launch);
 
@@ -238,6 +298,7 @@ static void chpl_gpu_launch_kernel_help(int ln,
   CUDA_CALL(cudaDeviceSynchronize());
 
   CHPL_GPU_DEBUG("Synchronization complete %s\n", name);
+  CHPL_GPU_DEBUG("deviceCommPtr = %i\n", *deviceCommPtr);
 
   // TODO: this should use chpl_mem_free
   chpl_free(kernel_params);
@@ -268,6 +329,7 @@ void chpl_gpu_launch_kernel(int ln, int32_t fn,
                             int grd_dim_x, int grd_dim_y, int grd_dim_z,
                             int blk_dim_x, int blk_dim_y, int blk_dim_z,
                             int nargs, ...) {
+  CHPL_GPU_DEBUG("GPU LAUNCH KERNEL WITH nargs = %i", nargs);
   va_list args;
   va_start(args, nargs);
   chpl_gpu_launch_kernel_help(ln, fn,
@@ -281,6 +343,7 @@ void chpl_gpu_launch_kernel(int ln, int32_t fn,
 void chpl_gpu_launch_kernel_flat(int ln, int32_t fn,
                                  const char* fatbinData, const char* name,
                                  int num_threads, int blk_dim, int nargs, ...) {
+  CHPL_GPU_DEBUG("AAA");
   int grd_dim = (num_threads+blk_dim-1)/blk_dim;
 
   va_list args;

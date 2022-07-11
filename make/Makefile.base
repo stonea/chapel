@@ -235,6 +235,8 @@ printplatform:
 #
 print-%: ; @echo "$*" is "$($*)"
 printQ-%: ; @echo "$($*)"
+#$(foreach v, $(.VARIABLES), $(info $(v) = $($(v))))
+
 
 
 # OBJ_SUBDIR is used in compiler/

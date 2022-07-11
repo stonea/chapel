@@ -59,6 +59,7 @@
 #include "resolution.h"
 #include "wellknown.h"
 #include "WhileDoStmt.h"
+#include "view.h"
 
 #include "global-ast-vecs.h"
 
@@ -2789,6 +2790,10 @@ void FnSymbol::codegenDef() {
         }
     }
   }
+
+/*  if(!strcmp(name, "on_fn")) {
+    nprint_view(this);
+  }*/
 
   body->codegen();
   flushStatements();

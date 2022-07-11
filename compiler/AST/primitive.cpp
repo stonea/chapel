@@ -868,6 +868,8 @@ initPrimitive() {
   // synchronize threads in a GPU kernel (equivalent to CUDA __syncThreads)
   prim_def(PRIM_GPU_SYNC_THREADS, "gpu syncThreads", returnInfoVoid, true);
 
+  prim_def(PRIM_GPU_SIGNAL_CPU, "gpu signal cpu", returnInfoVoid, true);
+
   // task primitives
   // get serial state
   prim_def(PRIM_GET_SERIAL, "task_get_serial", returnInfoBool);

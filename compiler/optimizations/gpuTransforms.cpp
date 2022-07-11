@@ -219,9 +219,9 @@ bool GpuizableLoop::shouldOutlineLoopHelp(BlockStmt* blk,
       // only primitives that are fast and local are allowed for now
       bool inLocal = inLocalBlock(call);
       int is = classifyPrimitive(call, inLocal);
-      if ((is != FAST_AND_LOCAL)) {
-        return false;
-      }
+      //if ((is != FAST_AND_LOCAL)) {
+      //  return false;
+      //}
     } else if (call->isResolved()) {
       if (!allowFnCalls)
         return false;
@@ -328,7 +328,7 @@ class GpuKernel {
 
   private:
   void buildStubOutlinedFunction(DefExpr* insertionPoint);
-  void populateBody(CForLoop *loop, FnSymbol *outlinedFunction);
+  void populateBodyAndAddArguments(CForLoop *loop, FnSymbol *outlinedFunction);
   void normalizeOutlinedFunction();
   void finalize();
 
@@ -343,7 +343,7 @@ GpuKernel::GpuKernel(const GpuizableLoop &gpuLoop, DefExpr* insertionPoint)
   : gpuLoop(gpuLoop)
 {
   buildStubOutlinedFunction(insertionPoint);
-  populateBody(gpuLoop.loop(), fn_);
+  populateBodyAndAddArguments(gpuLoop.loop(), fn_);
   normalizeOutlinedFunction();
   finalize();
 }
@@ -351,7 +351,7 @@ GpuKernel::GpuKernel(const GpuizableLoop &gpuLoop, DefExpr* insertionPoint)
 void GpuKernel::buildStubOutlinedFunction(DefExpr* insertionPoint) {
   fn_ = new FnSymbol("chpl_gpu_kernel");
 
-  fn_->body->blockInfoSet(new CallExpr(PRIM_BLOCK_LOCAL));
+  //fn_->body->blockInfoSet(new CallExpr(PRIM_BLOCK_LOCAL));
 
   fn_->addFlag(FLAG_RESOLVED);
   fn_->addFlag(FLAG_ALWAYS_RESOLVE);
@@ -463,7 +463,7 @@ void GpuKernel::generateEarlyReturn() {
   fn_->insertAtTail(new CondStmt(new SymExpr(isOOB), thenBlock));
 }
 
-void GpuKernel::populateBody(CForLoop *loop, FnSymbol *outlinedFunction) {
+void GpuKernel::populateBodyAndAddArguments(CForLoop *loop, FnSymbol *outlinedFunction) {
   std::set<Symbol*> handledSymbols;
   for_alist(node, loop->body) {
     bool copyNode = true;
@@ -544,9 +544,21 @@ void GpuKernel::populateBody(CForLoop *loop, FnSymbol *outlinedFunction) {
       }
     }
 
+    //bool isFoo = (!strcmp(loop->parentSymbol->astloc.filename(), "foo.chpl"));
     if (copyNode) {
       outlinedFunction->insertAtTail(node->copy());
     }
+  }
+
+  ArgSymbol* newFormal = new ArgSymbol(INTENT_IN, "deviceCommPtr", dtCVoidPtr);
+  fn_->insertFormalAtTail(newFormal);
+
+  if(!strcmp(loop->parentSymbol->astloc.filename(), "foo.chpl")) {
+    CallExpr *call = new CallExpr(PRIM_GPU_SIGNAL_CPU, newFormal);
+    //CallExpr *call = new CallExpr(PRIM_GPU_SIGNAL_CPU, new_IntSymbol(42, INT_SIZE_32));
+    outlinedFunction->insertAtTail(call);
+    int z = 0;
+    z = z + 1;
   }
 
   update_symbols(outlinedFunction->body, &copyMap_);

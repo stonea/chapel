@@ -5010,6 +5010,10 @@ DEFINE_PRIM(GPU_SYNC_THREADS) {
 #endif
 }
 
+DEFINE_PRIM(GPU_SIGNAL_CPU) {
+  ret = codegenCallExpr("chpl_gpu_signal_cpu", call->get(1));
+}
+
 DEFINE_PRIM(GET_REQUESTED_SUBLOC) { ret = codegenCallExpr("chpl_task_getRequestedSubloc"); }
 
 static void codegenPutGet(CallExpr* call, GenRet &ret) {
@@ -5883,6 +5887,11 @@ GenRet CallExpr::codegenPrimitive() {
 
 GenRet CallExpr::codegenPrimMove() {
   GenRet ret;
+
+  if(this->id == 1947320) {
+    int z = 0;
+    z = z + 1;
+  }
 
   const bool LHSRef = get(1)->isRef() || get(1)->isWideRef();
   const bool RHSRef = get(2)->isRef() || get(2)->isWideRef();

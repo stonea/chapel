@@ -150,6 +150,7 @@ PRIMITIVE_G(GPU_GRIDDIM_Y, "gpu gridDim y")
 PRIMITIVE_G(GPU_GRIDDIM_Z, "gpu gridDim z")
 PRIMITIVE_G(GPU_ALLOC_SHARED, "gpu allocShared")
 PRIMITIVE_G(GPU_SYNC_THREADS, "gpu syncThreads")
+PRIMITIVE_G(GPU_SIGNAL_CPU, "gpu signal cpu")
 
 PRIMITIVE_G(GET_SERIAL, "task_get_serial")
 PRIMITIVE_G(SET_SERIAL, "task_set_serial")
