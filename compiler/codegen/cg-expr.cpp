@@ -5010,6 +5010,10 @@ DEFINE_PRIM(GPU_SYNC_THREADS) {
 #endif
 }
 
+DEFINE_PRIM(GPU_SIGNAL_CPU) {
+  ret = codegenCallExpr("chpl_gpu_signal_cpu", call->get(1));
+}
+
 DEFINE_PRIM(GET_REQUESTED_SUBLOC) { ret = codegenCallExpr("chpl_task_getRequestedSubloc"); }
 
 static void codegenPutGet(CallExpr* call, GenRet &ret) {

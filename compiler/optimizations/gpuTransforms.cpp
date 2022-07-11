@@ -340,7 +340,7 @@ class GpuKernel {
 
   private:
   void buildStubOutlinedFunction(DefExpr* insertionPoint);
-  void populateBody(CForLoop *loop, FnSymbol *outlinedFunction);
+  void populateBodyAndAddArguments(CForLoop *loop, FnSymbol *outlinedFunction);
   void normalizeOutlinedFunction();
   void finalize();
 
@@ -355,7 +355,7 @@ GpuKernel::GpuKernel(const GpuizableLoop &gpuLoop, DefExpr* insertionPoint)
   : gpuLoop(gpuLoop)
 {
   buildStubOutlinedFunction(insertionPoint);
-  populateBody(gpuLoop.loop(), fn_);
+  populateBodyAndAddArguments(gpuLoop.loop(), fn_);
   normalizeOutlinedFunction();
   finalize();
 }
@@ -475,7 +475,7 @@ void GpuKernel::generateEarlyReturn() {
   fn_->insertAtTail(new CondStmt(new SymExpr(isOOB), thenBlock));
 }
 
-void GpuKernel::populateBody(CForLoop *loop, FnSymbol *outlinedFunction) {
+void GpuKernel::populateBodyAndAddArguments(CForLoop *loop, FnSymbol *outlinedFunction) {
   std::set<Symbol*> handledSymbols;
   for_alist(node, loop->body) {
     bool copyNode = true;
@@ -561,6 +561,16 @@ void GpuKernel::populateBody(CForLoop *loop, FnSymbol *outlinedFunction) {
     if (copyNode) {
       outlinedFunction->insertAtTail(node->copy());
     }
+  }
+
+  // Add argument to kernel that can be used to communicate with CPU
+  ArgSymbol* newFormal = new ArgSymbol(INTENT_IN, "deviceCommPtr", dtCVoidPtr);
+  fn_->insertFormalAtTail(newFormal);
+
+  // For now hard code it so kernel from foo.chpl to signal the CPU
+  if(!strcmp(loop->parentSymbol->astloc.filename(), "foo.chpl")) {
+    CallExpr *call = new CallExpr(PRIM_GPU_SIGNAL_CPU, newFormal);
+    outlinedFunction->insertAtTail(call);
   }
 
   update_symbols(outlinedFunction->body, &copyMap_);
