@@ -2786,6 +2786,10 @@ GenRet codegenCallExprWithArgs(const char* fnName,
   } else {
 #ifdef HAVE_LLVM
     fn.val = getFunctionLLVM(fnName);
+    std::cout << "try: " << fnName << std::endl;
+    if(!fn.val) {
+      std::cout << "  NOT FOUND!" << std::endl;
+    }
     INT_ASSERT(fn.val);
     return codegenCallExprWithArgs(fn, args, fnName,
                                    fnSym, FD, defaultToValues);

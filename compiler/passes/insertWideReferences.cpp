@@ -2565,4 +2565,5 @@ insertWideReferences(void) {
   //quiet unused function warning
   printCauses(NULL);
 
+  gpuTransforms();
 }
