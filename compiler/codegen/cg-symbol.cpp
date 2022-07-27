@@ -2257,11 +2257,6 @@ GenRet FnSymbol::codegenCast(GenRet fnPtr) {
 void FnSymbol::codegenPrototype() {
   GenInfo *info = gGenInfo;
 
-  if(id == 1948017) {
-    int z = 0;
-    z = z + 1;
-  }
-
   if (hasFlag(FLAG_EXTERN) && !hasFlag(FLAG_GENERATE_SIGNATURE)) return;
   if (hasFlag(FLAG_NO_CODEGEN))   return;
   if (gCodegenGPU == true) {

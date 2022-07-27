@@ -81,11 +81,6 @@ FnSymbol::FnSymbol(const char* initName)
   gFnSymbols.add(this);
 
   formals.parent = this;
-
-  if(id == 1948017) {
-    int z = 0;
-    z = z + 1;
-  }
 }
 
 FnSymbol::~FnSymbol() {

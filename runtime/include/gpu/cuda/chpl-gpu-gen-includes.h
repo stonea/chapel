@@ -72,13 +72,15 @@ __device__ static inline c_nodeid_t get_chpl_nodeID(void) {
 
 __device__ static inline
 c_nodeid_t chpl_rt_nodeFromLocaleID(chpl_localeID_t loc) {
+  printf("chpl_rt_nodeFromLocaleID: %i %i\n", loc.node, loc.subloc);
   return loc.node;
 }
 
 __device__ static inline void chpl_gen_comm_get(void *addr, c_nodeid_t node, void* raddr,
                        size_t size, int32_t commID, int ln, int32_t fn)
 {
-  printf("Whoohoo got to device chpl_gen_comm_get!");
+  printf("addr = %p, raddr = %p, Node = %d\n", addr, raddr, node);
+  printf("Whoohoo got to device chpl_gen_comm_get!\n");
 }
 
 /*__device__ static inline c_nodeid_t get_chpl_nodeID(void) {

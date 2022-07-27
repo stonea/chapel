@@ -2224,12 +2224,21 @@ static bool
 shouldChangeArgumentTypeToRef(ArgSymbol* arg) {
   FnSymbol* fn = toFnSymbol(arg->defPoint->parentSymbol);
 
-  bool shouldPassRef = (arg->intent & INTENT_FLAG_REF) ||
+  if(arg->id == 2123272) {
+    int z = 0;
+    z = z + 1;
+  }
+
+  bool isWidePointerPassedToGpuKernel = fn->hasFlag(FLAG_GPU_CODEGEN) &&
+      arg->type->symbol->hasEitherFlag(FLAG_WIDE_REF, FLAG_WIDE_CLASS);
+
+  bool shouldPassRef = isWidePointerPassedToGpuKernel ||
+                       (arg->intent & INTENT_FLAG_REF) ||
                        arg->requiresCPtr();
 
   bool alreadyRef = arg->typeInfo()->symbol->hasFlag(FLAG_REF) ||
                     arg->isRef() ||
-                    arg->isWideRef();
+                    (arg->isWideRef() && !isWidePointerPassedToGpuKernel);
 
   // Only change argument types for functions with a ref intent
   // that don't already have an argument being passed by ref

@@ -161,6 +161,11 @@ bool chpl_gpu_running_on_gpu_locale() {
   return chpl_task_getRequestedSubloc()>=0;
 }
 
+typedef struct WidePointer {
+  chpl_localeID_t localeId;
+  void *addr;
+} WidePointer;
+
 static void chpl_gpu_launch_kernel_help(int ln,
                                         int32_t fn,
                                         const char* fatbinData,
@@ -201,12 +206,18 @@ static void chpl_gpu_launch_kernel_help(int ln,
     size_t cur_arg_size = va_arg(args, size_t);
 
     if (cur_arg_size > 0) {
+      CHPL_GPU_DEBUG("\tArg size: %zu\n", cur_arg_size);
+
       // TODO this allocation needs to use `chpl_mem_alloc` with a proper desc
       kernel_params[i] = chpl_malloc(1*sizeof(CUdeviceptr));
 
       *kernel_params[i] = chpl_gpu_mem_alloc(cur_arg_size,
                                              CHPL_RT_MD_GPU_KERNEL_ARG,
                                              ln, fn);
+
+      WidePointer* wPtr = (WidePointer*)(cur_arg);
+      //wPtr->localeId.node = 1337;
+      printf("\t\tWide pointer node & subloc: %i %i\n", wPtr->localeId.node, wPtr->localeId.subloc);
 
       chpl_gpu_copy_host_to_device(*kernel_params[i], cur_arg, cur_arg_size);
 

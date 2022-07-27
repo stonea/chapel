@@ -84,8 +84,6 @@ extern
 c_sublocid_t chpl_localeModel_sublocMerge(c_sublocid_t full_subloc,
                   c_sublocid_t execution_subloc);
 
-
-
 #ifdef __cplusplus
 }
 #endif

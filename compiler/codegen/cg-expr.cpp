@@ -2786,10 +2786,6 @@ GenRet codegenCallExprWithArgs(const char* fnName,
   } else {
 #ifdef HAVE_LLVM
     fn.val = getFunctionLLVM(fnName);
-    std::cout << "try: " << fnName << std::endl;
-    if(!fn.val) {
-      std::cout << "  NOT FOUND!" << std::endl;
-    }
     INT_ASSERT(fn.val);
     return codegenCallExprWithArgs(fn, args, fnName,
                                    fnSym, FD, defaultToValues);
@@ -4885,10 +4881,21 @@ static GenRet codegenGPUKernelLaunch(CallExpr* call, bool is3d) {
     INT_FATAL("Unexpected code path: gpu code generation without LLVM as target");
   #endif
 
+    if(call->id == 2123344) {
+      int z = 0;
+      z = z + 1;
+    }
+
   // "Copy" arguments from primitive call to runtime library function call.
   int curArg = 1;
   for_actuals(actual, call) {
     Symbol* actualSym = toSymExpr(actual)->symbol();
+
+    if(actualSym->id == 1808720) {
+      int z = 0;
+      z = z + 1;
+    }
+
     if (curArg == 1) {  // function name or symbol
       if (FnSymbol* fn = toFnSymbol(actualSym)) {
         args.push_back(new_CStringSymbol(fn->cname));

@@ -379,7 +379,13 @@ void GpuKernel::buildStubOutlinedFunction(DefExpr* insertionPoint) {
 }
 
 Symbol* GpuKernel::addKernelArgument(Symbol* symInLoop) {
+  if(!strcmp(symInLoop->name, "r")) {
+    int z = 0;
+    z = z + 1;
+  }
+
   Type* symType = symInLoop->typeInfo();
+
   ArgSymbol* newFormal = new ArgSymbol(INTENT_IN, symInLoop->name, symType);
   fn_->insertFormalAtTail(newFormal);
 
