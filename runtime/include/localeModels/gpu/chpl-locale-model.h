@@ -57,6 +57,7 @@ chpl_localeID_t chpl__initCopy_chpl_rt_localeID_t(chpl_localeID_t initial) {
 //
 static inline
 chpl_localeID_t chpl_rt_buildLocaleID(c_nodeid_t node, c_sublocid_t subloc) {
+//  printf(">> Build locale ID for %i\n", node);
   chpl_localeID_t loc = { node, subloc };
   return loc;
 }
