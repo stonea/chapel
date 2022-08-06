@@ -2872,19 +2872,26 @@ GenRet FnSymbol::codegen() {
         if( hasFlag(FLAG_EXTERN) ) {
           if( isBuiltinExternCFunction(cname) ) {
             // it's OK.
-          } else {
+          } else if(gCodegenGPU) {
             USR_FATAL(this->defPoint,
-                      "Could not find C function for %s; "
-                      " perhaps it is missing or is a macro?", cname);
+                      "While generating code for GPU execution the Chapel "
+                      "compiler could not find a C function for %s; "
+                      "perhaps it is missing, is a macro, or a device version "
+                      "of the function needs to be made?",
+                      cname);
+          } else {
+              USR_FATAL(this->defPoint,
+                        "Could not find C function for %s; "
+                        "perhaps it is missing or is a macro?", cname);
           }
         } else {
-          INT_FATAL("Missing LLVM function for %s", cname);
+            INT_FATAL("Missing LLVM function for %s", cname);
         }
       }
     }
 #endif
   }
-  return ret;
+    return ret;
 }
 
 void FnSymbol::codegenFortran(int indent) {
