@@ -887,7 +887,11 @@ module ChapelArray {
     proc eltType type return _value.eltType;
 
     /* The type of indices used in the array's domain */
-    proc idxType type return _value.idxType;
+    proc idxType type {
+      if rank == 1 then return _value.idxType;
+      else return rank * _value.idxType;
+    }
+    proc idxTypeScalar type return _value.idxType;
     proc intIdxType type return chpl__idxTypeToIntIdxType(_value.idxType);
 
     pragma "no copy return"

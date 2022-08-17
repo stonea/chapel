@@ -1,7 +1,7 @@
 Array with unsigned domain
 ----------------
 eltType is: real(64)
-idxType is: uint(64)
+idxType is: 2*uint(64)
 rank is: 2
 
 size is: 16
@@ -106,7 +106,7 @@ reindexed X[(3, 7)] = 16.8
 Slice of array with unsigned domain
 ----------------
 eltType is: real(64)
-idxType is: uint(64)
+idxType is: 2*uint(64)
 rank is: 2
 
 size is: 16
@@ -211,7 +211,7 @@ reindexed X[(3, 7)] = 16.8
 Reindex of array with unsigned domain
 ----------------
 eltType is: real(64)
-idxType is: uint(64)
+idxType is: 2*uint(64)
 rank is: 2
 
 size is: 16
@@ -316,7 +316,7 @@ reindexed X[(7, 5)] = 16.8
 RankChange of array with unsigned domain
 ----------------
 eltType is: real(64)
-idxType is: uint(64)
+idxType is: 2*uint(64)
 rank is: 2
 
 size is: 16

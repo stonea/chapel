@@ -1465,7 +1465,7 @@ module ChapelDomain {
       pragma "no doc"
       proc _checkThatIndexMatchesArrayShape(arr, idx) param {
         if arr.rank > 1 || idx.type != arr.idxType {
-          if idx.type != (arr.rank*arr.idxType) {
+          if idx.type != arr.idxType {
             compilerError('invalid index type ' + idx.type:string +
                           ' for array with rank ' + arr.rank:string);
           }

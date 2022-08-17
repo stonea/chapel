@@ -1,7 +1,7 @@
 Reindex of Block-distributed array
 ----------------
 eltType is: real(64)
-idxType is: int(64)
+idxType is: 2*int(64)
 rank is: 2
 
 size is: 100

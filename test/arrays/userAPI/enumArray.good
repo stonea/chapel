@@ -1,7 +1,7 @@
 enum array
 ----------------
 eltType is: real(64)
-idxType is: color
+idxType is: 2*color
 rank is: 2
 
 size is: 25
@@ -124,7 +124,7 @@ reindexed X[(violet, blue)] = 25.8
 strided enum array
 ----------------
 eltType is: real(64)
-idxType is: color
+idxType is: 2*color
 rank is: 2
 
 size is: 16
