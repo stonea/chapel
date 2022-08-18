@@ -1080,7 +1080,8 @@ module ChapelDomain {
 
     /* Return the type of the indices of this domain */
     proc idxType type {
-      return _value.idxType;
+      if rank == 1 then return _value.idxType;
+      else return rank * _value.idxType;
     }
 
     /* The ``idxType`` as represented by an integer type.  When
