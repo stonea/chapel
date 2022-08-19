@@ -1017,7 +1017,7 @@ module ChapelDomain {
       }
     }
 
-    forwarding _value except chpl__serialize, chpl__deserialize;
+    forwarding _value except chpl__serialize, chpl__deserialize, idxType;
 
     pragma "no doc"
     proc chpl__serialize()
@@ -1079,6 +1079,10 @@ module ChapelDomain {
     }
 
     /* Return the type of the indices of this domain */
+    proc idxType type {
+      compilerError("Got to Domain.idxType");
+    }
+
     proc scalarIdxType type {
       return _value.idxType;
     }
