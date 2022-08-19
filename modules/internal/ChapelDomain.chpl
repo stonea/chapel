@@ -1079,7 +1079,7 @@ module ChapelDomain {
     }
 
     /* Return the type of the indices of this domain */
-    proc idxType type {
+    proc scalarIdxType type {
       return _value.idxType;
     }
 
