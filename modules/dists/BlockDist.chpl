@@ -460,13 +460,13 @@ proc Block.init(boundingBox: domain,
                 dataParIgnoreRunningTasks=getDataParIgnoreRunningTasks(),
                 dataParMinGranularity=getDataParMinGranularity(),
                 param rank = boundingBox.rank,
-                type idxType = boundingBox.idxType,
+                type idxType = boundingBox.scalarIdxType,
                 type sparseLayoutType = unmanaged DefaultDist) {
   this.rank = rank;
   this.idxType = idxType;
   if rank != boundingBox.rank then
     compilerError("specified Block rank != rank of specified bounding box");
-  if idxType != boundingBox.idxType then
+  if idxType != boundingBox.scalarIdxType then
     compilerError("specified Block index type != index type of specified bounding box");
   if rank != 2 && isCSType(sparseLayoutType) then
     compilerError("CS layout is only supported for 2 dimensional domains");
@@ -726,7 +726,7 @@ iter Block.activeTargetLocales(const space : domain = boundingBox) {
 proc chpl__computeBlock(locid, targetLocBox:domain, boundingBox:domain,
                         boundingBoxDims /* boundingBox.dims() */) {
   param rank = targetLocBox.rank;
-  type idxType = boundingBox.idxType;
+  type idxType = boundingBox.scalarIdxType;
   var inds: rank*range(idxType);
   for param i in 0..rank-1 {
     const lo = boundingBoxDims(i).lowBound;

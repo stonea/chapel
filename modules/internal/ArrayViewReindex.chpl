@@ -257,7 +257,7 @@ module ArrayViewReindex {
     }
 
     inline proc downIdxToUpIdx(i) {
-      var ind: updom.rank*updom.idxType;
+      var ind: updom.rank*updom.scalarIdxType;
       for param d in 0..updom.rank-1 {
         ind(d) = updom.dsiDim(d).orderToIndex(downdom.dsiDim(d).indexOrder(i(d)));
       }
@@ -327,7 +327,7 @@ module ArrayViewReindex {
 
     proc dsiPrivatize(privatizeData) {
       return new unmanaged ArrayViewReindexDom(rank = this.rank,
-                                     idxType = this.idxType,
+                                     idxType = this.scalarIdxType,
                                      stridable = this.stridable,
                                      updomInst = privatizeData(0),
                                      downdomPid = privatizeData(1),
@@ -726,7 +726,7 @@ module ArrayViewReindex {
   }
 
   inline proc chpl_reindexConvertIdx(i, updom, downdom) {
-    var ind: downdom.rank*downdom.idxType;
+    var ind: downdom.rank*downdom.scalarIdxType;
     for param d in 0..downdom.rank-1 {
       ind(d) = chpl_reindexConvertIdxDim(i(d), updom, downdom, d);
     }
@@ -740,7 +740,7 @@ module ArrayViewReindex {
     }
 
     var ranges : downdom.dsiDims().type;
-    var actualLow, actualHigh: downdom.rank*downdom.idxType;
+    var actualLow, actualHigh: downdom.rank*downdom.scalarIdxType;
     for param d in 0..dims.size-1 {
       if (dims(d).sizeAs(int) == 0) {
         actualLow(d) = downdom.dsiDim(d).lowBound;
@@ -771,8 +771,8 @@ module ArrayViewReindex {
       compilerError("Called chpl_reindexConvertDomMaybeSlice with incorrect rank. Got " + dims.size:string + ", expecting " + updom.rank:string);
     }
 
-    var ranges : downdom.rank * range(downdom.idxType, stridable=downdom.stridable || dims(0).stridable);
-    var actualLow, actualHigh: downdom.rank*downdom.idxType;
+    var ranges : downdom.rank * range(downdom.scalarIdxType, stridable=downdom.stridable || dims(0).stridable);
+    var actualLow, actualHigh: downdom.rank*downdom.scalarIdxType;
     for param d in 0..dims.size-1 {
       if (dims(d).sizeAs(int) == 0) {
         actualLow(d) = downdom.dsiDim(d).lowBound;

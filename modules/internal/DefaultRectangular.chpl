@@ -723,7 +723,7 @@ module DefaultRectangular {
 
     // convenience routine for turning an int (tuple) into an index (tuple)
     inline proc chpl_intToIdx(i) {
-      return chpl__intToIdx(this.idxType, i);
+      return chpl__intToIdx(this.scalarIdxType, i);
     }
   }
 
@@ -867,7 +867,7 @@ module DefaultRectangular {
     compilerAssert(this.rank == newDom.rank);
 
     // NB: Sets 'blkChanged' if the new domain is stridable.
-    var rad : _remoteAccessData(eltType, newDom.rank, newDom.idxType, newDom.stridable, newDom.stridable || this.blkChanged);
+    var rad : _remoteAccessData(eltType, newDom.rank, newDom.scalarIdxType, newDom.stridable, newDom.stridable || this.blkChanged);
 
     rad.initDataFrom(this);
 
@@ -901,7 +901,7 @@ module DefaultRectangular {
     compilerAssert(this.rank == newDom.rank);
 
     // NB: Only sets 'blkChanged' if underlying RADs have it set
-    var rad : _remoteAccessData(eltType, newDom.rank, newDom.idxType, newDom.stridable, blkChanged);
+    var rad : _remoteAccessData(eltType, newDom.rank, newDom.scalarIdxType, newDom.stridable, blkChanged);
 
     rad.initDataFrom(this);
 
@@ -929,7 +929,7 @@ module DefaultRectangular {
     // Unconditionally sets 'blkChanged'
     //
     // TODO: If 'collapsedDims' were param, we would know if blk(rank-1) was 1 or not.
-    var rad : _remoteAccessData(eltType, newDom.rank, newDom.idxType, newDom.stridable, true);
+    var rad : _remoteAccessData(eltType, newDom.rank, newDom.scalarIdxType, newDom.stridable, true);
     const collapsedDims = chpl__tuplify(cd);
 
     rad.initDataFrom(this);
@@ -1381,11 +1381,11 @@ module DefaultRectangular {
         var s: idxType;
         // NOTE: Not bothering to check to see if this can fit into idxType
         if idxSignedType==idxType {
-          s = (dom.dsiDim(i).stride / str(i)) : d.idxType;
+          s = (dom.dsiDim(i).stride / str(i)) : d.scalarIdxType;
         } else { // unsigned type, signed stride
           assert((dom.dsiDim(i).stride<0 && str(i)<0) ||
                  (dom.dsiDim(i).stride>0 && str(i)>0));
-          s = (dom.dsiDim(i).stride / str(i)) : d.idxType;
+          s = (dom.dsiDim(i).stride / str(i)) : d.scalarIdxType;
         }
         alias.off(i) = d.dsiDim(i).lowBound;
         alias.blk(i) = blk(i) * s;
@@ -1610,18 +1610,18 @@ module DefaultRectangular {
         // overflow.
 
         const first  = info.getDataIndex(viewDom.dsiLow);
-        const second = info.getDataIndex(chpl__intToIdx(viewDom.idxType, chpl__idxToInt(viewDom.dsiLow)+1));
+        const second = info.getDataIndex(chpl__intToIdx(viewDom.scalarIdxType, chpl__idxToInt(viewDom.dsiLow)+1));
         const step   = (second-first);
         const last   = first + (viewDom.dsiNumIndices:step.type-1) * step;
         foreach i in chpl_direct_pos_stride_range_iter(first, last, step) {
           yield info.theData(i);
         }
       } else {
-        type vdIntIdxType = chpl__idxTypeToIntIdxType(viewDom.idxType);
+        type vdIntIdxType = chpl__idxTypeToIntIdxType(viewDom.scalarIdxType);
         const viewDomDim = viewDom.dsiDim(0),
               stride = viewDomDim.stride: vdIntIdxType,
               start  = viewDomDim.first,
-              second = info.getDataIndex(chpl__intToIdx(viewDom.idxType, viewDomDim.firstAsInt + stride));
+              second = info.getDataIndex(chpl__intToIdx(viewDom.scalarIdxType, viewDomDim.firstAsInt + stride));
 
         var   first  = info.getDataIndex(start);
         const step   = (second-first).safeCast(int);
@@ -1719,7 +1719,7 @@ module DefaultRectangular {
 
   proc chpl_serialReadWriteRectangularHelper(f, arr, dom) throws {
     param rank = arr.rank;
-    type idxType = arr.idxType;
+    type idxType = arr.scalarIdxType;
     type idxSignedType = chpl__signedType(chpl__idxTypeToIntIdxType(idxType));
     type eltType = arr.eltType;
 
@@ -1902,15 +1902,15 @@ module DefaultRectangular {
 
   private proc _simpleTransfer(A, aView, B, bView) {
     param rank     = A.rank;
-    type idxType   = A.idxType;
+    type idxType   = A.scalarIdxType;
 
     const Adims = aView.dims();
-    var Alo: rank*aView.idxType;
+    var Alo: rank*aView.scalarIdxType;
     for param i in 0..rank-1 do
       Alo(i) = Adims(i).first;
 
     const Bdims = bView.dims();
-    var Blo: rank*B.idxType;
+    var Blo: rank*B.scalarIdxType;
     for param i in 0..rank-1 do
       Blo(i) = Bdims(i).first;
 
@@ -2041,7 +2041,7 @@ module DefaultRectangular {
 
   private proc complexTransferCore(LHS, LViewDom, RHS, RViewDom) {
     param minRank = min(LHS.rank, RHS.rank);
-    type  idxType = LHS.idxType;
+    type  idxType = LHS.scalarIdxType;
     type  intIdxType = LHS.intIdxType;
 
     if debugDefaultDistBulkTransfer {
@@ -2150,7 +2150,7 @@ module DefaultRectangular {
     strideDom = {1..stridelevels};
 
     proc getFirstIdx(dims) {
-      var ret : dims.size * dims(0).idxType;
+      var ret : dims.size * dims(0).scalarIdxType;
       for param i in 0..dims.size-1 do
         ret(i) = if dims(i).stride < 0 then dims(i).last else dims(i).first;
       return ret;

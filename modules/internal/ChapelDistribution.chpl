@@ -415,6 +415,8 @@ module ChapelDistribution {
 
     override proc isRectangular() param return true;
 
+    proc scalarIdxType type return idxType;
+
     proc getBaseArrType() type {
       var tmp = new unmanaged BaseArrOverRectangularDom(rank=rank, idxType=idxType, stridable=stridable);
       return tmp.type;
@@ -636,6 +638,7 @@ module ChapelDistribution {
     param rank: int;
     type idxType;
     var parentDom;
+    proc scalarIdxType type return idxType;
 
     // We currently cannot have dist here. It is due to a compiler bug due to
     // inheritance of generic var fields.
@@ -949,6 +952,7 @@ module ChapelDistribution {
     param rank : int;
     type idxType;
     param stridable: bool;
+    proc scalarIdxType type return idxType;
 
     // the dsiReallocate to overload only uses the argument with
     // the matching tuple of ranges.
@@ -1009,6 +1013,7 @@ module ChapelDistribution {
   class BaseSparseArr: AbsBaseArr {
     param rank : int;
     type idxType;
+    proc scalarIdxType type return idxType;
 
     var dom; /* : DefaultSparseDom(?); */
 

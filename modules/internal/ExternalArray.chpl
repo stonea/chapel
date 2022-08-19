@@ -124,7 +124,7 @@ module ExternalArray {
       safeCastCheckHalt("Cannot build an external array that stores " +
                         arr.eltType: string);
     }
-    if (!isIntegralType(arr.domain.idxType)) {
+    if (!isIntegralType(arr.domain.scalarIdxType)) {
       // Probably not reachable any more, but may become reachable again
       // once support for interoperability with array types expands.
       compilerError("cannot return an array with indices that are not " +

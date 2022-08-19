@@ -88,6 +88,8 @@ module ChapelRange {
     param boundedType: BoundedRangeType = BoundedRangeType.bounded; // bounded or not
     param stridable: bool = false;                 // range can be strided
 
+    proc scalarIdxType type return idxType;
+
     var _low       : chpl__idxTypeToIntIdxType(idxType);  // lower bound
     var _high      : chpl__idxTypeToIntIdxType(idxType);  // upper bound
     var _stride    : if stridable then chpl__rangeStrideType(idxType) else nothing; // signed stride

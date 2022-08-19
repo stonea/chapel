@@ -415,7 +415,7 @@ module ArrayViewRankChange {
 
     proc dsiPrivatize(privatizeData) {
       return new unmanaged ArrayViewRankChangeDom(rank = this.rank,
-                                        idxType = this.idxType,
+                                        idxType = this.scalarIdxType,
                                         stridable = this.stridable,
                                         upDomInst = privatizeData(0),
                                         collapsedDim = privatizeData(1),

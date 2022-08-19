@@ -438,20 +438,20 @@ module ChapelArray {
     if definedConst {
       if dom.isRectangular() {
         const distDom: domain(dom.rank,
-                              dom._value.idxType,
+                              dom._value.scalarIdxType,
                               dom._value.stridable) dmapped d = dom;
         return distDom;
       } else {
-        const distDom: domain(dom._value.idxType) dmapped d = dom;
+        const distDom: domain(dom._value.scalarIdxType) dmapped d = dom;
         return distDom;
       }
     }
     else {
       if dom.isRectangular() {
-        var distDom: domain(dom.rank, dom._value.idxType, dom._value.stridable) dmapped d = dom;
+        var distDom: domain(dom.rank, dom._value.scalarIdxType, dom._value.stridable) dmapped d = dom;
         return distDom;
       } else {
-        var distDom: domain(dom._value.idxType) dmapped d = dom;
+        var distDom: domain(dom._value.scalarIdxType) dmapped d = dom;
         return distDom;
       }
     }
@@ -545,14 +545,14 @@ module ChapelArray {
                     domainType:string);
     if chpl__isRectangularDomType(domainType) {
       var dom: domainType;
-      return chpl__buildDomainRuntimeType(d, dom._value.rank, dom._value.idxType,
+      return chpl__buildDomainRuntimeType(d, dom._value.rank, dom._value.scalarIdxType,
                                           dom._value.stridable);
     } else if chpl__isSparseDomType(domainType) {
       const ref parentDom = chpl__parentDomainFromDomainRuntimeType(domainType);
       return chpl__buildSparseDomainRuntimeType(d, parentDom);
     } else {
       var dom: domainType;
-      return chpl__buildDomainRuntimeType(d, dom._value.idxType, dom._value.parSafe);
+      return chpl__buildDomainRuntimeType(d, dom._value.scalarIdxType, dom._value.parSafe);
     }
   }
 
@@ -604,7 +604,7 @@ module ChapelArray {
     return chpl__buildIndexType(rank, int);
 
   proc chpl__buildIndexType(d: domain) type
-    return chpl__buildIndexType(d.rank, d._value.idxType);
+    return chpl__buildIndexType(d.rank, d._value.scalarIdxType);
 
   deprecated "isRectangularArr is deprecated - please use isRectangular method on array"
   proc isRectangularArr(a: []) param return a.isRectangular();
@@ -1024,7 +1024,7 @@ module ChapelArray {
     pragma "reference to const when const this"
     pragma "removable array access"
     pragma "alias scope from this"
-    inline proc ref this(i: rank*_value.dom.idxType) ref {
+    inline proc ref this(i: rank*_value.dom.scalarIdxType) ref {
       const value = _value;
       if boundsChecking then
         checkAccess(i, value=value);
@@ -1040,7 +1040,7 @@ module ChapelArray {
     }
     pragma "no doc" // value version, for POD types
     pragma "alias scope from this"
-    inline proc const this(i: rank*_value.dom.idxType)
+    inline proc const this(i: rank*_value.dom.scalarIdxType)
     where shouldReturnRvalueByValue(_value.eltType)
     {
       const value = _value;
@@ -1058,7 +1058,7 @@ module ChapelArray {
     }
     pragma "no doc" // const ref version, for not-POD types
     pragma "alias scope from this"
-    inline proc const this(i: rank*_value.dom.idxType) const ref
+    inline proc const this(i: rank*_value.dom.scalarIdxType) const ref
     {
       const value = _value;
       if boundsChecking then
@@ -1078,25 +1078,25 @@ module ChapelArray {
     pragma "reference to const when const this"
     pragma "removable array access"
     pragma "alias scope from this"
-    inline proc ref this(i: _value.dom.idxType ...rank) ref
+    inline proc ref this(i: _value.dom.scalarIdxType ...rank) ref
       return this(i);
 
     pragma "no doc" // value version, for POD types
     pragma "alias scope from this"
-    inline proc const this(i: _value.dom.idxType ...rank)
+    inline proc const this(i: _value.dom.scalarIdxType ...rank)
     where shouldReturnRvalueByValue(_value.eltType)
       return this(i);
 
     pragma "no doc" // const ref version, for not-POD types
     pragma "alias scope from this"
-    inline proc const this(i: _value.dom.idxType ...rank) const ref
+    inline proc const this(i: _value.dom.scalarIdxType ...rank) const ref
       return this(i);
 
 
     pragma "no doc" // ref version
     pragma "reference to const when const this"
     pragma "alias scope from this"
-    inline proc ref localAccess(i: rank*_value.dom.idxType) ref
+    inline proc ref localAccess(i: rank*_value.dom.scalarIdxType) ref
     {
       const value = _value;
       if boundsChecking then
@@ -1116,7 +1116,7 @@ module ChapelArray {
     }
     pragma "no doc" // value version, for POD types
     pragma "alias scope from this"
-    inline proc const localAccess(i: rank*_value.dom.idxType)
+    inline proc const localAccess(i: rank*_value.dom.scalarIdxType)
     where shouldReturnRvalueByValue(_value.eltType)
     {
       const value = _value;
@@ -1137,7 +1137,7 @@ module ChapelArray {
     }
     pragma "no doc" // const ref version, for not-POD types
     pragma "alias scope from this"
-    inline proc const localAccess(i: rank*_value.dom.idxType) const ref
+    inline proc const localAccess(i: rank*_value.dom.scalarIdxType) const ref
     {
       const value = _value;
       if boundsChecking then
@@ -1159,18 +1159,18 @@ module ChapelArray {
     pragma "no doc" // ref version
     pragma "reference to const when const this"
     pragma "alias scope from this"
-    inline proc ref localAccess(i: _value.dom.idxType ...rank) ref
+    inline proc ref localAccess(i: _value.dom.scalarIdxType ...rank) ref
       return localAccess(i);
 
     pragma "no doc" // value version, for POD types
     pragma "alias scope from this"
-    inline proc const localAccess(i: _value.dom.idxType ...rank)
+    inline proc const localAccess(i: _value.dom.scalarIdxType ...rank)
     where shouldReturnRvalueByValue(_value.eltType)
       return localAccess(i);
 
     pragma "no doc" // const ref version, for not-POD types
     pragma "alias scope from this"
-    inline proc const localAccess(i: _value.dom.idxType ...rank) const ref
+    inline proc const localAccess(i: _value.dom.scalarIdxType ...rank) const ref
       return localAccess(i);
 
 
@@ -1256,7 +1256,7 @@ module ChapelArray {
     pragma "no doc"
     pragma "reference to const when const this"
     pragma "fn returns aliasing array"
-    proc this(args ...rank) where _validRankChangeArgs(args, _value.dom.idxType) {
+    proc this(args ...rank) where _validRankChangeArgs(args, _value.dom.scalarIdxType) {
       if boundsChecking then
         checkRankChange(args);
 
@@ -1531,7 +1531,7 @@ module ChapelArray {
 
       pragma "no copy"
       pragma "no auto destroy"
-      const newDom = new _domain(redistRec, rank, updom.idxType,
+      const newDom = new _domain(redistRec, rank, updom.scalarIdxType,
                                  updom.stridable, updom.dims(),
                                  definedConst=true);
       newDom._value._free_when_no_arrs = true;
@@ -1731,7 +1731,7 @@ module ChapelArray {
       if (!chpl__isDense1DArray()) then
         compilerError("reverse() is only supported on dense 1D arrays");
       const lo = this.domain.alignedLow,
-            mid = this.domain.sizeAs(this.idxType) / 2,
+            mid = this.domain.sizeAs(this.scalarIdxType) / 2,
             hi = this.domain.alignedHigh;
       for i in 0..#mid {
         this[lo + i] <=> this[hi - i];
@@ -2558,7 +2558,7 @@ module ChapelArray {
                                     param kind:_tElt)
   lifetime a < b {
 
-      type idxType = a.domain.idxType,
+      type idxType = a.domain.scalarIdxType,
            strType = chpl__signedType(a.domain.intIdxType);
 
       const stride = a.domain.dim(a.rank-rank).stride,
@@ -2594,7 +2594,7 @@ module ChapelArray {
       }
   }
   private proc initArrFromTuple(ref a: [], b: _tuple, param kind:_tElt) {
-    var j: a.rank*a.domain.idxType;
+    var j: a.rank*a.domain.scalarIdxType;
     helpInitArrFromTuple(j, a.rank, a, b, kind);
   }
 
@@ -2761,7 +2761,7 @@ module ChapelArray {
   proc chpl__initCopy(const ref rhs: domain, definedConst: bool)
       where rhs.isRectangular() {
 
-    var lhs = new _domain(rhs.dist, rhs.rank, rhs.idxType, rhs.stridable,
+    var lhs = new _domain(rhs.dist, rhs.rank, rhs.scalarIdxType, rhs.stridable,
                           rhs.dims(), definedConst=definedConst);
     return lhs;
   }
@@ -2770,7 +2770,7 @@ module ChapelArray {
   proc chpl__initCopy(const ref rhs: domain, definedConst: bool)
       where rhs.isAssociative() {
 
-    var lhs = new _domain(rhs.dist, rhs.idxType, rhs.parSafe,
+    var lhs = new _domain(rhs.dist, rhs.scalarIdxType, rhs.parSafe,
                           definedConst=definedConst);
     // No need to lock this domain since it's not exposed anywhere yet.
     // No need to handle arrays over this domain either for the same reason.
@@ -2834,7 +2834,7 @@ module ChapelArray {
     }
     else {
       return chpl__convertRuntimeTypeToValue(dist=dist,
-                                             idxType=instanceType.idxType,
+                                             idxType=instanceType.scalarIdxType,
                                              parSafe=instanceType.parSafe,
                                              isNoInit=false,
                                              definedConst=definedConst);

@@ -180,12 +180,12 @@ module ChapelDomain {
   where chpl__isTupleOfRanges(ranges) {
     param rank = ranges.size;
     for param i in 1..rank-1 do
-      if ranges(0).idxType != ranges(i).idxType then
+      if ranges(0).scalarIdxType != ranges(i).scalarIdxType then
         compilerError("idxType varies among domain's dimensions");
     for param i in 0..rank-1 do
       if ! isBoundedRange(ranges(i)) then
         compilerError("one of domain's dimensions is not a bounded range");
-    var d: domain(rank, ranges(0).idxType, chpl__anyStridable(ranges));
+    var d: domain(rank, ranges(0).scalarIdxType, chpl__anyStridable(ranges));
     d.setIndices(ranges);
     if definedConst then
       chpl__setDomainConst(d);
@@ -578,7 +578,7 @@ module ChapelDomain {
 
   operator &=(ref a :domain, b: domain) where (a.type == b.type) &&
     a.isAssociative() {
-    var removeSet: domain(a.idxType);
+    var removeSet: domain(a.scalarIdxType);
     for e in a do
       if !b.contains(e) then
         removeSet += e;
@@ -638,7 +638,7 @@ module ChapelDomain {
 
   // TODO: Currently not optimized
   operator +=(ref sd: domain, d: domain)
-  where sd.isSparse() && d.rank==sd.rank && sd.idxType==d.idxType {
+  where sd.isSparse() && d.rank==sd.rank && sd.scalarIdxType==d.scalarIdxType {
     if d.sizeAs(int) == 0 then return;
 
     const indCount = d.sizeAs(int);
@@ -661,7 +661,7 @@ module ChapelDomain {
   }
 
   operator -=(ref sd: domain, d: domain)
-  where sd.isSparse() && d.rank==sd.rank && sd.idxType==d.idxType {
+  where sd.isSparse() && d.rank==sd.rank && sd.scalarIdxType==d.scalarIdxType {
     for ind in d do
       sd -= ind;
   }
@@ -673,7 +673,7 @@ module ChapelDomain {
     if a.rank != b.rank then
       compilerError("rank mismatch in domain assignment");
 
-    if a.idxType != b.idxType then
+    if a.scalarIdxType != b.scalarIdxType then
       compilerError("index type mismatch in domain assignment");
 
     if a.isRectangular() && b.isRectangular() then
@@ -991,12 +991,12 @@ module ChapelDomain {
     // handle the type of 'other'. That case is currently managed by the
     // compiler and various helper functions involving runtime types.
     proc init=(const ref other : domain) where other.isRectangular() {
-      this.init(other.dist, other.rank, other.idxType, other.stridable, other.dims());
+      this.init(other.dist, other.rank, other.scalarIdxType, other.stridable, other.dims());
     }
 
     proc init=(const ref other : domain) {
       if other.isAssociative() {
-        this.init(other.dist, other.idxType, other.parSafe);
+        this.init(other.dist, other.scalarIdxType, other.parSafe);
       } else if other.isSparse() {
         this.init(other.dist, other.parentDom);
       } else {
@@ -1083,6 +1083,8 @@ module ChapelDomain {
       if rank == 1 then return _value.idxType;
       else return rank * _value.idxType;
     }
+    
+    proc scalarIdxType type return _value.idxType;
 
     /* The ``idxType`` as represented by an integer type.  When
        ``idxType`` is an enum type, this evaluates to ``int``.
@@ -1178,7 +1180,7 @@ module ChapelDomain {
       // Also compute the upward-facing rank and tuple of ranges.
       //
       var collapsedDim: rank*bool;
-      var idx: rank*idxType;
+      var idx: rank*scalarIdxType;
       param uprank = chpl__countRanges((...args));
       param upstridable = this.stridable || chpl__anyRankChangeStridable(args);
       var upranges: uprank*range(idxType=_value.idxType,
@@ -1219,7 +1221,7 @@ module ChapelDomain {
       const rcdistRec = new _distribution(rcdist);
 
       return new _domain(rcdistRec, uprank,
-                                    upranges(0).idxType,
+                                    upranges(0).scalarIdxType,
                                     upranges(0).stridable,
                                     upranges);
     }
@@ -1465,8 +1467,8 @@ module ChapelDomain {
 
       pragma "no doc"
       proc _checkThatIndexMatchesArrayShape(arr, idx) param {
-        if arr.rank > 1 || idx.type != arr.idxType {
-          if idx.type != arr.idxType {
+        if arr.rank > 1 || idx.type != arr.scalarIdxType {
+          if idx.type != arr.scalarIdxType {
             compilerError('invalid index type ' + idx.type:string +
                           ' for array with rank ' + arr.rank:string);
           }
@@ -2082,10 +2084,10 @@ module ChapelDomain {
         return true;
 
       } else {
-        if ! isCoercible(other.idxType, this.idxType) then
+        if ! isCoercible(other.scalarIdxType, this.scalarIdxType) then
           compilerError("incompatible idxType in 'domain.contains()':",
-                        " cannot convert from '", other.idxType:string,
-                        "' to '", this.idxType:string, "'");
+                        " cannot convert from '", other.scalarIdxType:string,
+                        "' to '", this.scalarIdxType:string, "'");
 
         const otherSize = other.sizeAs(uint);
         if otherSize == 0 then return true;
@@ -2118,7 +2120,7 @@ module ChapelDomain {
 
       :returns: Domain index for a given order in the domain.
     */
-    proc orderToIndex(order: int) where (this.isRectangular() && isNumericType(this.idxType)){
+    proc orderToIndex(order: int) where (this.isRectangular() && isNumericType(this.scalarIdxType)){
 
       if boundsChecking then
         checkOrderBounds(order);
@@ -2150,7 +2152,7 @@ module ChapelDomain {
 
     pragma "last resort"
     proc orderToIndex(order) {
-      if this.isRectangular() && isNumericType(this.idxType) then
+      if this.isRectangular() && isNumericType(this.scalarIdxType) then
         compilerError("illegal value passed to orderToIndex():",
           " the argument 'order' must be an integer, excluding uint(64)");
       else
@@ -2442,18 +2444,18 @@ module ChapelDomain {
       var tmpD: t;
       if tmpD.rank != this.rank then
         compilerError("rank mismatch in cast");
-      if tmpD.idxType != this.idxType then
+      if tmpD.scalarIdxType != this.scalarIdxType then
         compilerError("idxType mismatch in cast");
       if tmpD.stridable == this.stridable then
         return this;
       else if !tmpD.stridable && this.stridable {
         const inds = this.getIndices();
-        var unstridableInds: rank*range(tmpD.idxType, stridable=false);
+        var unstridableInds: rank*range(tmpD.scalarIdxType, stridable=false);
 
         for param dim in 0..inds.size-1 {
           if inds(dim).stride != 1 then
             halt("non-stridable domain assigned non-unit stride in dimension ", dim);
-          unstridableInds(dim) = inds(dim).safeCast(range(tmpD.idxType,
+          unstridableInds(dim) = inds(dim).safeCast(range(tmpD.scalarIdxType,
                                                           stridable=false));
         }
         tmpD.setIndices(unstridableInds);
@@ -2530,17 +2532,17 @@ module ChapelDomain {
       var tmpD: t;
       if tmpD.rank != d.rank then
         compilerError("rank mismatch in cast");
-      if tmpD.idxType != d.idxType then
+      if tmpD.scalarIdxType != d.scalarIdxType then
         compilerError("idxType mismatch in cast");
 
       if tmpD.stridable == d.stridable then
         return d;
       else if !tmpD.stridable && d.stridable {
         var inds = d.getIndices();
-        var unstridableInds: d.rank*range(tmpD.idxType, stridable=false);
+        var unstridableInds: d.rank*range(tmpD.scalarIdxType, stridable=false);
 
         for param i in 0..tmpD.rank-1 {
-          unstridableInds(i) = inds(i):range(tmpD.idxType, stridable=false);
+          unstridableInds(i) = inds(i):range(tmpD.scalarIdxType, stridable=false);
         }
         tmpD.setIndices(unstridableInds);
         return tmpD;
