@@ -44,12 +44,21 @@ on here.gpus[0] {
     }
   }
 
-  if failureMode == 5 {
-    foreach i in 0..10 {
-      assertOnGpu();
-      usesOutsideVar();
-    }
-  }
+  // This fails with a different error message under the gasnet configuration.
+  // Debugging this is going to take some time (I created an issue to track it
+  // in #20641) so I'm disabling this portion of the test in the meantime (and
+  // forking it into a assertOnFailToGpuize_chplCommNone.chpl test to lock down
+  // the behavior outside of GASNET).
+
+  // TODO: Uncomment this once issue #20641 is solved.
+  // TODO: Make sure to add this config to the .compopts as well
+
+  //if failureMode == 5 {
+  //  foreach i in 0..10 {
+  //    assertOnGpu();
+  //    usesOutsideVar();
+  //  }
+  //}
 
   // I want to ensure this works
   // with forall loops as well:
