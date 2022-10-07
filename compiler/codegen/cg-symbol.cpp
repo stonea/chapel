@@ -3295,6 +3295,7 @@ void ModuleSymbol::codegenDef() {
 #endif
 
   for_vector(FnSymbol, fn, fns) {
+    //printf("Codegen fn: %s (%d)\n", fn->name, fn->id);
     fn->codegenDef();
   }
 

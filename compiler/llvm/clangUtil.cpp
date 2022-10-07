@@ -2564,6 +2564,7 @@ void runClang(const char* just_parse_filename) {
       std::string genHeaderFilename;
       genHeaderFilename = genIntermediateFilename("command-line-includes.h");
       FILE* fp =  openfile(genHeaderFilename.c_str(), "w");
+      fprintf(fp, "#undef __noinline__\n");
 
       int filenum = 0;
       while (const char* inputFilename = nthFilename(filenum++)) {

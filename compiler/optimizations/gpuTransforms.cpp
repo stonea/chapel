@@ -172,6 +172,7 @@ public:
   GpuizableLoop(BlockStmt* blk);
 
   CForLoop* loop() const { return loop_; }
+  FnSymbol* parentFn() const { return parentFn_; }
   bool isEligible() const { return isEligible_; }
   Symbol* upperBound() const { return upperBound_; }
   const std::vector<Symbol*>& loopIndices() const { return loopIndices_; }
@@ -267,6 +268,12 @@ bool GpuizableLoop::evaluateLoop() {
 
 bool GpuizableLoop::parentFnAllowsGpuization() {
   FnSymbol *cur = this->parentFn_;
+
+  if(cur->id == 23324094) {
+    printf("CUR = %d %s\n", cur->id, cur->name);
+    gdbShouldBreakHere();
+  }
+
   while (cur) {
     if (cur->hasFlag(FLAG_NO_GPU_CODEGEN)) {
       reportNotGpuizable(cur, "parent function disallows execution on a GPU");
@@ -487,6 +494,11 @@ GpuKernel::GpuKernel(const GpuizableLoop &gpuLoop, DefExpr* insertionPoint)
 
 void GpuKernel::buildStubOutlinedFunction(DefExpr* insertionPoint) {
   fn_ = new FnSymbol("chpl_gpu_kernel");
+
+  if(fn_->id == 47007177) {
+    printf("PARENT: %s %d\n", gpuLoop.parentFn()->name, gpuLoop.parentFn()->id);
+    gdbShouldBreakHere();
+  }
 
   fn_->body->blockInfoSet(new CallExpr(PRIM_BLOCK_LOCAL));
 
