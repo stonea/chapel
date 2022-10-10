@@ -67,6 +67,13 @@ static SymExpr* hasOuterVarAccesses(FnSymbol* fn) {
   collectSymExprs(fn, ses);
   for_vector(SymExpr, se, ses) {
     if (VarSymbol* var = toVarSymbol(se->symbol())) {
+
+      if(!strcmp(var->cname, "call_tmp_chpl165")) {
+        std::string s = "Found call_tmp_chpl165 in function! ";
+        s += fn->name;
+        USR_FATAL(se, s.c_str());
+      }
+
       if (var->defPoint->parentSymbol != fn) {
         if (!var->isParameter() && var != gVoid) {
           if (CallExpr* parent = toCallExpr(se->parentExpr)) {
@@ -77,6 +84,13 @@ static SymExpr* hasOuterVarAccesses(FnSymbol* fn) {
           return se;
         }
       }
+    }
+    if(se->symbol()->hasFlag(FLAG_EXTERN) && 
+       !se->symbol()->hasFlag(FLAG_GPU_CODEGEN) &&
+       !se->symbol()->hasFlag(FLAG_GPU_AND_CPU_CODEGEN))
+    {
+      //USR_FATAL(se, "Use of extern variable in function");
+      return se;
     }
   }
   return nullptr;
@@ -268,11 +282,6 @@ bool GpuizableLoop::evaluateLoop() {
 
 bool GpuizableLoop::parentFnAllowsGpuization() {
   FnSymbol *cur = this->parentFn_;
-
-  if(cur->id == 23324094) {
-    printf("CUR = %d %s\n", cur->id, cur->name);
-    gdbShouldBreakHere();
-  }
 
   while (cur) {
     if (cur->hasFlag(FLAG_NO_GPU_CODEGEN)) {
@@ -495,11 +504,6 @@ GpuKernel::GpuKernel(const GpuizableLoop &gpuLoop, DefExpr* insertionPoint)
 void GpuKernel::buildStubOutlinedFunction(DefExpr* insertionPoint) {
   fn_ = new FnSymbol("chpl_gpu_kernel");
 
-  if(fn_->id == 47007177) {
-    printf("PARENT: %s %d\n", gpuLoop.parentFn()->name, gpuLoop.parentFn()->id);
-    gdbShouldBreakHere();
-  }
-
   fn_->body->blockInfoSet(new CallExpr(PRIM_BLOCK_LOCAL));
 
   fn_->addFlag(FLAG_RESOLVED);
@@ -613,11 +617,16 @@ void GpuKernel::generateEarlyReturn() {
 }
 
 void GpuKernel::populateBody(CForLoop *loop, FnSymbol *outlinedFunction) {
+static bool breakOnNextIter = false;
+
   std::set<Symbol*> handledSymbols;
   for_alist(node, loop->body) {
     bool copyNode = true;
     std::vector<SymExpr*> symExprsInBody;
     collectSymExprs(node, symExprsInBody);
+
+    std::vector<DefExpr*> defExprsInBody;
+    collectDefExprs(node, defExprsInBody);
 
     CallExpr* call = toCallExpr(node);
     if(call && call->isPrimitive(PRIM_GPU_SET_BLOCKSIZE)) {
@@ -641,6 +650,13 @@ void GpuKernel::populateBody(CForLoop *loop, FnSymbol *outlinedFunction) {
       outlinedFunction->insertAtTail(newDef);
     }
     else {
+      for_vector(DefExpr, def, defExprsInBody) {
+        DefExpr* newDef = def->copy();
+        this->copyMap_.put(def->sym, newDef->sym);
+        outlinedFunction->insertAtTail(newDef);
+        printf("Type name for def: %s -- %s\n", def->sym->name, def->sym->type->name());
+      }
+
       for_vector(SymExpr, symExpr, symExprsInBody) {
         Symbol* sym = symExpr->symbol();
 
@@ -858,6 +874,10 @@ static void outlineEligibleLoop(FnSymbol *fn, const GpuizableLoop &gpuLoop) {
 
 static void outlineGPUKernels() {
   forv_Vec(FnSymbol*, fn, gFnSymbols) {
+    // We may want to introduce this hammer at some point:
+    //if(fn->getModule() && fn->getModule()->modTag != MOD_USER) {
+    //  continue;
+    //}
     std::vector<BaseAST*> asts;
     collect_asts(fn, asts);
 
@@ -865,6 +885,8 @@ static void outlineGPUKernels() {
       if (CForLoop* loop = toCForLoop(ast)) {
         GpuizableLoop gpuLoop(loop);
         if (gpuLoop.isEligible()) {
+          printf("Found GPU eligible loop in %s\n", fn->name);
+
           outlineEligibleLoop(fn, gpuLoop);
         }
       }

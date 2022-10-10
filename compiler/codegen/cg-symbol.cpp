@@ -713,7 +713,7 @@ GenRet VarSymbol::codegenVarSymbol(bool lhsInSetReference) {
   }
 
   USR_FATAL(this->defPoint, "Could not find C variable %s - "
-            "perhaps it is a complex macro?", cname);
+            "perhaps it is a complex macro? ID=%d EXTERN=%d", cname, id, hasFlag(FLAG_EXTERN));
   return ret;
 }
 
@@ -3295,7 +3295,6 @@ void ModuleSymbol::codegenDef() {
 #endif
 
   for_vector(FnSymbol, fn, fns) {
-    //printf("Codegen fn: %s (%d)\n", fn->name, fn->id);
     fn->codegenDef();
   }
 

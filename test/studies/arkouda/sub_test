@@ -6,6 +6,8 @@
 ARKOUDA_URL=${ARKOUDA_URL:-https://github.com/Bears-R-Us/arkouda.git}
 ARKOUDA_BRANCH=${ARKOUDA_BRANCH:-master}
 
+export CHPL_TEST_ARKOUDA_DISABLE_MODELS=ArraySetopsMsg:KExtremeMsg:ArgSortMsg:SegmentedMsg:DataFrameIndexingMsg:UniqueMsg:In1dMsg:SortMsg:ReductionMsg:EfuncMsg:HDF5Msg:EncodingMsg
+
 CWD=$(cd $(dirname ${BASH_SOURCE[0]}) ; pwd)
 source $CWD/functions.bash
 
@@ -22,20 +24,31 @@ chpl --version
 export ARKOUDA_HOME=$CWD/arkouda
 rm -rf ${ARKOUDA_HOME}
 
-# Clone Arkouda 
+ Clone Arkouda 
 if ! git clone --depth=1 ${ARKOUDA_URL} --branch=${ARKOUDA_BRANCH} ; then
   log_fatal_error "cloning Arkouda"
 fi
 cd ${ARKOUDA_HOME}
 
-# Install dependencies if needed
-if make check-deps 2>/dev/null ; then
-  export ARKOUDA_SKIP_CHECK_DEPS=true
-else
-  if ! nice make -j $($CHPL_HOME/util/buildRelease/chpl-make-cpu_count) install-deps ; then
-    log_fatal_error "installing dependencies"
-  fi
-  export "PATH=${ARKOUDA_HOME}/dep/hdf5-install/bin:$PATH"
+## Install dependencies if needed
+#if make check-deps 2>/dev/null ; then
+#  export ARKOUDA_SKIP_CHECK_DEPS=true
+#else
+#  if ! nice make -j $($CHPL_HOME/util/buildRelease/chpl-make-cpu_count) install-deps ; then
+#    log_fatal_error "installing dependencies"
+#  fi
+#  export "PATH=${ARKOUDA_HOME}/dep/hdf5-install/bin:$PATH"
+#fi
+
+# CHPL_TEST_ARKOUDA_DISABLE_MODELS is a colon separated list of modules to
+# disable.  Disable these modules by commenting them out in ServerModules.cfg
+if [ ! -z "${CHPL_TEST_ARKOUDA_DISABLE_MODELS+x}" ] ; then
+  IFS=":"
+  for mod in $CHPL_TEST_ARKOUDA_DISABLE_MODELS; do
+    cmd="s/^\s*$mod/#$mod/g"
+    sed -i $cmd ServerModules.cfg
+  done
+  unset IFS
 fi
 
 # Compile Arkouda
@@ -59,12 +72,17 @@ else
     log_fatal_error "compiling arkouda"
   fi
 fi
+pwd
 
 # Install Arkouda and python dependencies to a python-deps subdir
 export PYTHONUSERBASE=$ARKOUDA_HOME/python-deps
 # If Arkouda deps use any of our test deps, try to use the versions we want
 AK_PIP_CONTRAINTS="--constraint $CHPL_HOME/third-party/chpl-venv/test-requirements.txt"
+set -x
+echo python3 -m pip install --force-reinstall --upgrade --no-cache-dir $AK_PIP_CONTRAINTS -e .[dev] --user
+echo "--------------------------"
 if ! python3 -m pip install --force-reinstall --upgrade --no-cache-dir $AK_PIP_CONTRAINTS -e .[dev] --user ; then
+set +x
   log_fatal_error "installing arkouda"
 fi
 
