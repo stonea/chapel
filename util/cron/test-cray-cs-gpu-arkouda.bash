@@ -13,6 +13,10 @@ export CHPL_TEST_ARKOUDA_PERF=false
 source $CWD/common-arkouda.bash
 export ARKOUDA_NUMLOCALES=16
 
+# List of Arkouda server modules we exempt from testing (that goal is to
+# eventually have this be an empty list).
+export CHPL_TEST_ARKOUDA_DISABLE_MODELS=ArraySetopsMsg:KExtremeMsg:ArgSortMsg:SegmentedMsg:DataFrameIndexingMsg:UniqueMsg:In1dMsg:SortMsg:ReductionMsg:EfuncMsg:HDF5Msg:EncodingMsg
+
 module list
 
 # setup for CS perf (gasnet-large, gnu, 128-core Rome)

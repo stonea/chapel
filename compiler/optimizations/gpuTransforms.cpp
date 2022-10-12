@@ -470,6 +470,7 @@ class GpuKernel {
   std::vector<Symbol*> kernelIndices_;
   std::vector<Symbol*> kernelActuals_;
   SymbolMap copyMap_;
+  bool lateGpuizationFailure_;
 
   public:
   SymExpr* blockSize_;
@@ -477,6 +478,7 @@ class GpuKernel {
   GpuKernel(const GpuizableLoop &gpuLoop, DefExpr* insertionPoint);
   FnSymbol* fn() const { return fn_; }
   const std::vector<Symbol*>& kernelActuals() { return kernelActuals_; }
+  bool lateGpuizationFailure() const { return lateGpuizationFailure_; }
 
   private:
   void buildStubOutlinedFunction(DefExpr* insertionPoint);
@@ -493,12 +495,15 @@ class GpuKernel {
 
 GpuKernel::GpuKernel(const GpuizableLoop &gpuLoop, DefExpr* insertionPoint)
   : gpuLoop(gpuLoop)
+  , lateGpuizationFailure_(false)
   , blockSize_(nullptr)
 {
   buildStubOutlinedFunction(insertionPoint);
   populateBody(gpuLoop.loop(), fn_);
   normalizeOutlinedFunction();
-  finalize();
+  if(!lateGpuizationFailure_) {
+    finalize();
+  }
 }
 
 void GpuKernel::buildStubOutlinedFunction(DefExpr* insertionPoint) {
@@ -617,8 +622,6 @@ void GpuKernel::generateEarlyReturn() {
 }
 
 void GpuKernel::populateBody(CForLoop *loop, FnSymbol *outlinedFunction) {
-static bool breakOnNextIter = false;
-
   std::set<Symbol*> handledSymbols;
   for_alist(node, loop->body) {
     bool copyNode = true;
@@ -650,11 +653,11 @@ static bool breakOnNextIter = false;
       outlinedFunction->insertAtTail(newDef);
     }
     else {
+      // We also need to copy any defs that appear in blocks
       for_vector(DefExpr, def, defExprsInBody) {
         DefExpr* newDef = def->copy();
         this->copyMap_.put(def->sym, newDef->sym);
         outlinedFunction->insertAtTail(newDef);
-        printf("Type name for def: %s -- %s\n", def->sym->name, def->sym->type->name());
       }
 
       for_vector(SymExpr, symExpr, symExprsInBody) {
@@ -736,6 +739,16 @@ static bool breakOnNextIter = false;
 
 void GpuKernel::normalizeOutlinedFunction() {
   normalize(fn_);
+
+  std::vector<DefExpr*> defExprsInBody;
+  collectDefExprs(fn_, defExprsInBody);
+  for_vector (DefExpr, def, defExprsInBody) {
+    if(def->sym->type == dtUnknown) {
+      this->lateGpuizationFailure_ = true;
+      //printf("Late gpuization failure in fn %s\n", fn_->name);
+      //gdbShouldBreakHere();
+    }
+  }
 
   // normalization above adds PRIM_END_OF_STATEMENTs. It is probably too
   // wide of a brush. We can:
@@ -869,7 +882,11 @@ static void outlineEligibleLoop(FnSymbol *fn, const GpuizableLoop &gpuLoop) {
 
   // Construction of the GpuKernel will create the outlined function
   GpuKernel kernel(gpuLoop, fn->defPoint);
-  generateGpuAndNonGpuPaths(gpuLoop, kernel);
+  if(!kernel.lateGpuizationFailure()) {
+    generateGpuAndNonGpuPaths(gpuLoop, kernel);
+  } else {
+    kernel.fn()->defPoint->remove();
+  }
 }
 
 static void outlineGPUKernels() {
@@ -885,7 +902,7 @@ static void outlineGPUKernels() {
       if (CForLoop* loop = toCForLoop(ast)) {
         GpuizableLoop gpuLoop(loop);
         if (gpuLoop.isEligible()) {
-          printf("Found GPU eligible loop in %s\n", fn->name);
+          //printf("Found GPU eligible loop in %s\n", fn->name);
 
           outlineEligibleLoop(fn, gpuLoop);
         }
