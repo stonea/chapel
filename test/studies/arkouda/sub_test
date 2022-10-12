@@ -141,6 +141,12 @@ if [ ${CHPL_TEST_ARKOUDA_STOP_AFTER_BUILD} -eq "false" ]; then
     fi
     test_end
   fi
+else
+  # We will not get to this point if Arkouda failed to build We need to emit a
+  # test success in order for Jenkins to not complain.
+  test_start "build arkouda"
+  log_success "make output"
+  test_end "build arkouda"
 fi
 
 subtest_end
