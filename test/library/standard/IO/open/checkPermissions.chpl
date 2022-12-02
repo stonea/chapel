@@ -1,4 +1,4 @@
-use IO, OS.POSIX, FileSystem;
+use IO, OS.POSIX;
 
 var filename = "readOnly.txt";
 
@@ -6,7 +6,7 @@ var w = openwriter(filename);
 w.writeln("something");
 w.close();
 
-chmod(filename, 0o0400); // set it to read only now that it has contents
+chmod(filename.c_str(), 0o0400 : mode_t); // set it to read only now that it has contents
 
 try {
   var f = open(filename, iomode.cw);
