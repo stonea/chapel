@@ -1,1 +1,1 @@
-write("This is a test\n");
+write("This is a test Fool\n");
