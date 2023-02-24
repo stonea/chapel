@@ -634,7 +634,7 @@ static void checkIndicesForall(BaseAST* indices) {
 BlockStmt* ForallStmt::build(Expr* indices, Expr* iterator, CallExpr* intents,
                              BlockStmt* body, bool zippered, bool serialOK)
 {
-  checkControlFlow(body, "forall statement");
+  checkControlFlow(body, "forall statement groovey");
 
   if (!indices)
     indices = new UnresolvedSymExpr("chpl__elidedIdx");
