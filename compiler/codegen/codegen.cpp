@@ -2722,17 +2722,27 @@ void codegen() {
     // name uses the PID).
     ensureTmpDirExists();
 
-    pid_t pid = fork();
+    bool forkChildProcess = false;
+  
+    pid_t pid;
+    if(forkChildProcess) {
+      pid = fork();
+    }
 
-    if (pid == 0) {
+    if ((forkChildProcess && pid == 0) || !forkChildProcess) {
       // child process
       gCodegenGPU = true;
       codegenPartTwo();
       makeBinary();
-      clean_exit(0);
-    } else {
-      // parent process
-      INT_ASSERT(!gCodegenGPU);
+
+      if(forkChildProcess) {
+        clean_exit(0);
+      }
+    }
+
+    // parent process
+    gCodegenGPU = false;
+    if(forkChildProcess) {
       int status = 0;
       while (wait(&status) != pid) {
         // wait for child process
@@ -2746,6 +2756,22 @@ void codegen() {
       // the generated GPU code) was not created and we won't be able to continue.
       if(status != 0) {
         clean_exit(status);
+      }
+    } else {
+      // Types cache their code generated result we need to re codegen them into the new
+      // llvm context between our first invocation of clang (where we generate the GPU
+      // code) and the second (where we generate everything else).
+      forv_Vec(TypeSymbol, ts, gTypeSymbols) {
+        ts->llvmImplType = nullptr;
+        ts->llvmTbaaTypeDescriptor = nullptr;
+        ts->llvmTbaaAccessTag = nullptr;
+        ts->llvmConstTbaaAccessTag = nullptr;
+        ts->llvmTbaaAggTypeDescriptor = nullptr;
+        ts->llvmTbaaAggAccessTag = nullptr;
+        ts->llvmConstTbaaAggAccessTag = nullptr;
+        ts->llvmTbaaStructCopyNode = nullptr;
+        ts->llvmConstTbaaStructCopyNode = nullptr;
+        ts->llvmDIType = nullptr;
       }
     }
   }
