@@ -2,5 +2,5 @@ proc main() {
   var x: real;
 
   x = foo();
-  writeln("x is: ", x);
+  writeln("x is ERROR: ", x);
 }
