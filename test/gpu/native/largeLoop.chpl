@@ -1,5 +1,6 @@
 use GPU;
 use GpuDiagnostics;
+use ChplConfig;
 
 config const n = max(int(32))+1;
 config const printArr = false;
@@ -21,6 +22,8 @@ var sum = 0;
 for a in AHost do sum += a;
 
 assert(sum == n);
+
+writeln("CHPL_GPU IS: ", CHPL_GPU)
 
 if printChecksum {
   writeln(n);
