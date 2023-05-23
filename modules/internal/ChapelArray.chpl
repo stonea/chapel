@@ -865,6 +865,27 @@ module ChapelArray {
     var _instance; // generic, but an instance of a subclass of BaseArr
     var _unowned:bool;
 
+    var _domainRecord;
+
+    proc init(_pid:int, _instance, _unowned:bool = false) {
+      this._pid = _pid;
+      this._instance = _instance;
+      this._unowned = _unowned;
+
+      // Copy of _getDomain(_value.dom);
+      //if _to_unmanaged(_value.dom.type) != value.type then
+      //  compilerError("Domain on borrow created");
+
+      //if _isPrivatized(_value.dom) then
+
+        this._domainRecord = new _domain(_instance.dom.pid, _instance.dom, _unowned=true);
+        this.complete();
+        this._domainRecord = _getDomain(_value.dom);
+
+      //else
+        //this._domainRecord = new _domain(nullPid, _value.dom, _unowned=true);
+    }
+
     proc chpl__serialize() where _instance.chpl__rvfMe() {
       return _instance.chpl__serialize();
     }
@@ -915,7 +936,10 @@ module ChapelArray {
 
     pragma "no copy return"
     pragma "return not owned"
-    proc _dom const ref do return _getDomain(_value.dom);
+    proc _dom {
+      return _domainRecord;
+    }
+    //proc _dom const ref do return _getDomain(_value.dom);
 
     /* The number of dimensions in the array */
     proc rank param do return this.domain.rank;
