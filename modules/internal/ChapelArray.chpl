@@ -915,7 +915,7 @@ module ChapelArray {
 
     pragma "no copy return"
     pragma "return not owned"
-    proc _dom do return _getDomain(_value.dom);
+    proc _dom const ref do return _getDomain(_value.dom);
 
     /* The number of dimensions in the array */
     proc rank param do return this.domain.rank;
