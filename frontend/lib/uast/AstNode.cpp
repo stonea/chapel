@@ -30,6 +30,7 @@
 #include "chpl/uast/chpl-syntax-printer.h"
 
 #include <iomanip>
+#include <sstream>
 
 namespace chpl {
 namespace uast {
@@ -540,6 +541,13 @@ void AstNode::stringify(std::ostream& ss,
       }
       break;
   }
+}
+
+void AstNode::stringifyCStr(char *buf, int len) const {
+  std::ostringstream ss;
+  stringify(ss, StringifyKind::DEBUG_DETAIL);
+  std::string s = ss.str();
+  strncpy(buf, s.c_str(), len);
 }
 
 void AstNode::serialize(Serializer& ser) const {

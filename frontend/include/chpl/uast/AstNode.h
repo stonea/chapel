@@ -273,6 +273,7 @@ class AstNode {
   void mark(Context* context) const;
 
   void stringify(std::ostream& ss, chpl::StringifyKind stringKind) const;
+  void stringifyCStr(char *buf, int len) const;
 
   // compute the maximum width of all of the IDs
   int computeMaxIdStringWidth() const;
