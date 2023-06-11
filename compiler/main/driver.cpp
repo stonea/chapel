@@ -2095,6 +2095,9 @@ int main(int argc, char* argv[]) {
 
   tracker.Stop();
 
+  printf("OH NOES, THIS WON't WORK\n");
+  clean_exit(1);
+
   if (printPasses == true || printPassesFile != NULL) {
     tracker.ReportPass();
     tracker.ReportTotal();
