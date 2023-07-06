@@ -882,6 +882,9 @@ initPrimitive() {
   // synchronize threads in a GPU kernel (equivalent to CUDA __syncThreads)
   prim_def(PRIM_GPU_SYNC_THREADS, "gpu syncThreads", returnInfoVoid, true);
 
+  // synchronize threads in a warp (equivalent to CUDA __syncWarp)
+  prim_def(PRIM_GPU_SYNC_WARP, "gpu syncWarp", returnInfoVoid, true);
+
   // If embedded inside a gpuizable loop will set the blocksize when the kernel
   // for that loop launches.
   prim_def(PRIM_GPU_SET_BLOCKSIZE, "gpu set blockSize", returnInfoVoid, true);

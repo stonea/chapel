@@ -113,8 +113,16 @@ __device__ static inline void chpl_gpu_force_sync() {
   __builtin_amdgcn_s_barrier();
 }
 
+__device__ static inline void chpl_gpu_force_syncwarp() {
+  asm volatile("bar.warp.sync   -1;" : : : "memory");
+}
+
 __host__ static inline void chpl_gpu_force_sync() {
   chpl_internal_error("chpl_gpu_force_sync called from host");
+}
+
+__host__ static inline void chpl_gpu_force_syncwarp() {
+  chpl_internal_error("chpl_gpu_force_sync_warp called from host");
 }
 
 __device__ static inline uint32_t chpl_gpu_getThreadIdxX() { return __builtin_amdgcn_workitem_id_x(); }

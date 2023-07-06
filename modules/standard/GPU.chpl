@@ -175,6 +175,10 @@ module GPU
     __primitive("gpu syncThreads");
   }
 
+  inline proc syncWarp() {
+    __primitive("gpu syncWarp");
+  }
+
   /*
     Allocate block shared memory, enough to store ``size`` elements of
     ``eltType``. Returns a :type:`CTypes.c_ptr` to the allocated array. Note that
