@@ -22,6 +22,7 @@
 #define _FORALL_STMT_H_
 
 #include "stmt.h"
+#include "LoopStmt.h"
 
 enum ForallAutoLocalAccessCloneType {
   NOT_CLONE,
@@ -69,7 +70,7 @@ class ForallOptimizationInfo {
     // forall loop statement //
 ///////////////////////////////////
 
-class ForallStmt final : public Stmt
+class ForallStmt final : public  OrderIndependentLoop
 {
 public:
   bool       zippered()       const; // 'zip' keyword used and >1 index var
@@ -78,7 +79,8 @@ public:
   AList&     iteratedExpressions();  // Exprs, one per iterated expr
   const AList& constIteratedExpressions() const;  // const counterpart
   AList&     shadowVariables();      // DefExprs of ShadowVarSymbols
-  BlockStmt* loopBody()       const; // the body of the forall loop
+  BlockStmt* loopBody();             // the body of the forall loop
+  const BlockStmt* loopBody() const; // the body of the forall loop
   std::vector<BlockStmt*> loopBodies() const; // body or bodies of followers
   LabelSymbol* continueLabel();      // create it if not already
   CallExpr* zipCall() const;
@@ -142,7 +144,7 @@ private:
   AList          fIterVars;    // DefExprs of the induction vars
   AList          fIterExprs;
   AList          fShadowVars;  // may be empty
-  BlockStmt*     fLoopBody;    // always present
+//  BlockStmt*     fLoopBody;    // always present **AIS** REMOVE
   bool           fZippered;
   CallExpr*      fZipCall;
   bool           fFromForLoop; // see comment below
@@ -195,7 +197,8 @@ inline const AList& ForallStmt::constIteratedExpressions() const {
   return fIterExprs;
 }
 inline AList& ForallStmt::shadowVariables()        { return fShadowVars; }
-inline BlockStmt* ForallStmt::loopBody()     const { return fLoopBody;   }
+inline BlockStmt* ForallStmt::loopBody()           { return this;   }
+inline const BlockStmt* ForallStmt::loopBody() const { return this; }
 
 inline CallExpr* ForallStmt::zipCall()       const { return fZipCall;    }
 

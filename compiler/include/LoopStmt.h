@@ -84,4 +84,13 @@ class LoopWithIntents : public LoopStmt {
     bool                   mZippered;
 };
 
+class OrderIndependentLoop : public LoopWithIntents {
+public:
+  OrderIndependentLoop(BlockStmt *initBody)
+    : LoopWithIntents(initBody)
+  {
+  }
+};
+
+
 #endif

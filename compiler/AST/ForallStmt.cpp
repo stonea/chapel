@@ -41,9 +41,10 @@ ForallOptimizationInfo::ForallOptimizationInfo():
 //
 /////////////////////////////////////////////////////////////////////////////
 
-ForallStmt::ForallStmt(BlockStmt* body):
-  Stmt(E_ForallStmt),
-  fLoopBody(body),
+ForallStmt::ForallStmt(BlockStmt* body)
+  : //  Stmt(E_ForallStmt), *AIS* REMOVE
+  OrderIndependentLoop(body),
+  //fLoopBody(body), **AIS** REMOVE
   fZippered(false),
   fZipCall(NULL),
   fFromForLoop(false),
@@ -63,7 +64,7 @@ ForallStmt::ForallStmt(BlockStmt* body):
   fIterVars.parent = this;
   fIterExprs.parent = this;
   fShadowVars.parent = this;
-  INT_ASSERT(fLoopBody != NULL);
+  INT_ASSERT(loopBody() != nullptr);
 
 
   optInfo.autoLocalAccessChecked = false;
@@ -73,7 +74,7 @@ ForallStmt::ForallStmt(BlockStmt* body):
 }
 
 ForallStmt* ForallStmt::copyInner(SymbolMap* map) {
-  ForallStmt* _this  = new ForallStmt(COPY_INT(fLoopBody));
+  ForallStmt* _this  = new ForallStmt(COPY_INT(loopBody()));
   for_alist(expr, fIterVars)
     _this->fIterVars.insertAtTail(COPY_INT(expr));
   for_alist(expr, fIterExprs)
@@ -101,10 +102,14 @@ ForallStmt* ForallStmt::copyInner(SymbolMap* map) {
 }
 
 void ForallStmt::replaceChild(Expr* oldAst, Expr* newAst) {
-  if (oldAst == fLoopBody)
-    fLoopBody = toBlockStmt(newAst);
+//  if (oldAst == this) {
+//    INT_ASSERT(false); // Not sure how to handle this case
+    // **AIS** ???
+//    fLoopBody = toBlockStmt(newAst);
+//  }
+/*  else*/
 
-  else if (oldAst == fRecIterIRdef)
+  if (oldAst == fRecIterIRdef)
     fRecIterIRdef = toDefExpr(newAst);
   else if (oldAst == fRecIterICdef)
     fRecIterICdef = toDefExpr(newAst);
@@ -165,15 +170,15 @@ void ForallStmt::verify() {
     INT_ASSERT(fRecIterFreeIterator == NULL);
   }
 
-  INT_ASSERT(fLoopBody);
-  verifyParent(fLoopBody);
-  verifyNotOnList(fLoopBody);
+  INT_ASSERT(loopBody());
+  verifyParent(loopBody());
+  verifyNotOnList(loopBody());
   // should be a normal block
-  INT_ASSERT(fLoopBody->blockTag == BLOCK_NORMAL);
-  INT_ASSERT(!fLoopBody->blockInfoGet());
-  INT_ASSERT(!fLoopBody->isLoopStmt());
-  INT_ASSERT(!fLoopBody->userLabel);
-  INT_ASSERT(!fLoopBody->byrefVars);
+  INT_ASSERT(loopBody()->blockTag == BLOCK_NORMAL);
+  INT_ASSERT(!loopBody()->blockInfoGet());
+  INT_ASSERT(!loopBody()->isLoopStmt());
+  INT_ASSERT(!loopBody()->userLabel);
+  INT_ASSERT(!loopBody()->byrefVars);
 
   // ForallStmts are lowered away during lowerIterators().
   INT_ASSERT(!iteratorsLowered);
@@ -192,7 +197,7 @@ void ForallStmt::accept(AstVisitor* visitor) {
     if (fRecIterFreeIterator) fRecIterFreeIterator->accept(visitor);
     if (fZipCall)             fZipCall->accept(visitor);
 
-    fLoopBody->accept(visitor);
+    loopBody()->accept(visitor);
 
     visitor->exitForallStmt(this);
   }
@@ -228,14 +233,14 @@ Expr* ForallStmt::getNextExpr(Expr* expr) {
     else if (fRecIterIRdef != NULL)
       return fRecIterIRdef->getFirstExpr();
     else
-      return fLoopBody->getFirstExpr();
+      return loopBody()->getFirstExpr();
   }
 
   if (expr == fShadowVars.tail) {
     if (fRecIterIRdef != NULL)
       return fRecIterIRdef->getFirstExpr();
     else
-      return fLoopBody->getFirstExpr();
+      return loopBody()->getFirstExpr();
   }
 
   // Out of these four fields, either all are present or none:
@@ -251,9 +256,9 @@ Expr* ForallStmt::getNextExpr(Expr* expr) {
     return fRecIterFreeIterator->getFirstExpr();
 
   if (expr == fRecIterFreeIterator)
-    return fLoopBody->getFirstExpr();
+    return loopBody()->getFirstExpr();
 
-  if (expr == fLoopBody)
+  if (expr == loopBody())
     return this;
 
   INT_ASSERT(false); // should have done one of the above
@@ -354,13 +359,13 @@ VarSymbol* parIdxVar(ForallStmt* fs) {
 
 LabelSymbol* ForallStmt::continueLabel() {
   if (fContinueLabel == NULL) {
-    // We are extra-cautious here, to guard against the potential
-    // that we have added code that must execute at the end of fLoopBody.
-    // If this presents hardship, we can switch to always creating
-    // fContinueLabel, right when the ForallStmt is created.
+    // We are extra-cautious here, to guard against the potential that we have
+    // added code that must execute at the end of the loop body. If this
+    // presents hardship, we can switch to always creating fContinueLabel, right
+    // when the ForallStmt is created.
     INT_ASSERT(!normalized);
     fContinueLabel = new LabelSymbol("_continueLabel");
-    fLoopBody->insertAtTail(new DefExpr(fContinueLabel));
+    loopBody()->insertAtTail(new DefExpr(fContinueLabel));
   }
   return fContinueLabel;
 }
@@ -736,7 +741,8 @@ std::vector<BlockStmt*> ForallStmt::loopBodies() const {
   std::vector<BlockStmt*> bodies;
 
   // First, check for follower loops with fast follower check.
-  for_alist(stmt, fLoopBody->body) {
+  BlockStmt* lbody = const_cast<BlockStmt*>(loopBody()); // **AIS** Not ideal, can we keep const safety?
+  for_alist(stmt, lbody->body) {
     if (CondStmt* cond = toCondStmt(stmt)) {
       gatherFollowerLoopBodies(cond->thenStmt, bodies);
       if (cond->elseStmt)
@@ -745,7 +751,7 @@ std::vector<BlockStmt*> ForallStmt::loopBodies() const {
   }
   if (bodies.size() == 0) {
     // No fast follower check. Try a fast follower loop.
-    gatherFollowerLoopBodies(fLoopBody, bodies);
+    gatherFollowerLoopBodies(lbody, bodies);
   }
 
   // With the fast follower check, we might have 2 bodies,
@@ -754,7 +760,7 @@ std::vector<BlockStmt*> ForallStmt::loopBodies() const {
 
   if (bodies.size() == 0) {
     // No follower loops, must be standalone pattern, just use normal body
-    bodies.push_back(fLoopBody);
+    bodies.push_back(lbody);
   }
   return bodies;
 }
