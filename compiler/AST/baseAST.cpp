@@ -107,10 +107,10 @@ void printStatistics(const char* pass) {
   foreach_ast(decl_counters);
 
   int nStmt = nBlockStmt + nCondStmt + nDeferStmt + nGotoStmt + nUseStmt +
-    nImportStmt + nExternBlockStmt + nForallStmt + nTryStmt + nForwardingStmt +
+    nImportStmt + nExternBlockStmt + nTryStmt + nForwardingStmt +
     nCatchStmt + nImplementsStmt;
   int kStmt = kBlockStmt + kCondStmt + kDeferStmt + kGotoStmt + kUseStmt +
-    kImportStmt + kExternBlockStmt + kForallStmt + kTryStmt + kForwardingStmt +
+    kImportStmt + kExternBlockStmt + kTryStmt + kForwardingStmt +
     kCatchStmt + kImplementsStmt;
   int nExpr = nUnresolvedSymExpr + nSymExpr + nDefExpr + nCallExpr +
     nContextCallExpr + nLoopExpr + nNamedExpr + nIfcConstraint + nIfExpr +
@@ -516,7 +516,6 @@ const char* BaseAST::astTagAsString() const {
     case E_CondStmt:           return "CondStmt";
     case E_GotoStmt:           return "GotoStmt";
     case E_DeferStmt:          return "DeferStmt";
-    case E_ForallStmt:         return "ForallStmt";
     case E_TryStmt:            return "TryStmt";
     case E_ForwardingStmt:     return "ForwardingStmt";
     case E_CatchStmt:          return "CatchStmt";
@@ -528,6 +527,7 @@ const char* BaseAST::astTagAsString() const {
         if (false) return "";
         else if (stmt->isCForLoop())     return "CForLoop";
         else if (stmt->isForLoop())      return "ForLoop";
+        else if (stmt->isForallStmt())   return "ForallStmt";
         else if (stmt->isParamForLoop()) return "ParamForLoop";
         else if (stmt->isWhileDoStmt())  return "WhileDoStmt";
         else if (stmt->isDoWhileStmt())  return "DoWhileStmt";
@@ -702,6 +702,11 @@ bool isForLoop(const BaseAST* a)
   const BlockStmt* stmt = toConstBlockStmt(a);
 
   return (stmt != 0 && stmt->isForLoop()) ? true : false;
+}
+
+bool isForallStmt(const BaseAST* a) {
+  const BlockStmt* stmt = toConstBlockStmt(a);
+  return (stmt != 0 && stmt->isForallStmt()) ? true : false;
 }
 
 bool isCoforallLoop(const BaseAST* a)

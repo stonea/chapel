@@ -84,12 +84,13 @@
   macro(CondStmt) sep                              \
   macro(GotoStmt) sep                              \
   macro(DeferStmt) sep                             \
-  macro(ForallStmt) sep                            \
   macro(TryStmt) sep                               \
   macro(ForwardingStmt) sep                        \
   macro(CatchStmt) sep                             \
   macro(ImplementsStmt) sep                        \
   macro(ExternBlockStmt)
+
+//  macro(ForallStmt) sep                            \ **AIS** REMOVE
 
 #define foreach_ast(macro)                         \
   foreach_ast_sep(macro, ;)
@@ -109,6 +110,7 @@ class WhileDoStmt;
 class DoWhileStmt;
 class ForLoop;
 class CForLoop;
+class ForallStmt;
 class ParamForLoop;
 
 class QualifiedType;
@@ -168,7 +170,7 @@ enum AstTag {
   E_BlockStmt,
   E_CondStmt,
   E_GotoStmt,
-  E_ForallStmt,
+//  E_ForallStmt, //**AIS** REMOVE
   E_ImplementsStmt,
   E_ExternBlockStmt,
   E_TemporaryConversionThunk,
@@ -340,7 +342,7 @@ def_is_ast(BlockStmt)
 def_is_ast(CondStmt)
 def_is_ast(GotoStmt)
 def_is_ast(DeferStmt)
-def_is_ast(ForallStmt)
+//def_is_ast(ForallStmt) **AIS** REMOVE
 def_is_ast(TryStmt)
 def_is_ast(ForwardingStmt)
 def_is_ast(CatchStmt)
@@ -369,6 +371,7 @@ bool isWhileDoStmt(const BaseAST* a);
 bool isDoWhileStmt(const BaseAST* a);
 bool isParamForLoop(const BaseAST* a);
 bool isForLoop(const BaseAST* a);
+bool isForallStmt(const BaseAST* a);
 bool isCoforallLoop(const BaseAST* a);
 bool isCForLoop(const BaseAST* a);
 
@@ -396,7 +399,6 @@ def_to_ast(BlockStmt)
 def_to_ast(CondStmt)
 def_to_ast(GotoStmt)
 def_to_ast(DeferStmt)
-def_to_ast(ForallStmt)
 def_to_ast(TryStmt)
 def_to_ast(ForwardingStmt)
 def_to_ast(CatchStmt)
@@ -427,6 +429,7 @@ def_to_ast(WhileStmt);
 def_to_ast(WhileDoStmt);
 def_to_ast(DoWhileStmt);
 def_to_ast(ForLoop);
+def_to_ast(ForallStmt)
 def_to_ast(CForLoop);
 def_to_ast(ParamForLoop);
 
@@ -459,7 +462,6 @@ def_less_ast(BlockStmt)
 def_less_ast(CondStmt)
 def_less_ast(GotoStmt)
 def_less_ast(DeferStmt)
-def_less_ast(ForallStmt)
 def_less_ast(TryStmt)
 def_less_ast(ForwardingStmt)
 def_less_ast(CatchStmt)
@@ -489,6 +491,7 @@ def_less_ast(WhileStmt);
 def_less_ast(WhileDoStmt);
 def_less_ast(DoWhileStmt);
 def_less_ast(ForLoop);
+def_less_ast(ForallStmt);
 def_less_ast(CForLoop);
 def_less_ast(ParamForLoop);
 
@@ -603,6 +606,17 @@ static inline const CallExpr* toConstCallExpr(const BaseAST* a)
       AST_CALL_CHILD(_a, ForLoop,      indexGet(),     call, __VA_ARGS__); \
       AST_CALL_CHILD(_a, ForLoop,      iteratorGet(),  call, __VA_ARGS__); \
                                                                            \
+    } else if (isForallStmt(_a)      == true) {                              \
+      AST_CALL_LIST (_a, ForLoop,      body,                call, __VA_ARGS__); \
+      AST_CALL_LIST (_a, ForallStmt, inductionVariables(),  call, __VA_ARGS__); \
+      AST_CALL_LIST (_a, ForallStmt, iteratedExpressions(), call, __VA_ARGS__); \
+      AST_CALL_LIST (_a, ForallStmt, shadowVariables(),     call, __VA_ARGS__); \
+      AST_CALL_CHILD(_a, ForallStmt, fRecIterIRdef,         call, __VA_ARGS__); \
+      AST_CALL_CHILD(_a, ForallStmt, fRecIterICdef,         call, __VA_ARGS__); \
+      AST_CALL_CHILD(_a, ForallStmt, fRecIterGetIterator,   call, __VA_ARGS__); \
+      AST_CALL_CHILD(_a, ForallStmt, fRecIterFreeIterator,  call, __VA_ARGS__); \
+      AST_CALL_CHILD(_a, ForallStmt, zipCall(),             call, __VA_ARGS__); \
+                                                                           \
     } else if (isCoforallLoop(_a) == true) {                               \
       AST_CALL_LIST (_a, ForLoop,      body,           call, __VA_ARGS__); \
       AST_CALL_CHILD(_a, ForLoop,      indexGet(),     call, __VA_ARGS__); \
@@ -654,17 +668,6 @@ static inline const CallExpr* toConstCallExpr(const BaseAST* a)
     AST_CALL_CHILD(_a, ImplementsStmt, iConstraint, call, __VA_ARGS__); \
     AST_CALL_CHILD(_a, ImplementsStmt, implBody, call, __VA_ARGS__);    \
     break;                                                              \
-  case E_ForallStmt:                                                          \
-    AST_CALL_LIST (_a, ForallStmt, inductionVariables(),  call, __VA_ARGS__); \
-    AST_CALL_LIST (_a, ForallStmt, iteratedExpressions(), call, __VA_ARGS__); \
-    AST_CALL_LIST (_a, ForallStmt, shadowVariables(),     call, __VA_ARGS__); \
-    AST_CALL_CHILD(_a, ForallStmt, fRecIterIRdef,         call, __VA_ARGS__); \
-    AST_CALL_CHILD(_a, ForallStmt, fRecIterICdef,         call, __VA_ARGS__); \
-    AST_CALL_CHILD(_a, ForallStmt, fRecIterGetIterator,   call, __VA_ARGS__); \
-    AST_CALL_CHILD(_a, ForallStmt, fRecIterFreeIterator,  call, __VA_ARGS__); \
-    AST_CALL_CHILD(_a, ForallStmt, zipCall(),             call, __VA_ARGS__); \
-    AST_CALL_CHILD(_a, ForallStmt, loopBody(),            call, __VA_ARGS__); \
-    break;                                                                    \
   case E_ModuleSymbol:                                                  \
     AST_CALL_CHILD(_a, ModuleSymbol, block, call, __VA_ARGS__);         \
     break;                                                              \
@@ -712,6 +715,20 @@ static inline const CallExpr* toConstCallExpr(const BaseAST* a)
   default:                                                              \
     break;                                                              \
   }
+
+/* **AIS** REMOVE
+  case E_ForallStmt:                                                          \
+    AST_CALL_LIST (_a, ForallStmt, inductionVariables(),  call, __VA_ARGS__); \
+    AST_CALL_LIST (_a, ForallStmt, iteratedExpressions(), call, __VA_ARGS__); \
+    AST_CALL_LIST (_a, ForallStmt, shadowVariables(),     call, __VA_ARGS__); \
+    AST_CALL_CHILD(_a, ForallStmt, fRecIterIRdef,         call, __VA_ARGS__); \
+    AST_CALL_CHILD(_a, ForallStmt, fRecIterICdef,         call, __VA_ARGS__); \
+    AST_CALL_CHILD(_a, ForallStmt, fRecIterGetIterator,   call, __VA_ARGS__); \
+    AST_CALL_CHILD(_a, ForallStmt, fRecIterFreeIterator,  call, __VA_ARGS__); \
+    AST_CALL_CHILD(_a, ForallStmt, zipCall(),             call, __VA_ARGS__); \
+    AST_CALL_CHILD(_a, ForallStmt, loopBody(),            call, __VA_ARGS__); \
+    break;                                                                    \
+*/
 
 //
 // clean IR between passes by clearing some back pointers to dead AST

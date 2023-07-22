@@ -79,7 +79,7 @@ private:
 
 class LoopWithIntents : public LoopStmt {
   protected:
-    LoopWithIntents(BlockStmt* initBody);
+    explicit LoopWithIntents(BlockStmt* initBody);
 
     bool                   mZippered;
 };

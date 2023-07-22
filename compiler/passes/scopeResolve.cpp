@@ -1439,13 +1439,18 @@ static void checkRefsToIdxVars(ForallStmt* fs, DefExpr* def,
 }
 
 static void setupShadowVars() {
-  forv_Vec(ForallStmt, fs, gForallStmts)
+//  forv_Vec(ForallStmt, fs, gForallStmts) **AIS** REMOVE
+  forv_Vec(BlockStmt, blockStmt, gBlockStmts) {
+    if(!blockStmt->isForallStmt()) { continue; }
+    ForallStmt* fs = (ForallStmt*)blockStmt;
+
     for_shadow_vars_and_defs(svar, def, temp, fs) {
       if (hasOuterVariable(svar))
         setupOuterVar(fs, svar);
       if (svar->isTaskPrivate())
         checkRefsToIdxVars(fs, def, svar);
     }
+  }
 
   // Instead of the two nested loops above, we could march through
   // gShadowVarSymbols and invoke setupOuterVar(svar->parentExpr, svar).

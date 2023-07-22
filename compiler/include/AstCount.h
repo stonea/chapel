@@ -40,6 +40,7 @@ foreach_ast(decl_members);
   int numDoWhileStmt;
   int numCForLoop;
   int numForLoop;
+  int numForallStmt;
   int numParamForLoop;
 
    AstCount();

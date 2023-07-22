@@ -150,6 +150,7 @@ public:
   virtual bool        isForLoop()                                  const;
   virtual bool        isCoforallLoop()                             const;
   virtual bool        isCForLoop()                                 const;
+  virtual bool        isForallStmt()                               const;
 
   virtual void        checkConstLoops();
   virtual bool        deadBlockCleanup();

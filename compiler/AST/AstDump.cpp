@@ -193,8 +193,7 @@ bool AstDump::enterDefExpr(DefExpr* node) {
     retval = false;
 
   } else {
-    if (isBlockStmt(node->parentExpr) ||
-        isForallStmt(node->parentExpr)) {
+    if (isBlockStmt(node->parentExpr)) {
       newline();
     }
 
@@ -542,14 +541,26 @@ bool AstDump::enterForallStmt(ForallStmt* node) {
   newline();
   --mIndent;
   write("forall body");
+  write("{");
+  printBlockID(node);
+  ++mIndent;
+
+  /*
   node->loopBody()->accept(this);
   --mIndent;
   newline();
-  write("}");
-  return false;
+  write("}");*/
+
+  return true;
 }
 void AstDump::exitForallStmt(ForallStmt* node) {
+  --mIndent;
+  newline();
+  write(false, "}", true);
+  printBlockID(node);
 }
+
+
 
 //
 // WhileDoStmt

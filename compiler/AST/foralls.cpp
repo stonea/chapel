@@ -1410,7 +1410,10 @@ static void convertIteratorForLoopexpr(ForallStmt* fs) {
 
 // Todo: can we merge this into resolveForallHeader() ?
 void resolveForallStmts2() {
-  forv_Vec(ForallStmt, fs, gForallStmts) {
+  forv_Vec(BlockStmt, stmt, gBlockStmts) {
+    if(!stmt->isForallStmt()) { continue; }
+    ForallStmt *fs = (ForallStmt*)stmt;
+
     if (!fs->inTree() || !fs->getFunction()->isResolved())
       continue;
 

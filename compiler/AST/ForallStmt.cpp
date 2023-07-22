@@ -64,17 +64,17 @@ ForallStmt::ForallStmt(BlockStmt* body)
   fIterVars.parent = this;
   fIterExprs.parent = this;
   fShadowVars.parent = this;
-  INT_ASSERT(loopBody() != nullptr);
+//  INT_ASSERT(loopBody() != nullptr); **AIS** Necessarily true
 
 
   optInfo.autoLocalAccessChecked = false;
   optInfo.hasAlignedFollowers = false;
 
-  gForallStmts.add(this);
+//  gForallStmts.add(this);
 }
 
 ForallStmt* ForallStmt::copyInner(SymbolMap* map) {
-  ForallStmt* _this  = new ForallStmt(COPY_INT(loopBody()));
+  ForallStmt* _this  = new ForallStmt(nullptr);
   for_alist(expr, fIterVars)
     _this->fIterVars.insertAtTail(COPY_INT(expr));
   for_alist(expr, fIterExprs)
@@ -97,6 +97,9 @@ ForallStmt* ForallStmt::copyInner(SymbolMap* map) {
   _this->fRecIterGetIterator  = COPY_INT(fRecIterGetIterator);
   _this->fRecIterFreeIterator = COPY_INT(fRecIterFreeIterator);
   _this->fZipCall             = COPY_INT(fZipCall);
+
+  for_alist(expr, body)
+    _this->insertAtTail(expr->copy(map, true));
 
   return _this;
 }
@@ -134,7 +137,7 @@ static void verifyList(AList& list, Expr* parent) {
 }
 
 void ForallStmt::verify() {
-  Expr::verify(E_ForallStmt);
+  BlockStmt::verify(); // **AIS** Not sure this is needed? Maybe verifyParent(loopBody()) already has this covered?
 
   if (!fOverTupleExpand || resolved)
     INT_ASSERT(fIterVars.length == fIterExprs.length);
@@ -170,7 +173,7 @@ void ForallStmt::verify() {
     INT_ASSERT(fRecIterFreeIterator == NULL);
   }
 
-  INT_ASSERT(loopBody());
+//  INT_ASSERT(loopBody()); **AIS** Necessarily true
   verifyParent(loopBody());
   verifyNotOnList(loopBody());
   // should be a normal block
@@ -197,7 +200,7 @@ void ForallStmt::accept(AstVisitor* visitor) {
     if (fRecIterFreeIterator) fRecIterFreeIterator->accept(visitor);
     if (fZipCall)             fZipCall->accept(visitor);
 
-    loopBody()->accept(visitor);
+    BlockStmt::accept(visitor);
 
     visitor->exitForallStmt(this);
   }
@@ -321,17 +324,23 @@ ForallStmt* isForallIterExpr(Expr* expr) {
 
 // Return a ForallStmt* if 'expr' is its loopBody.
 ForallStmt* isForallLoopBody(Expr* expr) {
-  if (ForallStmt* pfs = toForallStmt(expr->parentExpr))
+  if (ForallStmt* pfs = toForallStmt(expr))
+    return pfs;
+
+  /*if (ForallStmt* pfs = toForallStmt(expr->parentExpr))
     if (expr == pfs->loopBody())
-      return pfs;
+      return pfs;*/
   return NULL;
 }
 
 // Return a const ForallStmt* if 'expr' is its loopBody.
 const ForallStmt* isConstForallLoopBody(const Expr* expr) {
-  if (const ForallStmt* pfs = toConstForallStmt(expr->parentExpr))
+  if (const ForallStmt* pfs = toConstForallStmt(expr))
+    return pfs;
+
+  /*if (const ForallStmt* pfs = toConstForallStmt(expr->parentExpr))
     if (expr == pfs->loopBody())
-      return pfs;
+      return pfs;*/
   return NULL;
 }
 

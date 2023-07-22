@@ -77,7 +77,8 @@ ResolveScope* ResolveScope::findOrCreateScopeFor(DefExpr* def) {
   retval = getScopeFor(ast);
 
   if (retval == NULL) {
-    if (BlockStmt* blockStmt = toBlockStmt(ast)) {
+    BlockStmt *blockStmt = toBlockStmt(ast);
+    if (blockStmt && !blockStmt->isForallStmt()) {
       retval = new ResolveScope(blockStmt, NULL);
 
     } else if (FnSymbol*  fnSymbol = toFnSymbol(ast)) {
@@ -89,7 +90,7 @@ ResolveScope* ResolveScope::findOrCreateScopeFor(DefExpr* def) {
     } else if (LoopExpr* fe = toLoopExpr(ast)) {
       retval = new ResolveScope(fe, NULL);
 
-    } else if (ForallStmt* fs = toForallStmt(ast)) {
+    } else if (ForallStmt* fs = toForallStmt(ast)) { // **AIS** I think this may be unnecessary
       retval = new ResolveScope(fs, NULL);
 
     } else {

@@ -145,7 +145,11 @@ void doPreNormalizeArrayOptimizations() {
                                  fAutoAggregation ||
                                  !fNoFastFollowers;
   if (anyAnalysisNeeded) {
-    forv_expanding_Vec(ForallStmt, forall, gForallStmts) {
+    //forv_expanding_Vec(ForallStmt, forall, gForallStmts) { **AIS** REMOVE
+    forv_expanding_Vec(BlockStmt, blockStmt, gBlockStmts) {
+      if(!blockStmt->isForallStmt()) { continue; }
+      ForallStmt* forall = (ForallStmt*)blockStmt;
+
       if (!fNoFastFollowers) {
         symbolicFastFollowerAnalysis(forall);
       }

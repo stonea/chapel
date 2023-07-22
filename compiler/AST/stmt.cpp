@@ -600,6 +600,11 @@ BlockStmt::isCForLoop() const {
   return false;
 }
 
+bool
+BlockStmt::isForallStmt() const {
+  return false;
+}
+
 void
 BlockStmt::checkConstLoops() {
 

@@ -105,6 +105,8 @@ public:
   void        replaceChild(Expr* oldAst, Expr* newAst) override;
   Expr*       getFirstExpr() override;
   Expr*       getNextExpr(Expr* expr) override;
+  bool           isForallStmt() const override
+                 { return true; }
   void        setZipCall(CallExpr *call);
 
   static ForallStmt* buildHelper(Expr* indices, Expr* iterator,
@@ -156,7 +158,7 @@ private:
   bool           fIsForallExpr;
 
   // constructor
-  ForallStmt(BlockStmt* body);
+  explicit ForallStmt(BlockStmt* body);
 
 public:
   LabelSymbol*            fContinueLabel;

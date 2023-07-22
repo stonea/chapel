@@ -130,14 +130,13 @@ LoopStmt* LoopStmt::findEnclosingLoop(Expr* expr, const char* name)
   return retval;
 }
 
+// **AIS** TODO: shuld probably just rename to `findEnclosingLoop` now that
+// Forall are LoopStmt's
 Stmt* LoopStmt::findEnclosingLoopOrForall(Expr* expr)
 {
   for (Expr* curr = expr; curr != NULL; curr = curr->parentExpr) {
     if (LoopStmt* loop = toLoopStmt(curr)) {
       return loop;
-    }
-    if (ForallStmt* forall = toForallStmt(curr)) {
-      return forall;
     }
   }
   // no enclosing loops

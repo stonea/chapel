@@ -1546,9 +1546,15 @@ static void removeDeadIters() {
 
 void lowerForallStmtsInline()
 {
-  forv_expanding_Vec(ForallStmt, fs, gForallStmts)
+//  forv_expanding_Vec(ForallStmt, fs, gForallStmts) { **AIS**
+
+  forv_expanding_Vec(BlockStmt, blockStmt, gBlockStmts) {
+    if(!blockStmt->isForallStmt()) { continue; }
+    ForallStmt* fs = (ForallStmt*)blockStmt;
+
     if (fs->inTree())
       lowerOneForallStmt(fs);
+  }
 
   USR_STOP();
 

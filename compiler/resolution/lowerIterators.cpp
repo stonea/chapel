@@ -380,7 +380,11 @@ static void markVectorizableForallLoops()
     }
   }
 
-  forv_Vec(ForallStmt, forall, gForallStmts) {
+//  forv_Vec(ForallStmt, forall, gForallStmts) { **AIS** REMOVE
+  forv_Vec(BlockStmt, blockStmt, gBlockStmts) {
+    if(!blockStmt->isForallStmt()) { continue; }
+    ForallStmt* forall = (ForallStmt*)blockStmt;
+
     // Consider functions called in the loop body.
     // Do they present any of the following hazards?
     //   * synchronization (use of sync variables or atomics)
