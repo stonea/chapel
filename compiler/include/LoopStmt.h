@@ -77,4 +77,11 @@ private:
   bool                   isNamed(const char* name)                       const;
 };
 
+class LoopWithIntents : public LoopStmt {
+  protected:
+    LoopWithIntents(BlockStmt* initBody);
+
+    bool                   mZippered;
+};
+
 #endif

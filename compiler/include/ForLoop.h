@@ -29,7 +29,7 @@
 // parser production into its internal representation.
 // ForLoop objects are also used to represent coforall-statements and zippered
 // iteration.
-class ForLoop final : public LoopStmt
+class ForLoop final : public LoopWithIntents
 {
   //
   // Class interface
@@ -132,7 +132,6 @@ private:
 
   SymExpr*               mIndex;
   SymExpr*               mIterator;
-  bool                   mZippered;
   bool                   mLoweredForall;
   bool                   mIsForExpr;
 };

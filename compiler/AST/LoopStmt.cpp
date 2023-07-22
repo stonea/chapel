@@ -155,3 +155,9 @@ bool LoopStmt::isNamed(const char* name) const
 
   return retval;
 }
+
+
+LoopWithIntents::LoopWithIntents(BlockStmt* initBody)
+  : LoopStmt(initBody)
+{
+}

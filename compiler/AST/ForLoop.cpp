@@ -374,7 +374,7 @@ BlockStmt* ForLoop::buildLoweredForallLoop(Expr*      indices,
 *                                                                           *
 ************************************* | ************************************/
 
-ForLoop::ForLoop() : LoopStmt(0)
+ForLoop::ForLoop() : LoopWithIntents(nullptr)
 {
   mIndex    = 0;
   mIterator = 0;
@@ -388,7 +388,7 @@ ForLoop::ForLoop(VarSymbol* index,
                  BlockStmt* initBody,
                  bool       zippered,
                  bool       isLoweredForall,
-                 bool       isForExpr) : LoopStmt(initBody)
+                 bool       isForExpr) : LoopWithIntents(initBody)
 {
   mIndex    = new SymExpr(index);
   mIterator = new SymExpr(iterator);
