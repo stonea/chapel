@@ -28,13 +28,17 @@
 
 #include "global-ast-vecs.h"
 
+struct LocAdaptor {
+  astlocT astloc;
+};
+
 
 /////////////////////////////////////////////////////////////////////////////
 // needsShadowVar() and helpers
 //
 
 // Is 'sym' an index variable of 'fs' ?
-static bool isFsIndexVar(ForallStmt* fs, Symbol* sym)
+static bool isFsIndexVar(LoopContainingShadowVars* fs, Symbol* sym)
 {
   if (!sym->hasFlag(FLAG_INDEX_VAR))
     return false;
@@ -42,7 +46,7 @@ static bool isFsIndexVar(ForallStmt* fs, Symbol* sym)
   return sym->defPoint->list == &fs->inductionVariables();
 }
 
-static bool isFsShadowVar(ForallStmt* fs, Symbol* sym)
+static bool isFsShadowVar(LoopContainingShadowVars* fs, Symbol* sym)
 {
   if (!isShadowVarSymbol(sym))
     return false;
@@ -50,7 +54,7 @@ static bool isFsShadowVar(ForallStmt* fs, Symbol* sym)
   return sym->defPoint->list == &fs->shadowVariables();
 }
 
-static bool needsShadowVar(ForallStmt* fs, BlockStmt* block, Symbol* sym) {
+static bool needsShadowVar(LoopContainingShadowVars* fs, BlockStmt* block, Symbol* sym) {
   return
     isLcnSymbol(sym)             && // include only variable-like things
     sym->type != dtMethodToken   && // not a method token
@@ -142,7 +146,7 @@ static void insertDeinitialization(ShadowVarSymbol* destVar) {
   insertDeinitialization(destVar->deinitBlock(), destVar);
 }
 
-static void resolveOneShadowVar(ForallStmt* fs, ShadowVarSymbol* svar) {
+static void resolveOneShadowVar(LoopContainingShadowVars* fs, ShadowVarSymbol* svar) {
   resolveBlockStmt(svar->initBlock());
   resolveBlockStmt(svar->deinitBlock());
 }
@@ -157,7 +161,7 @@ static void resolveOneShadowVar(ForallStmt* fs, ShadowVarSymbol* svar) {
 // If this does not resolve, instead call:
 //   globalOp.accumulate(outerVar)
 //
-static void insertAndResolveInitialAccumulate(ForallStmt* fs, BlockStmt* hld,
+static void insertAndResolveInitialAccumulate(LoopContainingShadowVars* fs, BlockStmt* hld,
                                             Symbol* globalOp, Symbol* outerVar)
 {
   CallExpr* initAccum = new CallExpr("initialAccumulate", gMethodToken,
@@ -165,7 +169,7 @@ static void insertAndResolveInitialAccumulate(ForallStmt* fs, BlockStmt* hld,
   if (hld)
     hld->insertAtTail(initAccum);
   else
-    fs->insertBefore(initAccum);
+    fs->asExpr()->insertBefore(initAccum);
 
   FnSymbol* initAccumOutcome = tryResolveCall(initAccum);
 
@@ -208,9 +212,9 @@ static void insertAndResolveInitialAccumulate(ForallStmt* fs, BlockStmt* hld,
 //   studies/kmeans/kmeans-blc
 //   studies/kmeans/kmeansonepassreduction-minchange
 //
-// This is invoked only for ForallStmts representing reduce expressions.
+// This is invoked only for LoopContainingShadowVarss representing reduce expressions.
 //
-static void workaroundForReduceIntoDetupleDecl(ForallStmt* fs, Symbol* svar) {
+static void workaroundForReduceIntoDetupleDecl(LoopContainingShadowVars* fs, Symbol* svar) {
   //
   // The pattern we are looking for is when 'svar' is used twice:
   // * as an outer variable of one of fs's shadow variables, and
@@ -249,22 +253,22 @@ static void workaroundForReduceIntoDetupleDecl(ForallStmt* fs, Symbol* svar) {
 }
 
 // Finalize the reduction:  outerVar = globalOp.generate()
-static void insertFinalGenerate(ForallStmt* fs,
+static void insertFinalGenerate(LoopContainingShadowVars* fs,
                                 Symbol* fiVarSym, Symbol* globalOp)
 {
   if (fs->needsInitialAccumulate()) {
     VarSymbol* genTemp = newTemp("chpl_gentemp");
-    fs->insertAfter(new CallExpr("=", fiVarSym, genTemp));
-    fs->insertAfter("'move'(%S, generate(%S,%S))",
+    fs->asExpr()->insertAfter(new CallExpr("=", fiVarSym, genTemp));
+    fs->asExpr()->insertAfter("'move'(%S, generate(%S,%S))",
                     genTemp, gMethodToken, globalOp);
-    fs->insertAfter(new DefExpr(genTemp));
+    fs->asExpr()->insertAfter(new DefExpr(genTemp));
     // TODO: Should we try to free chpl_gentemp right after the assignment?
     genTemp->addFlag(FLAG_INSERT_AUTO_DESTROY);
   } else {
     // Initialize, not assign. Do everything *after* 'fs'.
-    fs->insertAfter("'move'(%S, generate(%S,%S))",
+    fs->asExpr()->insertAfter("'move'(%S, generate(%S,%S))",
                     fiVarSym, gMethodToken, globalOp);
-    fs->insertAfter(fiVarSym->defPoint->remove());
+    fs->asExpr()->insertAfter(fiVarSym->defPoint->remove());
     fiVarSym->addFlag(FLAG_EXPR_TEMP);
     workaroundForReduceIntoDetupleDecl(fs, fiVarSym);
   }
@@ -295,12 +299,12 @@ static void moveInstantiationPoint(BlockStmt* to, BlockStmt* from, Type* type) {
   }
 }
 
-static Symbol* setupRiGlobalOp(ForallStmt* fs, Symbol* fiVarSym,
+static Symbol* setupRiGlobalOp(LoopContainingShadowVars* fs, Symbol* fiVarSym,
                                Expr* origRiSpec, TypeSymbol* riTypeSym,
                                Expr* eltTypeArg)
 {
   BlockStmt* hld = new BlockStmt(); // "holder"
-  fs->insertBefore(hld);
+  fs->asExpr()->insertBefore(hld);
 
   VarSymbol* globalOp = newTemp(astr("globalRP_", fiVarSym->name));
   hld->insertAtTail(new DefExpr(globalOp));
@@ -332,7 +336,7 @@ static Symbol* setupRiGlobalOp(ForallStmt* fs, Symbol* fiVarSym,
     hld->insertAtTail(new CallExpr(PRIM_MOVE, globalOp, newCall));
   }
 
-  fs->insertAfter("chpl__delete(%S)", globalOp);
+  fs->asExpr()->insertAfter("chpl__delete(%S)", globalOp);
   insertFinalGenerate(fs, fiVarSym, globalOp);
 
   resolveBlockStmt(hld);
@@ -349,7 +353,7 @@ static Symbol* setupRiGlobalOp(ForallStmt* fs, Symbol* fiVarSym,
   return globalOp;
 }
 
-static void handleRISpec(ForallStmt* fs, ShadowVarSymbol* svar)
+static void handleRISpec(LoopContainingShadowVars* fs, ShadowVarSymbol* svar)
 {
   Symbol* globalOp = NULL;
   Symbol* fiVarSym = svar->outerVarSym();
@@ -389,7 +393,7 @@ static void handleRISpec(ForallStmt* fs, ShadowVarSymbol* svar)
 
   } else {
     // What else can this be?
-    INT_FATAL(fs, "not implemented");
+    INT_FATAL(fs->asExpr(), "not implemented");
   }
   // Removing 'globalOp' is left as future work.
   if (globalOp) INT_ASSERT(globalOp); // dummy use of 'globalOp'
@@ -412,7 +416,7 @@ void  setReduceSVars(ShadowVarSymbol*& PRP, ShadowVarSymbol*& PAS,
   INT_ASSERT(PRP->intent == TFI_REDUCE_PARENT_OP);
 }
 
-static ShadowVarSymbol* create_REDUCE_PRP(ForallStmt* fs, ShadowVarSymbol* AS)
+static ShadowVarSymbol* create_REDUCE_PRP(LoopContainingShadowVars* fs, ShadowVarSymbol* AS)
 {
   // This is the global reduce op, either provided by user or set up by us.
   // PRP->outerVarSE will point to it.
@@ -435,7 +439,7 @@ static ShadowVarSymbol* create_REDUCE_PRP(ForallStmt* fs, ShadowVarSymbol* AS)
   return PRP;
 }
 
-static ShadowVarSymbol* create_REDUCE_PAS(ForallStmt* fs, ShadowVarSymbol* AS)
+static ShadowVarSymbol* create_REDUCE_PAS(LoopContainingShadowVars* fs, ShadowVarSymbol* AS)
 {
   ShadowVarSymbol* PAS = new ShadowVarSymbol(TFI_REDUCE_PARENT_AS,
                                              astr("PAS_", AS->name), NULL);
@@ -448,7 +452,7 @@ static ShadowVarSymbol* create_REDUCE_PAS(ForallStmt* fs, ShadowVarSymbol* AS)
   return PAS;
 }
 
-static ShadowVarSymbol* create_REDUCE_RP(ForallStmt* fs, ShadowVarSymbol* PRP,
+static ShadowVarSymbol* create_REDUCE_RP(LoopContainingShadowVars* fs, ShadowVarSymbol* PRP,
                                          ShadowVarSymbol* AS)
 {
   ShadowVarSymbol* RP = new ShadowVarSymbol(TFI_REDUCE_OP,
@@ -466,7 +470,7 @@ static ShadowVarSymbol* create_REDUCE_RP(ForallStmt* fs, ShadowVarSymbol* PRP,
   return RP;
 }
 
-static void setupForReduce(ForallStmt* fs,
+static void setupForReduce(LoopContainingShadowVars* fs,
                            ShadowVarSymbol* PRP, ShadowVarSymbol* PAS,
                            ShadowVarSymbol* RP,  ShadowVarSymbol* AS)
 {
@@ -495,7 +499,7 @@ static void setupForReduce(ForallStmt* fs,
 
   /// before the forall ///
   BlockStmt* holder1 = new BlockStmt();
-  fs->insertBefore(holder1);
+  fs->asExpr()->insertBefore(holder1);
   holder1->insertAtTail(new DefExpr(globalAS));
   insertInitialization(holder1, globalAS,
                        new_Expr("identity(%S,%S)", gMethodToken, globalRP));
@@ -505,7 +509,7 @@ static void setupForReduce(ForallStmt* fs,
 
   /// after the forall ///
   BlockStmt* holder2 = new BlockStmt();
-  fs->insertAfter(holder2);
+  fs->asExpr()->insertAfter(holder2);
   holder2->insertAtTail("accumulate(%S,%S,%S)",
                         gMethodToken, globalRP, globalAS);
   insertDeinitialization(holder2, globalAS);
@@ -513,12 +517,12 @@ static void setupForReduce(ForallStmt* fs,
   holder2->flattenAndRemove();
 }
 
-static void handleReduce(ForallStmt* fs, ShadowVarSymbol* AS) {
+static void handleReduce(LoopContainingShadowVars* fs, ShadowVarSymbol* AS) {
   handleRISpec(fs, AS);
 
   Symbol* ASovar = AS->outerVarSym();
   if (ASovar && ASovar->hasFlag(FLAG_CONST)) {
-    USR_FATAL_CONT(fs,
+    USR_FATAL_CONT(fs->asExpr(),
       "reduce intent is applied to a 'const' variable %s", ASovar->name);
   }
 
@@ -546,7 +550,7 @@ static void handleReduce(ForallStmt* fs, ShadowVarSymbol* AS) {
 // handleOneShadowVar()
 //
 
-static ShadowVarSymbol* create_IN_Parentvar(ForallStmt* fs,
+static ShadowVarSymbol* create_IN_Parentvar(LoopContainingShadowVars* fs,
                                             ShadowVarSymbol* SI,
                                             Symbol* userOuterVar)
 {
@@ -569,7 +573,7 @@ static ShadowVarSymbol* create_IN_Parentvar(ForallStmt* fs,
     VarSymbol* inptemp = newTempConst("INPtemp", SI->type);
     inptemp->qual      = QUAL_CONST_VAL;
 
-    fs->insertBefore(holder);
+    fs->asExpr()->insertBefore(holder);
     holder->insertAtTail(new DefExpr(inptemp));
     insertInitialization(holder, inptemp, cast);
     resolveBlockStmt(holder);
@@ -595,7 +599,7 @@ static void constDueToTFI(ShadowVarSymbol* svar, Symbol* ovar) {
     svar->addFlag(FLAG_CONST_DUE_TO_TASK_FORALL_INTENT);
 }
 
-static void handleIn(ForallStmt* fs, ShadowVarSymbol* SI, bool isConst) {
+static void handleIn(LoopContainingShadowVars* fs, ShadowVarSymbol* SI, bool isConst) {
   Symbol* ovar = SI->outerVarSym();
 
   if (isConst) {
@@ -614,7 +618,7 @@ static void handleIn(ForallStmt* fs, ShadowVarSymbol* SI, bool isConst) {
   resolveOneShadowVar(fs, INP);
 }
 
-static void handleRef(ForallStmt* fs, ShadowVarSymbol* SR, bool isConst) {
+static void handleRef(LoopContainingShadowVars* fs, ShadowVarSymbol* SR, bool isConst) {
   Symbol* ovar = SR->outerVarSym();
   if (isConst) {
     SR->addFlag(FLAG_CONST);
@@ -628,7 +632,7 @@ static void handleRef(ForallStmt* fs, ShadowVarSymbol* SR, bool isConst) {
     SR->addFlag(FLAG_REF_TO_IMMUTABLE);
 }
 
-static void handleTaskPrivate(ForallStmt* fs, ShadowVarSymbol* TPV) {
+static void handleTaskPrivate(LoopContainingShadowVars* fs, ShadowVarSymbol* TPV) {
   // initBlock() already comes from TPV's declaration in the with-clause,
   // so nothing to do with it.
 
@@ -637,7 +641,7 @@ static void handleTaskPrivate(ForallStmt* fs, ShadowVarSymbol* TPV) {
     insertDeinitialization(TPV);
 }
 
-static void handleOneShadowVar(ForallStmt* fs, ShadowVarSymbol* svar)
+static void handleOneShadowVar(LoopContainingShadowVars* fs, ShadowVarSymbol* svar)
 {
   if (svar->id == breakOnResolveID) gdbShouldBreakHere();
 
@@ -813,7 +817,7 @@ static void resolveShadowVarTypeIntent(ForallStmt* fs,
 
 // If 'sym' is the receiver and 'fs' has a shadow var for the receiver,
 // return that shadow var.
-static ShadowVarSymbol* svarForReceiver(ForallStmt* fs, Symbol* sym) {
+static ShadowVarSymbol* svarForReceiver(LoopContainingShadowVars* fs, Symbol* sym) {
   if (sym->name == astrThis)
     for_shadow_vars(SV, TEMP, fs)
       if (SV->name == astrThis)
@@ -850,7 +854,7 @@ static void assertNotRecordReceiver(Symbol* ovar, Expr* ref) {
 // At the same time, perform the substitutions already in 'outer2shadow'
 // except markPruned.
 //
-static void doImplicitShadowVars(ForallStmt* fs, BlockStmt* block,
+static void doImplicitShadowVars(LoopContainingShadowVars* fs, BlockStmt* block,
                                  SymbolMap& outer2shadow)
 {
   std::vector<SymExpr*> symExprs;
@@ -904,16 +908,16 @@ static void doImplicitShadowVars(ForallStmt* fs, BlockStmt* block,
   }
 }
 
-static void collectAndResolveImplicitShadowVars(ForallStmt* fs)
+static void collectAndResolveImplicitShadowVars(LoopContainingShadowVars* fs)
 {
   if (!fs->needToHandleOuterVars())  // no shadow vars, please
     return;
 
-  SET_LINENO(fs);
+  SET_LINENO(fs->asExpr());
   SymbolMap outer2shadow;
 
   // These are the additional blocks to look into for outer/shadow variables.
-  // This is specific to the start-of-resolution-of-ForallStmt point,
+  // This is specific to the start-of-resolution-of-LoopContainingShadowVars point,
   // where most initBlock() and deinitBlock() are irrelevant/empty.
   for_shadow_vars(svar, temp, fs)
     if (svar->isTaskPrivate())
@@ -942,7 +946,7 @@ static void removeUsesOfShadowVar(ShadowVarSymbol* svar) {
   svar->defPoint->remove();
 }
 
-static void resolveAndPruneExplicitShadowVars(ForallStmt* fs,
+static void resolveAndPruneExplicitShadowVars(LoopContainingShadowVars* fs,
                                               Expr* lastExplicitSVarDef)
 {
   if (lastExplicitSVarDef == NULL)
@@ -1018,11 +1022,11 @@ static VarSymbol* createFieldRef(Expr* anchor, Symbol* thisSym,
 // Given a field "myField", create a shadow variable myField_SV
 // whose outer variable "myField_ref" is set up prior to 'fs':
 //   ref myField_ref = ovar.myField;
-static ShadowVarSymbol* createSVforFieldAccess(ForallStmt* fs, Symbol* ovar,
+static ShadowVarSymbol* createSVforFieldAccess(LoopContainingShadowVars* fs, Symbol* ovar,
                                                Symbol* field)
 {
   bool isConst = ovar->isConstant() || field->isConstant();
-  VarSymbol* fieldRef = createFieldRef(fs, ovar, field, isConst);
+  VarSymbol* fieldRef = createFieldRef(fs->asExpr(), ovar, field, isConst);
 
   // Now create the shadow variable.
   Type*           svarType   = field->type;
@@ -1050,7 +1054,7 @@ static ShadowVarSymbol* createSVforFieldAccess(ForallStmt* fs, Symbol* ovar,
   return svar;
 }
 
-static void doConvertFieldsOfThis(ForallStmt* fs, AggregateType* recType,
+static void doConvertFieldsOfThis(LoopContainingShadowVars* fs, AggregateType* recType,
                                   ShadowVarSymbol* svar, Symbol* ovar)
 {
   std::map<Symbol*, ShadowVarSymbol*> fieldVars;
@@ -1072,7 +1076,7 @@ static void doConvertFieldsOfThis(ForallStmt* fs, AggregateType* recType,
 
 // This handles forall loops.
 // See also convertFieldsOfRecordThis().
-static void convertFieldsOfRecordReceiver(ForallStmt* fs) {
+static void convertFieldsOfRecordReceiver(LoopContainingShadowVars* fs) {
   // Each access to the receiver's field will reference the ArgSymbol
   // for 'this'. Which will force us to have a shadow variable for 'this'
   // and replace those ArgSymbol references with the shadow variable.
@@ -1180,13 +1184,8 @@ void convertFieldsOfRecordThis(FnSymbol* fn) {
 // setupAndResolveShadowVars() - the driver
 //
 
-void setupAndResolveShadowVars(ForallStmt* fs)
+void setupAndResolveShadowVars(LoopContainingShadowVars* fs)
 {
-  if(fs->id == 198694) {
-    static int z = 0;
-    z = z + 1;
-  }
-
   // Remember the last explicit shadow variable on the list, so that
   // resolveAndPruneExplicitShadowVars() stops there and does not deal
   // with the ones added by collectAndResolveImplicitShadowVars().

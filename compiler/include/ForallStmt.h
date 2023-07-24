@@ -69,24 +69,38 @@ class ForallOptimizationInfo {
     // forall loop statement //
 ///////////////////////////////////
 
-class ForallStmt final : public Stmt
+struct LoopContainingShadowVars {
+//  LoopContainingShadowVars() {}
+//  virtual ~LoopContainingShadowVars() {}
+
+  virtual AList& shadowVariables() = 0;
+  virtual bool needToHandleOuterVars() const = 0;
+  virtual AList& inductionVariables() = 0;
+  virtual BlockStmt* loopBody() const = 0;
+  virtual bool needsInitialAccumulate() const = 0;
+  virtual Expr* asExpr() = 0;
+};
+
+class ForallStmt final : public Stmt, public LoopContainingShadowVars
 {
 public:
+  Expr* asExpr() override { return this; }
+
   bool       zippered()       const; // 'zip' keyword used and >1 index var
-  AList&     inductionVariables();   // DefExprs, one per iterated expr
+  virtual AList&     inductionVariables() override;   // DefExprs, one per iterated expr
   const AList& constInductionVariables() const; // const counterpart
   AList&     iteratedExpressions();  // Exprs, one per iterated expr
   const AList& constIteratedExpressions() const;  // const counterpart
-  AList&     shadowVariables();      // DefExprs of ShadowVarSymbols
-  BlockStmt* loopBody()       const; // the body of the forall loop
+  AList&     shadowVariables() override;      // DefExprs of ShadowVarSymbols
+  BlockStmt* loopBody()       const override; // the body of the forall loop
   std::vector<BlockStmt*> loopBodies() const; // body or bodies of followers
   LabelSymbol* continueLabel();      // create it if not already
   CallExpr* zipCall() const;
 
   // when originating from a ForLoop or a reduce expression
   bool createdFromForLoop()     const;  // is converted from a for-loop
-  bool needToHandleOuterVars()  const;  // yes, convert to shadow vars
-  bool needsInitialAccumulate() const;  // for a reduce intent
+  bool needToHandleOuterVars()  const override;  // yes, convert to shadow vars
+  bool needsInitialAccumulate() const override;  // for a reduce intent
   bool fromReduce()             const;  // for a Chapel reduce expression
   bool overTupleExpand()        const;  // contains (...tuple) iterable(s)
   bool allowSerialIterator()    const;  // ok to loop over a serial iterator?
