@@ -69,25 +69,22 @@ class ForallOptimizationInfo {
     // forall loop statement //
 ///////////////////////////////////
 
-struct LoopContainingShadowVars {
-//  LoopContainingShadowVars() {}
-//  virtual ~LoopContainingShadowVars() {}
-
+struct ShadowVarLoopInterface {
   virtual AList& shadowVariables() = 0;
   virtual bool needToHandleOuterVars() const = 0;
-  virtual AList& inductionVariables() = 0;
   virtual BlockStmt* loopBody() const = 0;
   virtual bool needsInitialAccumulate() const = 0;
   virtual Expr* asExpr() = 0;
+  virtual bool isInductionVar(Symbol* sym) = 0;
 };
 
-class ForallStmt final : public Stmt, public LoopContainingShadowVars
+class ForallStmt final : public Stmt, public ShadowVarLoopInterface
 {
 public:
   Expr* asExpr() override { return this; }
 
   bool       zippered()       const; // 'zip' keyword used and >1 index var
-  virtual AList&     inductionVariables() override;   // DefExprs, one per iterated expr
+  AList&     inductionVariables();   // DefExprs, one per iterated expr
   const AList& constInductionVariables() const; // const counterpart
   AList&     iteratedExpressions();  // Exprs, one per iterated expr
   const AList& constIteratedExpressions() const;  // const counterpart
@@ -151,6 +148,8 @@ public:
   ForallOptimizationInfo optInfo;
 
   void insertZipSym(Symbol *sym);
+
+  bool isInductionVar(Symbol* sym) override;
 
 private:
   AList          fIterVars;    // DefExprs of the induction vars
