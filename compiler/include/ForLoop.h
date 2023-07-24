@@ -43,6 +43,7 @@ public:
 
   static BlockStmt*      buildForeachLoop (Expr*      indices,
                                            Expr*      iteratorExpr,
+                                           CallExpr*  intents,
                                            BlockStmt* body,
                                            bool       zippered,
                                            bool       isForExpr);
@@ -62,6 +63,7 @@ public:
 private:
   static BlockStmt*      doBuildForLoop (Expr*      indices,
                                          Expr*      iteratorExpr,
+                                         CallExpr*  intents,
                                          BlockStmt* body,
                                          bool       coforall,
                                          bool       zippered,
@@ -127,6 +129,8 @@ public:
   CallExpr*              blockInfoGet()                      const override;
   CallExpr*              blockInfoSet(CallExpr* expr)              override;
 
+  AList&                 shadowVariables();
+
 private:
                          ForLoop();
 
@@ -135,6 +139,10 @@ private:
   bool                   mZippered;
   bool                   mLoweredForall;
   bool                   mIsForExpr;
+
+  AList                  fShadowVars;  // may be empty
 };
+
+inline AList& ForLoop::shadowVariables() { return fShadowVars; }
 
 #endif

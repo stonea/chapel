@@ -172,6 +172,7 @@ static void tryToReplaceWithDirectRangeIterator(Expr* iteratorExpr)
 
 BlockStmt* ForLoop::doBuildForLoop(Expr*      indices,
                           Expr*      iteratorExpr,
+                          CallExpr*  intents,
                           BlockStmt* body,
                           bool       coforall,
                           bool       zippered,
@@ -294,6 +295,12 @@ BlockStmt* ForLoop::doBuildForLoop(Expr*      indices,
   loop->mContinueLabel = continueLabel;
   loop->mBreakLabel    = breakLabel;
 
+  // Transfer the DefExprs of the intent variables (ShadowVarSymbols).
+  if (intents) {
+    while (Expr* src = intents->argList.head)
+      loop->shadowVariables().insertAtTail(src->remove());
+  }
+
   loop->insertAtTail(new DefExpr(continueLabel));
 
   retval->insertAtTail(new DefExpr(index));
@@ -316,7 +323,9 @@ BlockStmt* ForLoop::buildForLoop(Expr*      indices,
                                  bool       zippered,
                                  bool       isForExpr)
 {
-  return doBuildForLoop(indices, iteratorExpr, body,
+  return doBuildForLoop(indices, iteratorExpr, 
+                        /* intents */ nullptr,
+                        body,
                         /* coforall */ false,
                         zippered,
                         /* isLoweredForall */ false,
@@ -326,12 +335,13 @@ BlockStmt* ForLoop::buildForLoop(Expr*      indices,
 
 BlockStmt* ForLoop::buildForeachLoop(Expr*      indices,
                                      Expr*      iteratorExpr,
+                                     CallExpr*  intents,
                                      BlockStmt* body,
                                      bool       zippered,
                                      bool       isForExpr)
 
 {
-  return doBuildForLoop(indices, iteratorExpr, body,
+  return doBuildForLoop(indices, iteratorExpr, intents, body,
                         /* coforall */ false,
                         zippered,
                         /* isLoweredForall */ false,
@@ -344,7 +354,9 @@ BlockStmt* ForLoop::buildCoforallLoop(Expr*      indices,
                                       BlockStmt* body,
                                       bool       zippered)
 {
-  return doBuildForLoop(indices, iteratorExpr, body,
+  return doBuildForLoop(indices, iteratorExpr, 
+                        /* intents */ nullptr,
+                        body,
                         /* coforall */ true,
                         zippered,
                         /* isLoweredForall */ false,
@@ -359,7 +371,9 @@ BlockStmt* ForLoop::buildLoweredForallLoop(Expr*      indices,
                                            bool       zippered,
                                            bool       isForExpr)
 {
-  return doBuildForLoop(indices, iteratorExpr, body,
+  return doBuildForLoop(indices, iteratorExpr,
+                        /* intents */ nullptr,
+                        body,
                         /* coforall */ false,
                         zippered,
                         /* isLoweredForall */ true,
