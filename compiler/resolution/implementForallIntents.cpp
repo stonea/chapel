@@ -1182,6 +1182,11 @@ void convertFieldsOfRecordThis(FnSymbol* fn) {
 
 void setupAndResolveShadowVars(ForallStmt* fs)
 {
+  if(fs->id == 198694) {
+    static int z = 0;
+    z = z + 1;
+  }
+
   // Remember the last explicit shadow variable on the list, so that
   // resolveAndPruneExplicitShadowVars() stops there and does not deal
   // with the ones added by collectAndResolveImplicitShadowVars().

@@ -3824,6 +3824,12 @@ FnSymbol* resolveNormalCall(CallExpr* call, check_state_t checkState) {
   CallInfo  info;
   FnSymbol* retval = NULL;
 
+  if(call->id == 198691) {
+    // writeln in foreach example
+    static int z = 0;
+    z = z + 1;
+  }
+
   if (checkState != CHECK_NORMAL_CALL) {
     inTryResolve++;
     tryResolveStates.push_back(checkState);

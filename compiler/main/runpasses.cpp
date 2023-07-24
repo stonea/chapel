@@ -224,6 +224,8 @@ void runPasses(PhaseTracker& tracker) {
   teardownLogfiles();
 }
 
+#include "view.h" // **AIS** TODO-CRUFT: REMOVE
+                  //
 static void runPass(PhaseTracker& tracker, size_t passIndex) {
   PassInfo* info = &sPassList[passIndex];
 
@@ -241,6 +243,31 @@ static void runPass(PhaseTracker& tracker, size_t passIndex) {
   //
   // Statistics and logging
   //
+
+  static int z = 0;
+  if(passIndex == 1-1) {
+    // conver-uast
+    z = z + 1;
+  }
+  if(passIndex == 11-1) {
+    //pre-resolve
+    z = z + 1;
+    nprint_view(userModules.head());
+  }
+  if(passIndex == 12-1) {
+    //resolve
+    z = z + 1;
+    nprint_view(1585184);
+  }
+  if(passIndex == 13-1) {
+    //resolveIntents
+    z = z + 1;
+  }
+  if(passIndex == 20-1) {
+    //lowerIterators
+    z = z + 1;
+  }
+
 
   if (fPrintStatistics[0] != '\0')
     printStatistics(info->name);

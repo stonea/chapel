@@ -715,6 +715,11 @@ void checkUseBeforeDefs(FnSymbol* fn) {
     collect_asts_postorder(fn, asts);
 
     for_vector(BaseAST, ast, asts) {
+      if(ast->id == 198692) {
+        static int z = 0;
+        z = z + 1;
+      }
+
       if (Symbol* sym = theDefinedSymbol(ast)) {
         defined.insert(sym);
 

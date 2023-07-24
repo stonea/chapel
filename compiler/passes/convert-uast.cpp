@@ -1962,24 +1962,32 @@ struct Converter {
 
       auto loopAttributes = buildLoopAttributes(node);
       loopAttributes.insertGpuEligibilityAssertion(body);
-      return ForallStmt::build(indices, iterator, intents, body, zippered,
+      BlockStmt* ret = ForallStmt::build(indices, iterator, intents, body, zippered,
                                serialOK);
+
+      // ID of interest (ret->id == 198696)
+
+      return ret;
     }
   }
 
-  BlockStmt* visit(const uast::Foreach* node) {
+#include "astlocs.h"
+#include "astutil.h"
 
+  BlockStmt* visit(const uast::Foreach* node) {
     // Does not appear possible right now, from reading the grammar.
     INT_ASSERT(!node->isExpressionLevel());
-
     if (node->withClause()) {
-      USR_FATAL_CONT(node->withClause()->id(), "foreach loops do not yet "
-                                               "support task intents");
+      static int z = 0;
+      z = z + 1;
+      //USR_FATAL_CONT(node->withClause()->id(), "foreach loops do not yet "
+      //                                         "support task intents");
     }
 
     // The pieces that we need for 'buildForallLoopExpr'.
     Expr* indices = convertLoopIndexDecl(node->index());
     Expr* iteratorExpr = toExpr(convertAST(node->iterand()));
+    CallExpr* intents = convertWithClause(node->withClause(), node);
     auto body = createBlockWithStmts(node->stmts(), node->blockStyle());
     bool zippered = node->iterand()->isZip();
     bool isForExpr = node->isExpressionLevel();
@@ -1989,7 +1997,7 @@ struct Converter {
 
     auto loopAttributes = buildLoopAttributes(node);
     loopAttributes.insertGpuEligibilityAssertion(body);
-    auto ret = ForLoop::buildForeachLoop(indices, iteratorExpr, body,
+    auto ret = ForLoop::buildForeachLoop(indices, iteratorExpr, intents, body,
                                          zippered,
                                          isForExpr, std::move(loopAttributes.llvmMetadata));
 
