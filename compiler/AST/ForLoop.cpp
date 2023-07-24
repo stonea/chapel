@@ -653,3 +653,7 @@ Expr* ForLoop::getNextExpr(Expr* expr)
 
   return retval;
 }
+
+bool ForLoop::isInductionVar(Symbol* sym) {
+  return sym == mIndex->symbol();
+}

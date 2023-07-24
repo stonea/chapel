@@ -22,6 +22,7 @@
 #define _FOR_LOOP_H_
 
 #include "LoopStmt.h"
+#include "ForallStmt.h" // TODO **AIS** CRUFT: Put ShadowVarLoopInterface in a better shared header
 
 // A ForLoop represents the for-statement language construct as described in
 // the specification (see "The For Loop" section in the chapter on "Statements").
@@ -29,7 +30,7 @@
 // parser production into its internal representation.
 // ForLoop objects are also used to represent coforall-statements and zippered
 // iteration.
-class ForLoop final : public LoopStmt
+class ForLoop final : public LoopStmt, public ShadowVarLoopInterface 
 {
   //
   // Class interface
@@ -134,7 +135,13 @@ public:
   CallExpr*              blockInfoGet()                      const override;
   CallExpr*              blockInfoSet(CallExpr* expr)              override;
 
-  AList&                 shadowVariables();
+  AList&                 shadowVariables() override;
+
+  bool needToHandleOuterVars() const override { return true; } // **AIS** ??? Is this hard-coded value always right?
+  BlockStmt* loopBody() const override { return const_cast<ForLoop*>(this); } // **AIS** ?? Really is this, won't this body cover too much?
+  bool needsInitialAccumulate() const override { return false; } // **AIS** ??? Really, should this be false?
+  Expr* asExpr() override { return this; }
+  bool isInductionVar(Symbol* sym) override;
 
 private:
                          ForLoop();

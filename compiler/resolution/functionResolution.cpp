@@ -10583,7 +10583,17 @@ Expr* resolveExpr(Expr* expr) {
   // This must be after isParamResolved
   } else if (BlockStmt* block = toBlockStmt(expr)) {
     if (ForLoop* forLoop = toForLoop(block)) {
+      printf("%s\n", forLoop->stringLoc());
+
       retval = replaceForWithForallIfNeeded(forLoop);
+      if(retval == forLoop && forLoop->isOrderIndependent()) {
+        // **AIS** for development purposes I'm going to limit
+        // this to user-written code.
+        printf("%s\n", forLoop->getModule()->name);
+        if(!strcmp(forLoop->getModule()->name, "foo")) {
+          setupAndResolveShadowVars(forLoop);
+        }
+      }
     } else {
       retval = expr;
     }
