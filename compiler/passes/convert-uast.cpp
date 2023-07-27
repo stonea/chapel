@@ -1304,6 +1304,11 @@ struct Converter {
       }
     }
 
+    if(((Expr*)ret->argList.head)->id == 199566) {
+      static int z = 0;
+      z = z + 1;
+    }
+
     return ret;
   }
 
@@ -1705,11 +1710,18 @@ struct Converter {
     // These are the arguments that 'buildCoforallLoopStmt' requires.
     Expr* indices = convertLoopIndexDecl(node->index());
     Expr* iterator = toExpr(convertAST(node->iterand()));
+    
+    if(node->withClause()) {
+      static int z = 0;
+      z = z + 1;
+    }
+
     CallExpr* byref_vars = convertWithClause(node->withClause(), node);
     auto body = createBlockWithStmts(node->stmts(), node->blockStyle());
     bool zippered = node->iterand()->isZip();
 
-    return buildThunk(buildCoforallLoopStmt, indices, iterator, byref_vars, body, zippered);
+    auto *ret = buildThunk(buildCoforallLoopStmt, indices, iterator, byref_vars, body, zippered);
+    return ret;
   }
 
   Expr* visit(const uast::For* node) {
