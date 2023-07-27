@@ -613,6 +613,11 @@ VarSymbol::VarSymbol(const char *init_name,
   llvmDIGlobalVariable(NULL),
   llvmDIVariable(NULL)
 {
+  if(id == 199547) {
+    static int z = 0;
+    z = z + 1;
+  }
+
   gVarSymbols.add(this);
   if (type == dtUnknown || type->symbol == NULL) {
     this->qual = QUAL_UNKNOWN;

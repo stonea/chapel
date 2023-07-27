@@ -137,8 +137,20 @@ public:
 
   AList&                 shadowVariables() override;
 
+  // --------
+
   bool needToHandleOuterVars() const override { return true; } // **AIS** ??? Is this hard-coded value always right?
-  BlockStmt* loopBody() const override { return const_cast<ForLoop*>(this); } // **AIS** ?? Really is this, won't this body cover too much?
+  BlockStmt* loopBody() const override {
+    BlockStmt *bs = const_cast<ForLoop*>(this);
+    auto *a = bs->body.first();
+    auto *b = bs->body.get(1);
+
+    (void)a;
+    (void)b;
+
+    // **AIS** ?? Really is this, won't this body cover too much?
+    return const_cast<ForLoop*>(this);
+  }
   bool needsInitialAccumulate() const override { return false; } // **AIS** ??? Really, should this be false?
   Expr* asExpr() override { return this; }
   bool isInductionVar(Symbol* sym) override;

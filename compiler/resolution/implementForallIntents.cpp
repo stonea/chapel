@@ -852,8 +852,17 @@ static void assertNotRecordReceiver(Symbol* ovar, Expr* ref) {
 static void doImplicitShadowVars(ShadowVarLoopInterface* fs, BlockStmt* block,
                                  SymbolMap& outer2shadow)
 {
+  if(block->id == 199574) {
+    //gdbShouldBreakHere();
+    static int z = 0;
+    z = z + 1;
+  }
+
   std::vector<SymExpr*> symExprs;
-  collectLcnSymExprs(block, symExprs);
+  //collectLcnSymExprs(block, symExprs);
+  for_alist(next_ast, block->body) {
+    collectLcnSymExprs(next_ast, symExprs);
+  }
 
   for_vector(SymExpr, se, symExprs) {
     Symbol* sym = se->symbol();
@@ -1181,6 +1190,11 @@ void convertFieldsOfRecordThis(FnSymbol* fn) {
 
 void setupAndResolveShadowVars(ShadowVarLoopInterface* fs)
 {
+  if(fs->asExpr()->id == 199574) {
+    static int z = 0;
+    z = z + 1;
+  }
+
   // Remember the last explicit shadow variable on the list, so that
   // resolveAndPruneExplicitShadowVars() stops there and does not deal
   // with the ones added by collectAndResolveImplicitShadowVars().

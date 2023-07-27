@@ -245,10 +245,17 @@ static void runPass(PhaseTracker& tracker, size_t passIndex) {
   //
 
   static int z = 0;
-  if(passIndex == 1-1) {
-    // conver-uast
+
+  if(passIndex == 5-1) {
     z = z + 1;
   }
+  if(passIndex == 6-1) {
+    z = z + 1;
+  }
+  if(passIndex == 7-1) {
+    z = z + 1;
+  }
+
   if(passIndex == 11-1) {
     //pre-resolve
     z = z + 1;

@@ -299,10 +299,13 @@ BlockStmt* ForLoop::doBuildForLoop(Expr*      indices,
   loop->mBreakLabel    = breakLabel;
 
   // Transfer the DefExprs of the intent variables (ShadowVarSymbols).
-  if (intents) {
+  if (isForeach && intents) {
     while (Expr* src = intents->argList.head)
       loop->shadowVariables().insertAtTail(src->remove());
   }
+  /*if(isForeach) {
+    loop->byrefVars = intents;
+  }*/
 
   loop->insertAtTail(new DefExpr(continueLabel));
 

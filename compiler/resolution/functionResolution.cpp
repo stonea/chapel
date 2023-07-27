@@ -10208,6 +10208,14 @@ void resolveBlockStmt(BlockStmt* blockStmt) {
   bool ef = shouldHandleEarlyFinish(blockStmt);
 
   for_exprs_postorder(expr, blockStmt) {
+    Expr *before = expr;
+    (void)before;
+
+    if(before->id == 1181767) {
+      static int z = 0;
+      z = z + 1;
+    }
+
     if (Expr* changed = handleNonNormalizableExpr(expr)) {
       expr = changed;
     } else {
@@ -10583,22 +10591,27 @@ Expr* resolveExpr(Expr* expr) {
   // This must be after isParamResolved
   } else if (BlockStmt* block = toBlockStmt(expr)) {
     if (ForLoop* forLoop = toForLoop(block)) {
-      printf("%s\n", forLoop->stringLoc());
-
       retval = replaceForWithForallIfNeeded(forLoop);
-      if(retval == forLoop && forLoop->isOrderIndependent()) {
+      /*if(retval == forLoop && forLoop->isOrderIndependent()) {
         // **AIS** for development purposes I'm going to limit
         // this to user-written code.
         printf("%s\n", forLoop->getModule()->name);
         if(!strcmp(forLoop->getModule()->name, "foo")) {
           setupAndResolveShadowVars(forLoop);
         }
-      }
+      }*/
     } else {
       retval = expr;
     }
 
   } else if (DefExpr* def = toDefExpr(expr)) {
+    /*ForLoop* pfl = toForLoop(def->parentExpr);
+    if(pfl && pfl->continueLabelGet() == def->sym &&
+        pfl->shadowVariables().length > 0)
+    {
+      setupAndResolveShadowVars(pfl);
+    }*/
+
     Expr* fold = def;
     if (isConstrainedGenericSymbol(def->sym)) {
       resolveConstrainedGenericSymbol(def->sym, false);
@@ -10612,10 +10625,20 @@ Expr* resolveExpr(Expr* expr) {
   } else if (SymExpr* se = toSymExpr(expr)) {
     makeRefType(se->symbol()->type);
 
-    if (ForallStmt* pfs = isForallIterExpr(se)) {
+    ForallStmt* pfs = isForallIterExpr(se);
+    ForLoop* pfl = toForLoop(se->parentExpr);
+    if (pfs) {
       CallExpr* call = resolveForallHeader(pfs, se);
       retval = resolveExprPhase2(expr, fn, preFold(call));
-    } else if (isMentionOfFnTriggeringCapture(se)) {
+    } 
+    else if(pfl && pfl->shadowVariables().length > 0 && se == pfl->indexGet()) {
+      (void)pfl;
+      static int z = 0;
+      z = z + 1;
+      setupAndResolveShadowVars(pfl);
+      retval = resolveExprPhase2(expr, fn, expr);
+    }
+    else if (isMentionOfFnTriggeringCapture(se)) {
       auto fn = toFnSymbol(se->symbol());
       INT_ASSERT(fn);
 
