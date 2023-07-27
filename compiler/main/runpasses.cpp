@@ -259,12 +259,12 @@ static void runPass(PhaseTracker& tracker, size_t passIndex) {
   if(passIndex == 11-1) {
     //pre-resolve
     z = z + 1;
-    nprint_view(userModules.head());
+    //nprint_view(userModules.head());
   }
   if(passIndex == 12-1) {
     //resolve
     z = z + 1;
-    nprint_view(1585184);
+    //nprint_view(1585184);
   }
   if(passIndex == 13-1) {
     //resolveIntents
