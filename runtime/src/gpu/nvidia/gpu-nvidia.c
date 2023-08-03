@@ -19,7 +19,7 @@
 
 #ifdef HAS_GPU_LOCALE
 
-// #define CHPL_GPU_ENABLE_PROFILE // define this before including chpl-gpu.h
+#define CHPL_GPU_ENABLE_PROFILE // define this before including chpl-gpu.h
 
 #include "sys_basic.h"
 #include "chplrt.h"
@@ -102,7 +102,10 @@ void chpl_gpu_impl_use_device(c_sublocid_t dev_id) {
 }
 
 void chpl_gpu_impl_init(int* num_devices) {
+  CHPL_GPU_START_TIMER(total_time);
+  CHPL_GPU_START_TIMER(cu_init_time);
   CUDA_CALL(cuInit(0));
+  CHPL_GPU_STOP_TIMER(cu_init_time);
 
   CUDA_CALL(cuDeviceGetCount(num_devices));
 
@@ -112,8 +115,8 @@ void chpl_gpu_impl_init(int* num_devices) {
   chpl_gpu_cuda_modules = chpl_malloc(sizeof(CUmodule)*loc_num_devices);
   deviceClockRates = chpl_malloc(sizeof(int)*loc_num_devices);
 
-  int i;
-  for (i=0 ; i<loc_num_devices ; i++) {
+  int i=0;
+//  for (i=0 ; i<loc_num_devices ; i++) {
     CUdevice device;
     CUcontext context;
 
@@ -123,7 +126,9 @@ void chpl_gpu_impl_init(int* num_devices) {
 
     CUDA_CALL(cuCtxSetCurrent(context));
     // load the module and setup globals within
+    CHPL_GPU_START_TIMER(module_load_time);
     CUmodule module = chpl_gpu_load_module(chpl_gpuBinary);
+    CHPL_GPU_STOP_TIMER(module_load_time);
     chpl_gpu_cuda_modules[i] = module;
 
     cuDeviceGetAttribute(&deviceClockRates[i], CU_DEVICE_ATTRIBUTE_CLOCK_RATE, device);
@@ -134,7 +139,13 @@ void chpl_gpu_impl_init(int* num_devices) {
     // TODO can we refactor some of this to chpl-gpu to avoid duplication
     // between runtime layers?
     chpl_gpu_impl_set_globals(i, module);
-  }
+//  }
+
+  CHPL_GPU_STOP_TIMER(total_time);
+  CHPL_GPU_PRINT_TIMERS("TIMERS Overall=%Lf "
+                               "CuInit=%Lf "
+                               "ModuleLoad=%Lf\n",
+         total_time/1000.0, cu_init_time/1000.0, module_load_time/1000.0);
 }
 
 bool chpl_gpu_impl_is_device_ptr(const void* ptr) {
