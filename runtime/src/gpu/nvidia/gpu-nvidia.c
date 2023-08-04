@@ -102,7 +102,11 @@ void chpl_gpu_impl_use_device(c_sublocid_t dev_id) {
 }
 
 void chpl_gpu_impl_init(int* num_devices) {
+  CHPL_GPU_START_TIMER(total_gpu_init_time);
+
+  CHPL_GPU_START_TIMER(cu_init_time);
   CUDA_CALL(cuInit(0));
+  CHPL_GPU_STOP_TIMER(cu_init_time);
 
   CUDA_CALL(cuDeviceGetCount(num_devices));
 
@@ -135,6 +139,14 @@ void chpl_gpu_impl_init(int* num_devices) {
     // between runtime layers?
     chpl_gpu_impl_set_globals(i, module);
   }
+
+  CHPL_GPU_STOP_TIMER(total_gpu_init_time);
+
+  CHPL_GPU_PRINT_TIMERS(
+      "GPU_TIMER TOTAL: %Lf\n"
+      "GPU_TIMER CuInit: %Lf\n",
+      total_gpu_init_time/1000.0,
+      cu_init_time/1000.0)
 }
 
 bool chpl_gpu_impl_is_device_ptr(const void* ptr) {

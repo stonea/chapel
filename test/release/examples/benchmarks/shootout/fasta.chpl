@@ -1,3 +1,4 @@
+use Time;var swatch : stopwatch; swatch.start();
 /* The Computer Language Benchmarks Game
    https://salsa.debian.org/benchmarksgame-team/benchmarksgame/
 
@@ -76,6 +77,7 @@ proc main() {
   repeatMake(">ONE Homo sapiens alu", ALU, 2*n);
   randomMake(">TWO IUB ambiguity codes", IUB, 3*n);
   randomMake(">THREE Homo sapiens frequency", HomoSapiens, 5*n);
+  writeln("ELAPSED TIME: ", swatch.elapsed());
 }
 
 //

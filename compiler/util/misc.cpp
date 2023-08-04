@@ -204,7 +204,9 @@ static void cleanup_for_exit() {
 // models will not be flat.
 //
 static bool forceWidePtrs() {
-  return (strcmp(CHPL_LOCALE_MODEL, "flat") != 0);
+  return false;
+
+//  return (strcmp(CHPL_LOCALE_MODEL, "flat") != 0);
 }
 
 static void vprint_error(const char* format, va_list vl) {

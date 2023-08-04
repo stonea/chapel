@@ -1,3 +1,4 @@
+use Time;var swatch : stopwatch; swatch.start();
 /* The Computer Language Benchmarks Game
    https://salsa.debian.org/benchmarksgame-team/benchmarksgame/
 
@@ -99,6 +100,7 @@ proc main() {
   solve();
   writeln(solutionCount.read(), " solutions found\n");
   printLargestSmallest();
+  writeln("ELAPSED TIME: ", swatch.elapsed());
 }
 
 /* Calculate every legal rotation for each piece at each board location. */

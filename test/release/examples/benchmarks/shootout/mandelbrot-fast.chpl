@@ -6,6 +6,7 @@
      and the Chapel version by Nelson et al.
 */
 
+use Time;var swatch : stopwatch; swatch.start();
 use DynamicIters, IO, Math;
 
 config const n = 200,             // image size in pixels (n x n)
@@ -66,6 +67,7 @@ proc main() {
   w.writef("P4\n");
   w.writef("%i %i\n", n, n);
   w.write(image);
+  writeln("ELAPSED TIME: ", swatch.elapsed());
 }
 
 //

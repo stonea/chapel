@@ -38,18 +38,15 @@ start_test -performance . | tee -a "$runLog"
 inner_time_data=$(./grep_start_test_log.py "ELAPSED TIME:" $runLog | sed -r -n 's/.*ELAPSED TIME: //p')
 outer_time_data=$(./grep_start_test_log.py "real" $runLog | sed -r -n 's/.*real //p')
 inner_tests=$(./grep_start_test_log.py "ELAPSED TIME:" $runLog | sed -r -n 's/.*\[(.*)\].*/\1/p')
-outer_tests=$(./grep_start_test_log.py "real" $runLog  | sed -r -n 's/.*\[(.*)\].*/\1/p')
 
-if [[ "$inner_tests" != "$outer_tests" ]]; then
-  echo "Unexpeced misalignment in logs"
-  echo "$inner_tests"
-  echo "$outer_tests"
-  exit 1
-fi
+total_init_time=$(./grep_start_test_log.py "GPU_TIMER TOTAL: " $runLog | sed -r -n 's/.*GPU_TIMER TOTAL: //p')
+cuinit_time=$(./grep_start_test_log.py "GPU_TIMER CuInit: " $runLog | sed -r -n 's/.*GPU_TIMER CuInit: //p')
 
 set +x
-echo -e "\tinner_time\touter_time" > $datFile
+echo -e "\tinner_time\touter_time\ttotal_init_time\tcuinit_time" > $datFile
 paste \
   <(printf "%s\n" "${inner_tests[@]}") \
   <(printf "%s\n" "${inner_time_data[@]}") \
-  <(printf "%s\n" "${outer_time_data[@]}") >> "$datFile"
+  <(printf "%s\n" "${outer_time_data[@]}") \
+  <(printf "%s\n" "${total_init_time[@]}") \
+  <(printf "%s\n" "${cuinit_time[@]}") >> "$datFile"

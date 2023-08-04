@@ -1,3 +1,4 @@
+use Time;var swatch : stopwatch; swatch.start();
 /* The Computer Language Benchmarks Game
    https://salsa.debian.org/benchmarksgame-team/benchmarksgame/
 
@@ -19,6 +20,7 @@ proc main() {
   }
 
   writef("%.9dr\n", sqrt(+ reduce (u*v) / + reduce (v*v)));
+  writeln("ELAPSED TIME: ", swatch.elapsed());
 }
 
 //

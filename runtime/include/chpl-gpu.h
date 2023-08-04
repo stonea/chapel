@@ -49,6 +49,8 @@ static inline void CHPL_GPU_DEBUG(const char *str, ...) {
   }
 }
 
+#define CHPL_GPU_ENABLE_PROFILE
+
 #ifdef CHPL_GPU_ENABLE_PROFILE
 // returns time from epoch in milliseconds. Used in macros below.
 static inline long double get_time() {

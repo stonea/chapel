@@ -1,3 +1,5 @@
+use Time;var swatch : stopwatch; swatch.start();
+
 /* The Computer Language Benchmarks Game
    https://salsa.debian.org/benchmarksgame-team/benchmarksgame/
 
@@ -36,6 +38,7 @@ proc main() {
   // their sums, and free them.
   //
   forall depth in dynamic(depths) {
+    writeln("TASK PAR: ", here.runningTasks());
     const iterations = 2**(maxDepth - depth + minDepth);
     var sum = 0;
 
@@ -56,6 +59,8 @@ proc main() {
   // Checksum the long-lived tree, print its stats, and free it.
   //
   writeln("long lived tree of depth ", maxDepth, "\t check: ", llTree.sum());
+
+  writeln("ELAPSED TIME: ", swatch.elapsed());
 }
 
 

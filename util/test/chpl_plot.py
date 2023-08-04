@@ -578,6 +578,22 @@ class Table:
 
     return res
 
+  def csv(self):
+    res = f"### {self.title}\n"
+    
+    for col_num in range(len(self.yData)):
+      res += "," + list(self.yData.keys())[col_num]
+
+    for row_num in range(len(self.xData)):
+      res += "\n"
+      res += self.xData[row_num]
+      for col_num in range(len(self.yData)):
+        cur_col = list(self.yData.keys())[col_num]
+        res += ", " + str(self.yData[cur_col][row_num])
+
+    return res
+    
+
   def plot(self, **plotArgs):
     return plot(self, **plotArgs)
 
@@ -683,6 +699,10 @@ class TableCollection():
   def md(self, *args):
     """ Print all tables in .md """
     return "\n\n".join(map(lambda tbl: tbl.md(*args), self.tables.values()))
+
+  def csv(self, *args):
+    """ Print all tables in .csv """
+    return "\n\n".join(map(lambda tbl: tbl.csv(*args), self.tables.values()))
 
   def plot(self, **kwArgs):
     """ Join all tables and plot them """

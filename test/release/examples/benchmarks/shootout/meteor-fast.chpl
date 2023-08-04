@@ -1,3 +1,4 @@
+use Time;var swatch : stopwatch; swatch.start();
 /* The Computer Language Benchmarks Game
    https://salsa.debian.org/benchmarksgame-team/benchmarksgame/
 
@@ -40,7 +41,6 @@ param maskEven   = 0xf07c1f07c1f07c1f: int, // Even rows of board (0, 2, 4, ..)
 // Find and print the minimum and maximum solutions to meteor puzzle
 //
 proc main(args: [] string) {
-
   initialize();
 
   sync searchParallel();
@@ -48,6 +48,7 @@ proc main(args: [] string) {
   writef("%i solutions found\n\n", solutions);
   printBoard(minSolution);
   printBoard(maxSolution);
+  writeln("ELAPSED TIME: ", swatch.elapsed());
 }
 
 

@@ -1,3 +1,4 @@
+use Time;var swatch : stopwatch; swatch.start();
 /* The Computer Language Benchmarks Game
    https://salsa.debian.org/benchmarksgame-team/benchmarksgame/
 
@@ -24,6 +25,7 @@ proc main() {
   // Pad out any trailing digits for the final line
   if n % digitsPerLine then
     writeln(" " * (digitsPerLine - n % digitsPerLine), "\t:", n);
+  writeln("ELAPSED TIME: ", swatch.elapsed());
 }
 
 

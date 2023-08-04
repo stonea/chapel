@@ -1,3 +1,4 @@
+use Time;var swatch : stopwatch; swatch.start();
 /* The Computer Language Benchmarks Game
    https://salsa.debian.org/benchmarksgame-team/benchmarksgame/
 
@@ -55,6 +56,7 @@ proc main(args: [] string) {
   // write the data out to stdout once all tasks have completed
   const stdoutBin = (new file(1)).writer(iokind.native, locking=false);
   stdoutBin.writeBinary(data);
+  writeln("ELAPSED TIME: ", swatch.elapsed());
 }
 
 // process a sequence from both ends, replacing each extreme element

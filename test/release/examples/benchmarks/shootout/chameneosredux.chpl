@@ -1,3 +1,4 @@
+use Time;var swatch : stopwatch; swatch.start();
 /* The Computer Language Benchmarks Game
    https://salsa.debian.org/benchmarksgame-team/benchmarksgame/
 
@@ -21,6 +22,7 @@ proc main() {
 
   simulate(popSize1);
   simulate(popSize2);
+  writeln("ELAPSED TIME: ", swatch.elapsed());
 }
 
 

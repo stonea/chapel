@@ -5,6 +5,7 @@
    derived from the Java version by Mark C. Lewis and Chad Whipkey
 */
 
+use Time;var swatch : stopwatch; swatch.start();
 
 config const n = 10000;       // The number of timesteps to simulate
 
@@ -79,6 +80,7 @@ proc main() {
     advance(0.01);
 
   writef("%.9r\n", energy());     // print the final energy
+  writeln("ELAPSED TIME: ", swatch.elapsed());
 }
 
 //

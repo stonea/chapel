@@ -415,7 +415,8 @@ def _setup_logging(verbose):
     :type verbose: bool
     :arg verbose: When True, set log level to DEBUG.
     """
-    log_level = logging.DEBUG if verbose else logging.INFO
+    #log_level = logging.DEBUG if verbose else logging.INFO
+    log_level = logging.CRITICAL
     logging.basicConfig(format='%(asctime)s [%(levelname)s] %(message)s',
                         level=log_level)
     logging.debug('Verbose output enabled.')

@@ -1,3 +1,4 @@
+use Time;var swatch : stopwatch; swatch.start();
 /* The Computer Language Benchmarks Game
    https://salsa.debian.org/benchmarksgame-team/benchmarksgame/
 
@@ -42,6 +43,7 @@ proc main(args: [] string) {
 
   const stdoutBin = (new file(1)).writer(iokind.native, locking=false);
   stdoutBin.writeBinary(data);
+  writeln("ELAPSED TIME: ", swatch.elapsed());
 }
 
 

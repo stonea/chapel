@@ -1,3 +1,4 @@
+use Time;var swatch : stopwatch; swatch.start();
 /* The Computer Language Benchmarks Game
    https://salsa.debian.org/benchmarksgame-team/benchmarksgame/
 
@@ -35,6 +36,7 @@ proc main() {
 
   print(group1);
   print(group2);
+  writeln("ELAPSED TIME: ", swatch.elapsed());
 }
 
 
