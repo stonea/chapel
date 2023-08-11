@@ -1378,6 +1378,7 @@ ident_def:
 ident_use:
   TIDENT                   { $$ = $1; }
 | TTHIS                    { $$ = $1; }
+| TDEINIT                  { $$ = $1; }
 ;
 
 /* Error message has been moved to post-parse. */

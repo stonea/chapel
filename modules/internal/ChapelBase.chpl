@@ -2566,7 +2566,7 @@ module ChapelBase {
       compilerError("'delete' can only be applied to unmanaged classes");
 
     if (arg != nil) {
-      //arg!.deinit(); **AIS** I think we need to replace this with some primitive to allow exempting the call
+      arg!.deinit(); //**AIS** I think we might need to replace this with some primitive to allow exempting the call
 
       on arg do
         chpl_here_free(__primitive("_wide_get_addr", arg));
