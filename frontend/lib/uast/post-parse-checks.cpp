@@ -221,6 +221,17 @@ static ControlFlowModifier nodeAllowsReturn(const AstNode* node,
       // can't return a value from an iterator.
       return ControlFlowModifier::BLOCKS;
     }
+
+    // Cant return values from init, deinit, or postinit
+    if(fn->name() == USTR("init") ||
+       fn->name() == USTR("deinit") ||
+       fn->name() == USTR("postinit"))
+    {
+      if(ctrl->value() != nullptr) {
+        return ControlFlowModifier::BLOCKS;
+      }
+    }
+
     return ControlFlowModifier::ALLOWS;
   }
   if (node->isForall() || node->isForeach() || node->isCoforall() ||
@@ -1034,9 +1045,23 @@ bool Visitor::isNamedThisAndNotReceiverOrFunction(const NamedDecl* node) {
   return true;
 }
 
+// **AIS** TODO: make this private method rather than free func
+static bool isSpecialMethodKeywordAndNotAMethod(const NamedDecl *node) {
+  if ((node->name() != USTR("init")) &&
+      (node->name() != USTR("deinit")) &&
+      (node->name() != USTR("postinit")))
+  {
+    return false;
+  }
+  if (node->isFunction() &&
+      node->toFunction()->isMethod()) return false;
+  return true;
+}
+
 bool Visitor::isNameReservedWord(const NamedDecl* node) {
   auto name = node->name();
   if (isNamedThisAndNotReceiverOrFunction(node)) return true;
+  if (isSpecialMethodKeywordAndNotAMethod(node)) return true;
   if (name == "none") return true;
   if (name == "false") return true;
   if (name == "true") return true;
@@ -1324,6 +1349,28 @@ void Visitor::visit(const Function* node) {
   checkLambdaReturnIntent(node);
   checkConstReturnIntent(node);
   checkProcDefFormalsAreNamed(node);
+
+  // Disallow deinit and postinit from having parameters
+  // (besides the implicit "this" paremter)
+  if ((node->name() == USTR("deinit")) ||
+      (node->name() == USTR("postinit")))
+  {
+    if(node->numFormals() > 1) {
+      // **AIS** TODO: Give a more specific error
+      error(node, "special method '%s' is not allowed to have parameters",
+        node->name().c_str());
+    }
+  }
+
+  if ((node->name() == USTR("init")) ||
+      (node->name() == USTR("deinit")) ||
+      (node->name() == USTR("postinit")))
+  {
+    if(node->returnType()) {
+      error(node, "special method '%s' is not allowed to have a return type",
+        node->name().c_str());
+     }
+  }
 }
 
 void Visitor::visit(const FunctionSignature* node) {

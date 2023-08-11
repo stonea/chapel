@@ -405,6 +405,9 @@
 %token <uniqueStr> TYIELD
 %token <uniqueStr> TZIP
 
+// **AIS** TODO: Alphabetize in
+%token <uniqueStr> TDEINIT
+
 //
 // operators and punctuation (alphabetical)
 //
@@ -1355,6 +1358,7 @@ reserved_word_ident:
 | TTHIS
 | TFALSE
 | TTRUE
+| TDEINIT
 | internal_type_ident_def
 ;
 
