@@ -1046,22 +1046,27 @@ bool Visitor::isNamedThisAndNotReceiverOrFunction(const NamedDecl* node) {
 }
 
 // **AIS** TODO: make this private method rather than free func
-static bool isSpecialMethodKeywordAndNotAMethod(const NamedDecl *node) {
+static bool isSpecialMethodKeywordUsedIncorrectly(const NamedDecl *node) {
   if ((node->name() != USTR("init")) &&
       (node->name() != USTR("deinit")) &&
       (node->name() != USTR("postinit")))
   {
     return false;
   }
-  if (node->isFunction() &&
-      node->toFunction()->isMethod()) return false;
-  return true;
+
+  // deinit can also be a free function used to deinitialize the current
+  // module
+  if(node->name() == USTR("deinit")) {
+    return !node->isFunction();
+  }
+
+  return !(node->isFunction() && node->toFunction()->isMethod());
 }
 
 bool Visitor::isNameReservedWord(const NamedDecl* node) {
   auto name = node->name();
   if (isNamedThisAndNotReceiverOrFunction(node)) return true;
-  if (isSpecialMethodKeywordAndNotAMethod(node)) return true;
+  if (isSpecialMethodKeywordUsedIncorrectly(node)) return true;
   if (name == "none") return true;
   if (name == "false") return true;
   if (name == "true") return true;

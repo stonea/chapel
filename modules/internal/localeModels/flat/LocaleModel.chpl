@@ -225,7 +225,7 @@ module LocaleModel {
     return c_sublocid_none;
   }
 
-  proc deinitLocales() {
+  proc deinit() {
     for l in chpl_emptyLocales do {
       delete l._instance;
     }

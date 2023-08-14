@@ -790,7 +790,7 @@ module ChapelLocale {
   }
 
   @chpldoc.nodoc
-  proc deinitLocales() {
+  proc deinit() {
     delete origRootLocale._instance;
     delete dummyLocale._instance;
   }
