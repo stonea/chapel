@@ -220,8 +220,6 @@ with             return processToken(yyscanner, TWITH);
 yield            return processToken(yyscanner, TYIELD);
 zip              return processToken(yyscanner, TZIP);
 
-deinit           return processToken(yyscanner, TDEINIT);
-
 "@"              return processToken(yyscanner, TATMARK);
 "_"              return processToken(yyscanner, TUNDERSCORE);
 

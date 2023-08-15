@@ -222,9 +222,8 @@ static ControlFlowModifier nodeAllowsReturn(const AstNode* node,
       return ControlFlowModifier::BLOCKS;
     }
 
-    // Cant return values from init, deinit, or postinit
-    if(fn->name() == USTR("init") ||
-       fn->name() == USTR("deinit") ||
+    // Cant return values from deinit or postinit
+    if(fn->name() == USTR("deinit") ||
        fn->name() == USTR("postinit"))
     {
       if(ctrl->value() != nullptr) {
@@ -1355,27 +1354,28 @@ void Visitor::visit(const Function* node) {
   checkConstReturnIntent(node);
   checkProcDefFormalsAreNamed(node);
 
+  // **AIS** TODO: Factor this out into an individual check* function
+
   // Disallow deinit and postinit from having parameters
   // (besides the implicit "this" paremter)
-  if ((node->name() == USTR("deinit")) ||
-      (node->name() == USTR("postinit")))
-  {
-    if(node->numFormals() > 1) {
-      // **AIS** TODO: Give a more specific error
-      error(node, "special method '%s' is not allowed to have parameters",
-        node->name().c_str());
+  
+  /*if(node->isFunction() && node->numFormals() > 1) {
+    if (node->name() == USTR("deinit")) {
+      error(node, "destructors must not have arguments");
     }
-  }
+    // We handle postinit in the 'initializer rules' pass
+  }*/
 
-  if ((node->name() == USTR("init")) ||
+  /*
+  if(node->isFunction() && (
       (node->name() == USTR("deinit")) ||
-      (node->name() == USTR("postinit")))
+      (node->name() == USTR("postinit"))))
   {
     if(node->returnType()) {
       error(node, "special method '%s' is not allowed to have a return type",
         node->name().c_str());
      }
-  }
+  }*/
 }
 
 void Visitor::visit(const FunctionSignature* node) {

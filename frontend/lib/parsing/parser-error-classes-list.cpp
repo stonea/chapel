@@ -303,14 +303,11 @@ void ErrorDisallowedControlFlow::write(ErrorWriterBase& wr) const {
   }
 
   // We also special case return statements in special methods that don't allow
-  // returns (with values)
+  // returns with values
   if (auto ret = invalidAst->toReturn()) {
     if(blockingAst) {
       if (auto fn = blockingAst->toFunction()) {
-        if((fn->name() == "init") ||
-           (fn->name() == "deinit") ||
-           (fn->name() == "postinit"))
-        {
+        if((fn->name() == "deinit") || (fn->name() == "postinit")) {
           wr.heading(kind_, type_, ret,
                      "'return' statements with values are not allowed in special methods.");
           wr.message("The following 'return' statement has a value:");

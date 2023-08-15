@@ -405,9 +405,6 @@
 %token <uniqueStr> TYIELD
 %token <uniqueStr> TZIP
 
-// **AIS** TODO: Alphabetize in
-%token <uniqueStr> TDEINIT
-
 //
 // operators and punctuation (alphabetical)
 //
@@ -1358,7 +1355,6 @@ reserved_word_ident:
 | TTHIS
 | TFALSE
 | TTRUE
-| TDEINIT
 | internal_type_ident_def
 ;
 
@@ -1378,7 +1374,6 @@ ident_def:
 ident_use:
   TIDENT                   { $$ = $1; }
 | TTHIS                    { $$ = $1; }
-| TDEINIT                  { $$ = $1; }
 ;
 
 /* Error message has been moved to post-parse. */
