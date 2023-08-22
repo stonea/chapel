@@ -100,6 +100,7 @@ struct Visitor {
   bool isParentFalseBlock(int depth=0) const;
 
   bool isNamedThisAndNotReceiverOrFunction(const NamedDecl* node);
+  bool isSpecialMethodKeywordUsedIncorrectly(const NamedDecl *node);
   bool isNameReservedWord(const NamedDecl* node);
   inline bool shouldEmitUnstableWarning(const AstNode* node);
 
@@ -222,7 +223,6 @@ static ControlFlowModifier nodeAllowsReturn(const AstNode* node,
       return ControlFlowModifier::BLOCKS;
     }
 
-    // Cant return values from deinit or postinit
     if(fn->name() == USTR("deinit") ||
        fn->name() == USTR("postinit"))
     {
@@ -1044,8 +1044,9 @@ bool Visitor::isNamedThisAndNotReceiverOrFunction(const NamedDecl* node) {
   return true;
 }
 
-// **AIS** TODO: make this private method rather than free func
-static bool isSpecialMethodKeywordUsedIncorrectly(const NamedDecl *node) {
+bool Visitor::isSpecialMethodKeywordUsedIncorrectly(
+  const NamedDecl *node)
+{
   if ((node->name() != USTR("init")) &&
       (node->name() != USTR("deinit")) &&
       (node->name() != USTR("postinit")))
@@ -1053,7 +1054,7 @@ static bool isSpecialMethodKeywordUsedIncorrectly(const NamedDecl *node) {
     return false;
   }
 
-  // deinit can also be a free function used to deinitialize the current
+  // deinit can be a free function used to deinitialize the current
   // module
   if(node->name() == USTR("deinit")) {
     return !node->isFunction();
@@ -1353,29 +1354,6 @@ void Visitor::visit(const Function* node) {
   checkLambdaReturnIntent(node);
   checkConstReturnIntent(node);
   checkProcDefFormalsAreNamed(node);
-
-  // **AIS** TODO: Factor this out into an individual check* function
-
-  // Disallow deinit and postinit from having parameters
-  // (besides the implicit "this" paremter)
-  
-  /*if(node->isFunction() && node->numFormals() > 1) {
-    if (node->name() == USTR("deinit")) {
-      error(node, "destructors must not have arguments");
-    }
-    // We handle postinit in the 'initializer rules' pass
-  }*/
-
-  /*
-  if(node->isFunction() && (
-      (node->name() == USTR("deinit")) ||
-      (node->name() == USTR("postinit"))))
-  {
-    if(node->returnType()) {
-      error(node, "special method '%s' is not allowed to have a return type",
-        node->name().c_str());
-     }
-  }*/
 }
 
 void Visitor::visit(const FunctionSignature* node) {
