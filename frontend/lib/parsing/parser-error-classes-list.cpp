@@ -307,14 +307,14 @@ void ErrorDisallowedControlFlow::write(ErrorWriterBase& wr) const {
   if (auto ret = invalidAst->toReturn()) {
     if(blockingAst) {
       if (auto fn = blockingAst->toFunction()) {
-        if((fn->name() == "deinit") || (fn->name() == "postinit")) {
+        //if((fn->name() == "deinit") || (fn->name() == "postinit")) {
           wr.heading(kind_, type_, ret,
                      "'return' statements with values are not allowed in ", fn->name(), " methods");
           wr.message("The following 'return' statement has a value:");
           wr.code(ret, { ret->value() });
           wr.codeForLocation(fn);
           return;
-        }
+        //}
       }
     }
   }
