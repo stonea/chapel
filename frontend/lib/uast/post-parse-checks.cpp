@@ -225,7 +225,8 @@ static ControlFlowModifier nodeAllowsReturn(const AstNode* node,
       return ControlFlowModifier::BLOCKS;
     }
 
-    if(fn->name() == USTR("deinit") ||
+    if(fn->name() == USTR("init") ||
+       fn->name() == USTR("deinit") ||
        fn->name() == USTR("postinit"))
     {
       if(ctrl->value() != nullptr) {
