@@ -628,6 +628,12 @@ static void normalizeBase(BaseAST* base, bool addEndOfStatements) {
     if (VarSymbol* var = toVarSymbol(symbol)) {
       DefExpr* defExpr = var->defPoint;
 
+      if(defExpr->id == 206159) {
+        static int z = 0;
+        z = z + 1;
+      }
+        
+
       if (FnSymbol* fn = toFnSymbol(defExpr->parentSymbol)) {
         if (fn == stringLiteralModule->initFn) {
           fixStringLiteralInit(fn);
@@ -2981,6 +2987,11 @@ static void  restoreShadowVarForNormalize(DefExpr* def, Expr* svarMark);
 
 void normalizeVariableDefinition(DefExpr* defExpr) {
   SET_LINENO(defExpr);
+
+  if(defExpr->id == 206159) {
+    static int z = 0;
+    z = z + 1;
+  }
 
   VarSymbol* var  = toVarSymbol(defExpr->sym);
   Expr*      type = defExpr->exprType;

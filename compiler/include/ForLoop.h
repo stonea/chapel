@@ -155,6 +155,9 @@ public:
   Expr* asExpr() override { return this; }
   bool isInductionVar(Symbol* sym) override;
 
+  virtual bool isForLoopStmt() override { return false; }
+  virtual ForallStmt *forLoopStmt() override { return nullptr; }
+
 private:
                          ForLoop();
 

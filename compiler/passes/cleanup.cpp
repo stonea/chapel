@@ -182,16 +182,34 @@ static void backPropagate(BaseAST* ast) {
 }
 
 static void handleNonTypedAndNonInitedVar(DefExpr* def) {
-  if (toVarSymbol(def->sym)) {
+  if(def->id == 206159) {
+    bool a = !def->init;
+    printf("%d\n", a);
+  }
+
+  if (Symbol* sym = toVarSymbol(def->sym)) {
+    if(toShadowVarSymbol(sym)) {
+      return;
+    }
+
     bool needsInit = false;
     // The test for FLAG_TEMP allows compiler-generated (temporary) variables
     // to be declared without an explicit type or initializer expression.
     if ((!def->init || def->init->isNoInitExpr())
         && !def->exprType && !def->sym->hasFlag(FLAG_TEMP))
+    {
+
       if (isBlockStmt(def->parentExpr) && !isArgSymbol(def->parentSymbol))
+      {
         if (def->parentExpr != rootModule->block && def->parentExpr != stringLiteralModule->block)
+        {
           if (!def->sym->hasFlag(FLAG_INDEX_VAR))
+          {
             needsInit = true;
+          }
+        }
+      }
+    }
 
     if (needsInit) {
       if ((def->init && def->init->isNoInitExpr()) ||
@@ -264,6 +282,11 @@ static void cleanup(ModuleSymbol* module) {
         replaceIsSubtypeWithPrimitive(call, false, true);
 
     } else if (DefExpr* def = toDefExpr(ast)) {
+      if(def->id == 206159) {
+        static int z = 0;
+        z = z + 2;
+      }
+
       if (FnSymbol* fn = toFnSymbol(def->sym)) {
         // Is this function defined within a type i.e. is it a method?
         if (TypeSymbol* ts = toTypeSymbol(fn->defPoint->parentSymbol)) {

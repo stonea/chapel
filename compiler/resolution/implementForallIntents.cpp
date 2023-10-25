@@ -716,7 +716,7 @@ std::map<ForallStmt*, std::set<Symbol*>> refMaybeConstForallPairs;
 // It is done on an already-existing, explicit shadow variable
 // or before an implicit shadow variable is to be created.
 //
-static void resolveShadowVarTypeIntent(ForallStmt* fs,
+static void resolveShadowVarTypeIntent(ShadowVarLoopInterface* fs,
                                        Symbol* sym,
                                        Type*& type,
                                        ForallIntentTag& intent,
@@ -742,13 +742,17 @@ static void resolveShadowVarTypeIntent(ForallStmt* fs,
       argInt = concreteIntent(argInt, valType);
       intent = forallIntentForArgIntent(argInt);
 
-      // mark all ref-maybe-const shadow variables
-      if (argInt == INTENT_REF_MAYBE_CONST && intent == TFI_REF) {
-        auto it = refMaybeConstForallPairs.find(fs);
-        if (it == refMaybeConstForallPairs.end())
-          it = refMaybeConstForallPairs.insert(it, {fs, {}});
-        it->second.insert(sym);
-        implicitRefMaybeConst = true;
+      // *AIS* I'm going into the forall loop escape hatch here, do we need this behavior for 'foreach'
+      if(fs->isForLoopStmt()) {
+        
+        // mark all ref-maybe-const shadow variables
+        if (argInt == INTENT_REF_MAYBE_CONST && intent == TFI_REF) {
+          auto it = refMaybeConstForallPairs.find(fs->forLoopStmt());
+          if (it == refMaybeConstForallPairs.end())
+            it = refMaybeConstForallPairs.insert(it, {fs->forLoopStmt(), {}});
+          it->second.insert(sym);
+          implicitRefMaybeConst = true;
+        }
       }
 
       break;
@@ -763,13 +767,16 @@ static void resolveShadowVarTypeIntent(ForallStmt* fs,
     case TFI_REF: {
       // if there is an explicit ref shadow variable
       // we need to remove the symbol from the list
-      auto it = refMaybeConstForallPairs.find(fs);
-      if (it != refMaybeConstForallPairs.end()) {
-        auto& listOfSyms = it->second;
-        listOfSyms.erase(sym);
-        if (ShadowVarSymbol* svar = toShadowVarSymbol(sym)) {
-          if(Symbol* outerSym = svar->outerVarSym()) {
-            listOfSyms.erase(outerSym);
+      // *AIS* I'm going into the forall loop escape hatch here, do we need this behavior for 'foreach'
+      if(fs->isForLoopStmt()) {
+        auto it = refMaybeConstForallPairs.find(fs->forLoopStmt());
+        if (it != refMaybeConstForallPairs.end()) {
+          auto& listOfSyms = it->second;
+          listOfSyms.erase(sym);
+          if (ShadowVarSymbol* svar = toShadowVarSymbol(sym)) {
+            if(Symbol* outerSym = svar->outerVarSym()) {
+              listOfSyms.erase(outerSym);
+            }
           }
         }
       }
@@ -1050,9 +1057,12 @@ static ShadowVarSymbol* createSVforFieldAccess(ShadowVarLoopInterface* fs, Symbo
   // implicit ref intents, this check ensures that later on
   // refMaybeConstForallPairs checks the right symbols
   if (wasImplicitRef) {
-    auto fsIt = refMaybeConstForallPairs.find(fs);
-    CHPL_ASSERT(fsIt != refMaybeConstForallPairs.end());
-    fsIt->second.insert(svar);
+    // *AIS* I'm going into the forall loop escape hatch here, do we need this behavior for 'foreach'
+    if(fs->isForLoopStmt()) {
+      auto fsIt = refMaybeConstForallPairs.find(fs->forLoopStmt());
+      CHPL_ASSERT(fsIt != refMaybeConstForallPairs.end());
+      fsIt->second.insert(svar);
+    }
   }
 
   return svar;

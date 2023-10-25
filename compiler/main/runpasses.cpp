@@ -246,30 +246,54 @@ static void runPass(PhaseTracker& tracker, size_t passIndex) {
 
   static int z = 0;
 
+  if(passIndex == 1-1) {
+    z = z + 1; // parseAndConvertUast
+//    std::cout << "-------- after parseConvertUast -------" << std::endl;
+//    nprint_view(userModules.head());
+  }
+  breakOnID = 410328;
+
   if(passIndex == 5-1) {
     z = z + 1;
   }
   if(passIndex == 6-1) {
-    z = z + 1;
+    z = z + 1;  //scopeResolve
   }
   if(passIndex == 7-1) {
-    z = z + 1;
+    z = z + 1; // flattenClasses
+
+    std::cout << "-------- before normalize ---------" << std::endl;
+    nprint_view(userModules.head());
+  }
+
+  if(passIndex == 8-1) {
+    z = z + 1; // normalize
+    std::cout << "-------- after normalize ---------" << std::endl;
+    nprint_view(userModules.head());
   }
 
   if(passIndex == 11-1) {
     //pre-resolve
     z = z + 1;
-    //nprint_view(userModules.head());
+//    std::cout << "-------- before resolve ---------" << std::endl;
+//    nprint_view(userModules.head());
   }
   if(passIndex == 12-1) {
     //resolve
     z = z + 1;
+//    std::cout << "-------- after resolve ---------" << std::endl;
+//    nprint_view(userModules.head());
     //nprint_view(1585184);
   }
   if(passIndex == 13-1) {
     //resolveIntents
     z = z + 1;
   }
+  if(passIndex == 13-1) {
+    //resolveIntents
+    z = z + 1;
+  }
+  
   if(passIndex == 20-1) {
     //lowerIterators
     z = z + 1;

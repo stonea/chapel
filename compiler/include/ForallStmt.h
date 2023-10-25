@@ -76,6 +76,9 @@ struct ShadowVarLoopInterface {
   virtual bool needsInitialAccumulate() const = 0;
   virtual Expr* asExpr() = 0;
   virtual bool isInductionVar(Symbol* sym) = 0;
+
+  virtual bool isForLoopStmt() = 0;
+  virtual ForallStmt *forLoopStmt() = 0;
 };
 
 class ForallStmt final : public Stmt, public ShadowVarLoopInterface
@@ -150,6 +153,9 @@ public:
   void insertZipSym(Symbol *sym);
 
   bool isInductionVar(Symbol* sym) override;
+
+  virtual bool isForLoopStmt() override { return true; }
+  virtual ForallStmt *forLoopStmt() override { return this; }
 
 private:
   AList          fIterVars;    // DefExprs of the induction vars
