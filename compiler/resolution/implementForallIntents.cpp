@@ -142,6 +142,11 @@ static void insertDeinitialization(ShadowVarSymbol* destVar) {
 }
 
 static void resolveOneShadowVar(ShadowVarLoopInterface* fs, ShadowVarSymbol* svar) {
+  if(svar->id == 1595397 || svar->id == 1595742) {
+    static int z = 0;
+    z = z + 1;
+  }
+
   resolveBlockStmt(svar->initBlock());
   resolveBlockStmt(svar->deinitBlock());
 }
@@ -606,6 +611,11 @@ static void handleIn(ShadowVarLoopInterface* fs, ShadowVarSymbol* SI, bool isCon
   }
   INT_ASSERT(!SI->isRef());
 
+  if(fs->asExpr()->id == 206168 || fs->asExpr()->id == 206166) {
+    static int y = 0;
+    y = y + 1;
+  }
+
   ShadowVarSymbol* INP = create_IN_Parentvar(fs, SI, ovar);
   insertInitialization(SI, INP);
   insertDeinitialization(SI);
@@ -859,7 +869,7 @@ static void assertNotRecordReceiver(Symbol* ovar, Expr* ref) {
 static void doImplicitShadowVars(ShadowVarLoopInterface* fs, BlockStmt* block,
                                  SymbolMap& outer2shadow)
 {
-  if(block->id == 199574) {
+  if(block->id == 206154 || block->id == 206168) {
     //gdbShouldBreakHere();
     static int z = 0;
     z = z + 1;
@@ -904,6 +914,12 @@ static void doImplicitShadowVars(ShadowVarLoopInterface* fs, BlockStmt* block,
       assertNotRecordReceiver(sym, se);
       outer2shadow.put(sym, markPruned);
       continue;
+    }
+
+    if(sym->id == 206142) {
+      // __VAR__ in foreach loop
+      static int z = 0;
+      z = z + 1;
     }
 
     // Yes, convert to a shadow variable.
@@ -1200,7 +1216,7 @@ void convertFieldsOfRecordThis(FnSymbol* fn) {
 
 void setupAndResolveShadowVars(ShadowVarLoopInterface* fs)
 {
-  if(fs->asExpr()->id == 199574) {
+  if(fs->asExpr()->id == 206166 || fs->asExpr()->id == 206168) {
     static int z = 0;
     z = z + 1;
   }

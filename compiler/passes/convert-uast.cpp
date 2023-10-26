@@ -1401,6 +1401,10 @@ struct Converter {
       } else if (const uast::ReduceIntent* rd = expr->toReduceIntent()) {
         astlocMarker markAstLoc(rd->id());
 
+        if(parent->toForeach()) {
+          USR_FATAL(node->id(), "reduce intents can not be used in foreach loops");
+        }
+
         Expr* ovar = new UnresolvedSymExpr(rd->name().c_str());
         Expr* riExpr = convertScanReduceOp(rd->op());
         svs = ShadowVarSymbol::buildFromReduceIntent(ovar, riExpr);

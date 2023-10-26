@@ -652,6 +652,12 @@ isLegalLvalueActualArg(ArgSymbol* formal, Expr* actual,
 
     bool actualConst = false;
 
+    /*bool a = sym->hasFlag(FLAG_REF_TO_CONST);
+    bool b = sym->isConstant(); // This returns true with forall
+    bool c = sym->isParameter();
+
+    printf("%d%d%d\n",a,b,c);*/
+
     if (sym->hasFlag(FLAG_REF_TO_CONST) ||
         sym->isConstant() ||
         sym->isParameter())
@@ -7465,6 +7471,11 @@ static void lvalueCheckActual(CallExpr* call, Expr* actual, IntentTag intent, Ar
   bool exprTmpError = false;
   bool errorMsg = false;
 
+  if(call->id == 206155) {
+    static int z = 0;
+    z = z + 1;
+  }
+
   switch (intent) {
    case INTENT_BLANK:
    case INTENT_CONST:
@@ -10211,7 +10222,7 @@ void resolveBlockStmt(BlockStmt* blockStmt) {
     Expr *before = expr;
     (void)before;
 
-    if(before->id == 1181767) {
+    if(before->id == 1595402 || before->id == 1595747) {
       static int z = 0;
       z = z + 1;
     }
@@ -10631,12 +10642,13 @@ Expr* resolveExpr(Expr* expr) {
       CallExpr* call = resolveForallHeader(pfs, se);
       retval = resolveExprPhase2(expr, fn, preFold(call));
     } 
-    else if(pfl && pfl->shadowVariables().length > 0 && se == pfl->indexGet()) {
-      (void)pfl;
-      static int z = 0;
-      z = z + 1;
-      setupAndResolveShadowVars(pfl);
-      retval = resolveExprPhase2(expr, fn, expr);
+    else if(pfl && /*pfl->shadowVariables().length > 0 &&*/ se == pfl->indexGet() &&
+      (pfl->shadowVariables().length > 0)) { /* || pfl->asExpr()->id == 206168)) {*/
+        (void)pfl;
+        static int z = 0;
+        z = z + 1;
+        setupAndResolveShadowVars(pfl);
+        retval = resolveExprPhase2(expr, fn, expr);
     }
     else if (isMentionOfFnTriggeringCapture(se)) {
       auto fn = toFnSymbol(se->symbol());

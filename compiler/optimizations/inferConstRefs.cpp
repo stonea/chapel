@@ -744,6 +744,12 @@ void inferConstRefs() {
   //
   // TODO: Can we use for_SymbolSymExprs here instead?
   forv_Vec(SymExpr, se, gSymExprs) {
+//    printf("Sym expr: %d\n", se->id);
+    if(se->id == 2058703) {
+      static int z = 0;
+      z = z + 1;
+    }
+
     if (!(isVarSymbol(se->symbol()) || isArgSymbol(se->symbol()))) continue;
     // TODO: BHARSH: Skip classes for now. Not sure how to deal with aliasing
     if (!se->isRef() && isClass(se->typeInfo())) continue;

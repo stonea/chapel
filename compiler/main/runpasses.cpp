@@ -251,7 +251,11 @@ static void runPass(PhaseTracker& tracker, size_t passIndex) {
 //    std::cout << "-------- after parseConvertUast -------" << std::endl;
 //    nprint_view(userModules.head());
   }
-  breakOnID = 410328;
+
+  //breakOnID = 410328;
+  //breakOnID = 1595747;
+  //breakOnID = 2058703;
+//  breakOnID = 1993164;
 
   if(passIndex == 5-1) {
     z = z + 1;
@@ -262,14 +266,14 @@ static void runPass(PhaseTracker& tracker, size_t passIndex) {
   if(passIndex == 7-1) {
     z = z + 1; // flattenClasses
 
-    std::cout << "-------- before normalize ---------" << std::endl;
-    nprint_view(userModules.head());
+//    std::cout << "-------- before normalize ---------" << std::endl;
+//    nprint_view(userModules.head());
   }
 
   if(passIndex == 8-1) {
     z = z + 1; // normalize
-    std::cout << "-------- after normalize ---------" << std::endl;
-    nprint_view(userModules.head());
+//    std::cout << "-------- after normalize ---------" << std::endl;
+//    nprint_view(userModules.head());
   }
 
   if(passIndex == 11-1) {
@@ -293,12 +297,24 @@ static void runPass(PhaseTracker& tracker, size_t passIndex) {
     //resolveIntents
     z = z + 1;
   }
-  
-  if(passIndex == 20-1) {
-    //lowerIterators
+
+  if(passIndex == 19-1) {
+    // before lower_iterators
+    
+//    std::cout << "-------- before lower iterators ---------" << std::endl;
+//    nprint_view(userModules.head());
     z = z + 1;
   }
 
+  if(passIndex == 20-1) {
+    // after lowerIterators
+//    std::cout << "-------- after lower iterators ---------" << std::endl;
+//    nprint_view(userModules.head());
+    z = z + 1;
+  }
+
+//  std::cout << "-------- after " << passIndex << " ---------" << std::endl;
+//  nprint_view(userModules.head());
 
   if (fPrintStatistics[0] != '\0')
     printStatistics(info->name);

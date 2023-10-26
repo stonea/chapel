@@ -423,6 +423,8 @@ ForLoop::ForLoop(VarSymbol* index,
   mZippered = zippered;
   mLoweredForall = isLoweredForall;
   mIsForExpr = isForExpr;
+
+  fShadowVars.parent = this; // **AIS** NEED THIS!
 }
 
 ForLoop* ForLoop::copyInner(SymbolMap* map)

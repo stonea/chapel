@@ -2411,6 +2411,28 @@ buildIteratorCall(Symbol* ret, int fnid, Symbol* iterator, Vec<Type*>& children)
   return outerBlock;
 }
 
+// *AIS* Copied from lowerIterators, some better place to put this?
+/*static void addDefAndMap(Expr* aInit, SymbolMap& map, ShadowVarSymbol* svar,
+                         VarSymbol* currVar)
+{
+  if (currVar->type == dtNothing) {
+    INT_ASSERT(currVar->firstSymExpr() == NULL);
+    return;
+  }
+  aInit->insertBefore(new DefExpr(currVar));
+  map.put(svar, currVar);
+}*/
+
+// *AIS* Copied from lowerIterators, some better place to put this?
+/*static VarSymbol* createCurrIN(ShadowVarSymbol* SI) {
+  INT_ASSERT(!SI->isRef());
+  VarSymbol* currSI = new VarSymbol(SI->name, SI->type);
+  currSI->qual = SI->isConstant() ? QUAL_CONST_VAL : QUAL_VAL;
+  if (SI->isConstant()) currSI->addFlag(FLAG_CONST);
+  return currSI;
+}
+*/
+
 // Replace a ForLoop with its inline equivalent, if possible.
 // Otherwise, convert it into a C-style for loop.
 // The given forLoop is converted unconditionally.
@@ -2419,6 +2441,29 @@ expandForLoop(ForLoop* forLoop) {
   SymExpr*   se2      = forLoop->iteratorGet();
   VarSymbol* iterator = toVarSymbol(se2->symbol());
   bool converted = false;
+
+  /*SET_LINENO(forLoop);
+  for_shadow_vars(svar, temp, forLoop) {
+      (void)(svar);
+      (void)(temp);
+      (void)(forLoop);
+      static int z = 0;
+      z = z + 1;
+
+    if(svar->intent == TFI_IN || svar->intent == TFI_CONST_IN) {
+      SymbolMap  map;
+
+      addDefAndMap(forLoop, map, svar, createCurrIN(svar));
+
+      ShadowVarSymbol* INP = svar->ParentvarForIN();
+      map.put(INP, INP->outerVarSym());
+
+      BlockStmt* copyIB = svar->initBlock()->copy(&map);
+      forLoop->insertBefore(copyIB);
+      // Let's drop the BlockStmt wrapper, to simplify the AST.
+      copyIB->flattenAndRemove();
+    }
+  }*/
 
   if (!fNoInlineIterators)
   {

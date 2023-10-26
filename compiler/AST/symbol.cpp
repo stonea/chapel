@@ -115,6 +115,11 @@ Symbol::Symbol(AstTag astTag, const char* init_name, Type* init_type) :
 
 
 Symbol::~Symbol() {
+  if(id == 206156) {
+    static int z = 0;
+    z = z + 1;
+  }
+
   if (fieldQualifiers)
     delete [] fieldQualifiers;
 }
