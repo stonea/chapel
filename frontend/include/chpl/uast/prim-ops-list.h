@@ -398,3 +398,5 @@ PRIMITIVE_R(REAL32_AS_UINT32, "real32 as uint32")
 PRIMITIVE_R(REAL64_AS_UINT64, "real64 as uint64")
 
 PRIMITIVE_G(BREAKPOINT, "breakpoint")
+
+PRIMITIVE_R(TASK_INDEPENDENT_SVAR_CAPTURE, "task independent svar capture")

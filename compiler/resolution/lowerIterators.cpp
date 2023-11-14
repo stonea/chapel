@@ -437,7 +437,7 @@ static void markVectorizableForallLoops()
         USR_PRINT(forall, "Vectorization hazard -- calls synchronizing function %s [%i]", fn->name, fn->id);
       else if (fn && v.hazard)
         USR_PRINT(forall, "Vectorization hazard -- calls synchronizing function %s", fn->name);
-       else if (v.hazard && v.reason && v.reason->isPrimitive(PRIM_VIRTUAL_METHOD_CALL))
+      else if (v.hazard && v.reason && v.reason->isPrimitive(PRIM_VIRTUAL_METHOD_CALL))
         USR_PRINT(forall, "Vectorization hazard -- calls virtual function");
       else
         USR_PRINT(forall, "Vectorization hazard -- other");
@@ -1469,18 +1469,20 @@ expandRecursiveIteratorInline(ForLoop* forLoop)
 typedef Map<FnSymbol*,FnSymbol*> TaskFnCopyMap;
 
 static void
-expandBodyForIteratorInline(ForLoop*       forLoop,
-                            BlockStmt*     ibody,
-                            Symbol*        index);
+expandBodyForIteratorInline(ForLoop*         forLoop,
+                            BlockStmt*       ibody,
+                            Symbol*          index,
+                            const SymbolMap& map);
 
 
 static void
-expandBodyForIteratorInline(ForLoop*       forLoop,
-                            BlockStmt*     ibody,
-                            Symbol*        index,
-                            bool           inTaskFn,
-                            TaskFnCopyMap& taskFnCopies,
-                            bool&          addErrorArgToCall);
+expandBodyForIteratorInline(ForLoop*         forLoop,
+                            BlockStmt*       ibody,
+                            Symbol*          index,
+                            bool             inTaskFn,
+                            TaskFnCopyMap&   taskFnCopies,
+                            bool&            addErrorArgToCall,
+                            const SymbolMap& map);
 
 static void markLoopProperties(ForLoop* forLoop, BlockStmt* ibody,
                                bool forVectorize) {
@@ -1528,12 +1530,132 @@ static void markLoopProperties(ForLoop* forLoop, BlockStmt* ibody,
   }
 }
 
+
+// -- - - - - - -- -
+
+/*
+static VarSymbol* createCurrIN(ShadowVarSymbol* SI) {
+  INT_ASSERT(!SI->isRef());
+  VarSymbol* currSI = new VarSymbol(SI->name, SI->type);
+  currSI->qual = SI->isConstant() ? QUAL_CONST_VAL : QUAL_VAL;
+  if (SI->isConstant()) currSI->addFlag(FLAG_CONST);
+  return currSI;
+}
+
+static void addDefAndMap(Expr* aInit, SymbolMap& map, ShadowVarSymbol* svar,
+                         VarSymbol* currVar)
+{
+  if (currVar->type == dtNothing) {
+    INT_ASSERT(currVar->firstSymExpr() == NULL);
+    return;
+  }
+  aInit->insertBefore(new DefExpr(currVar));
+  map.put(svar, currVar);
+}
+
+static void addCloneOfInitBlock(Expr* aInit, SymbolMap& map, ShadowVarSymbol* svar) {
+  //
+  // We have to clone IB as a whole. This is to ensure that the uses
+  // of any symbols that the original IB defines (via DefExprs
+  // within that IB) get converted to uses of these symbols' copies.
+  //
+  BlockStmt* copyIB = svar->initBlock()->copy(&map);
+  aInit->insertBefore(copyIB);
+  // Let's drop the BlockStmt wrapper, to simplify the AST.
+  copyIB->flattenAndRemove();
+}
+
+static void addCloneOfDeinitBlock(Expr* aFini, SymbolMap& map, ShadowVarSymbol* svar) {
+  BlockStmt* copyDB = svar->deinitBlock()->copy(&map);
+  aFini->insertAfter(copyDB);
+  // Let's drop the BlockStmt wrapper, to simplify the AST.
+  copyDB->flattenAndRemove();
+}
+*/
+
+// This function is called while expanding an iterator for a for/foreach loop
+// that may potentially have intents / shadow variables.
+// While processing these update a symbol map that we'll use to map shadow
+// variables to whatever they should be mapped to in the expanded loop.
+static void processShadowVariables(ForLoop* forLoop, SymbolMap *map) {
+  for_shadow_vars (svar, temp, forLoop) {
+    switch (svar->intent) {
+      case TFI_DEFAULT:
+      case TFI_CONST:
+        INT_ASSERT(false);
+
+      case TFI_IN:
+        {
+        // If we have a variable with an 'in' intent for a foreach loop we'll
+        // want to capture its value before we start executing the loop. We'll
+        // use this copied version to give an initial value to thread-private
+        // versions of the variable.  How many thread private variables we
+        // should have and how to initialize them is something handled by later
+        // passes since at this point we don't know if this loop will be
+        // vectorized or gpuized, so in the meantime we model this as an
+        // assignment to a primitive and leave it to future passes (like
+        // gpuTransforms) to rewrite things as appropriate.
+        // IOW: coming out of this case we'll add something that looks like this:
+        //
+        //   var capX = x;
+        //   var taskIndX = PRIM_TASK_IND_CAPTURE_OF(capX);
+        //   # note: there's also a flag on taskIndX marking it as being a "task"-independent variable
+
+        SET_LINENO(forLoop);
+
+//        ShadowVarSymbol* INP = svar->ParentvarForIN();
+//        map->put(INP, INP->outerVarSym());
+
+//        VarSymbol* capturedSvar = createCurrIN(svar);
+//        addDefAndMap(forLoop, *map, svar, capturedSvar);
+////        addCloneOfInitBlock(forLoop, *map, svar);
+//        addCloneOfDeinitBlock(forLoop, *map, svar);
+
+        VarSymbol* capturedSvar = new VarSymbol(svar->name, svar->type);
+        forLoop->insertBefore(new DefExpr(capturedSvar));
+        forLoop->insertBefore(new CallExpr(PRIM_MOVE, capturedSvar, svar->outerVarSE->symbol()));
+
+        //FnSymbol* autoCopy = getAutoCopyForType(svar->type);
+        //forLoop->insertBefore(new CallExpr(PRIM_MOVE,
+        //                                   capturedSvar,
+        //                                   new CallExpr(autoCopy, svar->outerVarSE->symbol(), gFalse)));
+
+        VarSymbol* taskIndVar = new VarSymbol(svar->name, svar->type);
+        taskIndVar->addFlag(FLAG_TASK_PRIVATE_VARIABLE);
+        forLoop->insertBefore(new DefExpr(taskIndVar));
+        forLoop->insertBefore(new CallExpr(PRIM_ASSIGN, taskIndVar, new CallExpr(PRIM_TASK_INDEPENDENT_SVAR_CAPTURE, capturedSvar)));
+
+        map->put(svar, taskIndVar);
+        }
+        break;
+
+      case TFI_CONST_IN:
+      case TFI_REF:
+      case TFI_CONST_REF:
+      case TFI_REDUCE_OP:
+        INT_ASSERT(false);
+
+      case TFI_IN_PARENT:
+        continue;
+
+      case TFI_REDUCE:
+      case TFI_REDUCE_PARENT_AS:
+      case TFI_REDUCE_PARENT_OP:
+      case TFI_TASK_PRIVATE:
+        INT_ASSERT(false);
+    }
+  }
+}
+
 // Returns true if the given ForLoop was handled (converted and removed from
 // the tree); false otherwise.
 static bool expandIteratorInline(ForLoop* forLoop)
 {
   Symbol*   ic       = forLoop->iteratorGet()->symbol();
   FnSymbol* iterator = getTheIteratorFn(ic);
+
+  SymbolMap map;
+  processShadowVariables(forLoop, &map);
 
   if (fReportInlinedIterators) {
     ModuleSymbol *mod = iterator->getModule();
@@ -1589,7 +1711,7 @@ static bool expandIteratorInline(ForLoop* forLoop)
     // Replace yield statements in the inlined iterator body with copies
     // of the body of the For Loop that invoked the iterator, substituting
     // the yielded index for the iterator formal.
-    expandBodyForIteratorInline(forLoop, ibody, index);
+    expandBodyForIteratorInline(forLoop, ibody, index, map);
 
     std::vector<SymExpr*> symExprs;
     collectSymExprs(ibody, symExprs);
@@ -1604,11 +1726,12 @@ static bool expandIteratorInline(ForLoop* forLoop)
 static void
 expandBodyForIteratorInline(ForLoop*       forLoop,
                             BlockStmt*     ibody,
-                            Symbol*        index) {
+                            Symbol*        index,
+                            const SymbolMap& map) {
   TaskFnCopyMap taskFnCopies;
   bool addErrorArgToCall = false;
   expandBodyForIteratorInline(forLoop, ibody, index, false,
-                              taskFnCopies, addErrorArgToCall);
+                              taskFnCopies, addErrorArgToCall, map);
   INT_ASSERT(addErrorArgToCall == false); // case not handled
 }
 
@@ -2106,7 +2229,8 @@ expandBodyForIteratorInline(ForLoop*       forLoop,
                             Symbol*        index,
                             bool           inTaskFn,
                             TaskFnCopyMap& taskFnCopies,
-                            bool&          addErrorArgToCall) {
+                            bool&          addErrorArgToCall,
+                            const SymbolMap& svarMap) {
   bool removeReturn = !inTaskFn;
   std::vector<CallExpr*> bodyCalls;
   collectCallExprs(ibody, bodyCalls);
@@ -2125,6 +2249,7 @@ expandBodyForIteratorInline(ForLoop*       forLoop,
         }
 
         SymbolMap  map;
+        map.copy(svarMap);
         map.put(index, yieldedIndex);
 
         BlockStmt* bodyCopy = forLoop->copyBody(&map);
@@ -2211,7 +2336,7 @@ expandBodyForIteratorInline(ForLoop*       forLoop,
 
           // Repeat, recursively.
           expandBodyForIteratorInline(forLoop, fcopy->body, index, true,
-              taskFnCopies, addErrorArgToSubCall);
+              taskFnCopies, addErrorArgToSubCall, svarMap);
 
         } else {
           // Indeed, 'cfn' is encountered only once per 'body',

@@ -982,6 +982,7 @@ CallResolutionResult resolvePrimCall(Context* context,
     case PRIM_UNKNOWN:
     case NUM_KNOWN_PRIMS:
     case PRIM_BREAKPOINT:
+    case PRIM_TASK_INDEPENDENT_SVAR_CAPTURE:
       CHPL_ASSERT(false && "not implemented yet");
 
     // no default to get a warning when new primitives are added

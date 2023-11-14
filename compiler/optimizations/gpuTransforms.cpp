@@ -1270,7 +1270,6 @@ static void generateGPUKernelCall(const GpuizableLoop &gpuLoop,
     // the conditional.
     gpuLoop.fixupNonGpuPath();
   }
-
 }
 
 static CallExpr* getGpuEligibleMarker(CForLoop* loop) {
@@ -1283,6 +1282,8 @@ static CallExpr* getGpuEligibleMarker(CForLoop* loop) {
   }
   return nullptr;
 }
+
+static void processTaskIndependenceInNonGpuLoop(CForLoop *loop);
 
 static void outlineEligibleLoop(FnSymbol *fn, GpuizableLoop &gpuLoop) {
   SET_LINENO(gpuLoop.gpuLoop());
@@ -1299,6 +1300,7 @@ static void outlineEligibleLoop(FnSymbol *fn, GpuizableLoop &gpuLoop) {
   } else {
     kernel.fn()->defPoint->remove();
     gpuLoop.makeCpuOnly();
+    processTaskIndependenceInNonGpuLoop(gpuLoop.cpuLoop());
   }
 }
 
@@ -1332,6 +1334,7 @@ static void outlineGpuKernelsInFn(FnSymbol *fn) {
         outlineEligibleLoop(fn, gpuLoop);
       } else {
         gpuLoop.makeCpuOnly();
+        processTaskIndependenceInNonGpuLoop(gpuLoop.cpuLoop());
       }
     }
   }
@@ -1553,6 +1556,39 @@ void GpuizableLoop::fixupNonGpuPath() const {
   }
 }
 
+std::set<VarSymbol*> processedVar;
+
+static void processTaskIndependenceInNonGpuLoop(CForLoop *loop) {
+  std::vector<SymExpr*> ses;
+  collectSymExprs(loop, ses);
+  for_vector(SymExpr, se, ses) {
+    if (VarSymbol* var = toVarSymbol(se->symbol())) {
+      if(var->hasFlag(FLAG_TASK_PRIVATE_VARIABLE)) {
+        if(processedVar.find(var) != processedVar.end())
+          continue;
+        processedVar.insert(var);
+
+        // *AIS* I don't think it's necessarily safe to assume the initpoint
+        // follows from the defpoint. Is there a way to put an initialization
+        // into a defpoint?
+        Expr *defPoint = var->defPoint;
+        Expr *initPoint = defPoint->next;
+
+        CallExpr *callExpr = toCallExpr(initPoint);
+        INT_ASSERT(callExpr);
+        CallExpr* taskIndSvarPrim = toCallExpr(callExpr->get(2));
+        INT_ASSERT(taskIndSvarPrim);
+        SymExpr* capturedSvarExp = toSymExpr(taskIndSvarPrim->get(1));
+        INT_ASSERT(capturedSvarExp);
+
+        SET_LINENO(var);
+
+        initPoint->replace(new CallExpr(PRIM_MOVE, var, capturedSvarExp->symbol()));
+      }
+    }
+  }
+}
+
 static void duplicateEligibleLoopsForAdjustedLICM(FnSymbol* fn) {
   std::vector<CForLoop*> asts;
   collectCForLoopStmtsPreorder(fn, asts);
@@ -1565,6 +1601,11 @@ static void duplicateEligibleLoopsForAdjustedLICM(FnSymbol* fn) {
       continue;
     }
 
+    if(loop->id == 205808) {
+      static int z = 0;
+      z = z + 1;
+    }
+
     GpuizableLoop gpuLoop(loop);
     if (gpuLoop.isEligible()) {
       SET_LINENO(loop);
@@ -1572,6 +1613,7 @@ static void duplicateEligibleLoopsForAdjustedLICM(FnSymbol* fn) {
       eligibleLoops.insert({ gpuCopy, std::move(gpuLoop) });
       gpuCopy->body.insertAtHead(new CallExpr(PRIM_GPU_ELIGIBLE));
     }
+    processTaskIndependenceInNonGpuLoop(loop);
   }
 }
 
