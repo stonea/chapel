@@ -634,6 +634,8 @@ PRAGMA(EXEMPT_INSTANTIATION_LIMIT, ypr, "fn exempt instantiation limit", "compil
 
 PRAGMA(COMPUTE_UNIFIED_TYPE_HELP, ypr, "compute unified type helper", "identify the internal chpl_computeUnifiedTypeHelp() routine")
 
+PRAGMA(TASK_PRIVATE_VARIABLE, npr, "task private variable", ncm)
+
 #undef ypr
 #undef npr
 #undef ncm
