@@ -1637,6 +1637,7 @@ def main():
 
             # make sure to add this early so that actual compopts file can
             # override
+            print("CHPL_TEST_GPU ????? ", os.getenv('CHPL_TEST_GPU'))
             if os.getenv('CHPL_TEST_GPU'):
                 args += ['--no-checks']
 
