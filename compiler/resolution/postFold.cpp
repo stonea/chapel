@@ -104,11 +104,6 @@ Expr* postFold(Expr* expr) {
 
   Expr* retval = expr;
 
-  if(!expr->inTree()) {
-    static int z = 0;
-    z = z + 1;
-  }
-
   INT_ASSERT(expr->inTree());
 
   if (CallExpr* call = toCallExpr(expr)) {

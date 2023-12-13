@@ -10259,14 +10259,6 @@ void resolveBlockStmt(BlockStmt* blockStmt) {
       expr = changed;
     } else {
       expr = resolveExpr(expr);
-/*      if(lastNodeIDUsed() > 1899561) {
-        std::cout << expr->id << ":\t" << aid(1899561)->inTree() << std::endl;
-
-        if(expr->id == 1645158) {
-          static int z = 0;
-          z = z + 1;
-        }
-      }*/
     }
 
     INT_ASSERT(expr);
