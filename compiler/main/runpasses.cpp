@@ -231,8 +231,6 @@ void runPasses(PhaseTracker& tracker) {
   teardownLogfiles();
 }
 
-#include "view.h"
-
 static void runPass(PhaseTracker& tracker, size_t passIndex) {
   PassInfo* info = &sPassList[passIndex];
 
@@ -246,7 +244,6 @@ static void runPass(PhaseTracker& tracker, size_t passIndex) {
     printStatistics("clean");
 
   (*(info->passFunction))();
-
 
   //
   // Statistics and logging
