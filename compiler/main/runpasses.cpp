@@ -245,6 +245,8 @@ static void runPass(PhaseTracker& tracker, size_t passIndex) {
 
   (*(info->passFunction))();
 
+  breakOnID = 1783338;
+
   //
   // Statistics and logging
   //
