@@ -768,6 +768,10 @@ replaceIteratorFormalsWithIteratorFields(FnSymbol* iterator, Symbol* ic,
       // it is replaced by the field once the iterator class is created
       Expr* stmt = se->getStmtExpr();
 
+      if(ShadowVarSymbol *svarSym = toShadowVarSymbol(se->parentSymbol)) {
+        stmt = svarSym->getFunction()->body->getFirstExpr();
+      }
+
       // Error variable arguments should have already been handled.
       INT_ASSERT(! (formal->defPoint->parentSymbol != se->parentSymbol &&
                      formal->hasFlag(FLAG_ERROR_VARIABLE)));
@@ -3150,7 +3154,6 @@ void lowerIterators() {
         z = z + 1;
       }
       expandForLoop(loop);
-      std::cout << "After loop " << loop->id << "\t" << aid(1644340)->inTree() << std::endl;
     }
   }
 
