@@ -10633,7 +10633,7 @@ static LoopWithShadowVarsInterface*
   // for the time being I would like to keep the behavior of loops that
   // don't have a 'with' clause unchanged.
   if(pfl && pfl->isOrderIndependent() && se == pfl->indexGet()
-     /*&& pfl->getModule()->modTag == MOD_USER */ ) {
+     /*&& pfl->getModule()->modTag == MOD_USER*/ ) {
      /*(pfl->shadowVariables().length > 0)*/
     return pfl;
   }

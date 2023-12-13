@@ -219,7 +219,7 @@ module ChapelTuple {
     if CHPL_WARN_TUPLE_ITERATION == "true" then
       compilerWarning("Iterating over tuples. If you intended to use zippered iteration, add the new keyword 'zip' before the tuple of iteratable expressions.");
 
-    foreach i in 0..#this.size {
+    foreach i in 0..#this.size with (ref this) {
       yield(this(i));
     }
   }
