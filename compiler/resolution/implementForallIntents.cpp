@@ -608,12 +608,6 @@ static void handleIn(LoopWithShadowVarsInterface* fs, ShadowVarSymbol* SI, bool 
   INT_ASSERT(!SI->isRef());
 
   ShadowVarSymbol* INP = create_IN_Parentvar(fs, SI, ovar);
-
-  if(INP->id == 1572855) {
-    static int z = 0;
-    z = z + 1;
-  }
-
   insertInitialization(SI, INP);
   insertDeinitialization(SI);
 

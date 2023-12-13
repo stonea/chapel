@@ -759,7 +759,7 @@ fragmentLocalBlocks() {
 // Multiple temps may be created for each formal.
 static void
 replaceIteratorFormalsWithIteratorFields(FnSymbol* iterator, Symbol* ic,
-                                         SymExpr* se) {
+                                         SymExpr* se, BlockStmt *body) {
   int count = 1;
   for_formals(formal, iterator) {
     if (formal->hasFlag(FLAG_RETARG) == false &&
@@ -768,8 +768,9 @@ replaceIteratorFormalsWithIteratorFields(FnSymbol* iterator, Symbol* ic,
       // it is replaced by the field once the iterator class is created
       Expr* stmt = se->getStmtExpr();
 
-      if(ShadowVarSymbol *svarSym = toShadowVarSymbol(se->parentSymbol)) {
-        stmt = svarSym->getFunction()->body->getFirstExpr();
+      if(toShadowVarSymbol(se->parentSymbol)) {
+        //stmt = svarSym->getFunction()->body->getFirstExpr();
+        stmt = body->getFirstExpr();
       }
 
       // Error variable arguments should have already been handled.
@@ -809,7 +810,8 @@ static void replaceErrorFormalWithEnclosingError(SymExpr* se);
 
 static void
 replaceIteratorFormals(FnSymbol* iterator, Symbol* ic,
-                       std::vector<SymExpr*> & symExprs) {
+                       std::vector<SymExpr*> & symExprs,
+                       BlockStmt *body) {
   bool throws = iterator->throwsError();
 
   for_vector(SymExpr, se, symExprs) {
@@ -820,7 +822,7 @@ replaceIteratorFormals(FnSymbol* iterator, Symbol* ic,
       replaceErrorFormalWithEnclosingError(se);
     // if se was not replaced by the above call...
     if (se->inTree() && ! isPrimIRFieldByFormalArg(se))
-      replaceIteratorFormalsWithIteratorFields(iterator, ic, se);
+      replaceIteratorFormalsWithIteratorFields(iterator, ic, se, body);
   }
 }
 
@@ -1359,7 +1361,7 @@ createIteratorFn(FnSymbol* iterator, CallExpr* iteratorFnCall, Symbol* index,
   ArgSymbol* icArg = new ArgSymbol(blankIntentForType(ic->type), "_ic", ic->type);
   iteratorFn->insertFormalAtTail(icArg);
 
-  replaceIteratorFormals(iterator, icArg, symExprs);
+  replaceIteratorFormals(iterator, icArg, symExprs, iteratorFn->body);
 
   ArgSymbol* loopBodyFnIDArg = new ArgSymbol(INTENT_CONST_IN, "_loopBodyFnID", dtInt[INT_SIZE_DEFAULT]);
   iteratorFn->insertFormalAtTail(loopBodyFnIDArg);
@@ -1670,7 +1672,7 @@ static bool expandIteratorInline(ForLoop* forLoop)
 
     std::vector<SymExpr*> symExprs;
     collectSymExprs(ibody, symExprs);
-    replaceIteratorFormals(iterator, ic, symExprs);
+    replaceIteratorFormals(iterator, ic, symExprs, ibody);
 
     // We can return true if forLoop has been removed from the tree.
     INT_ASSERT(!forLoop->inTree());
@@ -3148,13 +3150,8 @@ void lowerIterators() {
   }
 
   for_alive_in_expanding_Vec(BlockStmt, block, gBlockStmts) {
-    if (ForLoop* loop = toForLoop(block)) {
-      if(loop->id == 1642094) {
-        static int z = 0;
-        z = z + 1;
-      }
+    if (ForLoop* loop = toForLoop(block))
       expandForLoop(loop);
-    }
   }
 
   if (fVerify) {
