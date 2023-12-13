@@ -759,7 +759,7 @@ fragmentLocalBlocks() {
 // Multiple temps may be created for each formal.
 static void
 replaceIteratorFormalsWithIteratorFields(FnSymbol* iterator, Symbol* ic,
-                                         SymExpr* se) {
+                                         SymExpr* se, BlockStmt *body) {
   int count = 1;
   for_formals(formal, iterator) {
     if (formal->hasFlag(FLAG_RETARG) == false &&
@@ -767,6 +767,10 @@ replaceIteratorFormalsWithIteratorFields(FnSymbol* iterator, Symbol* ic,
       // count is used to get the nth field out of the iterator class;
       // it is replaced by the field once the iterator class is created
       Expr* stmt = se->getStmtExpr();
+
+      if(toShadowVarSymbol(se->parentSymbol)) {
+        stmt = body->getFirstExpr();
+      }
 
       // Error variable arguments should have already been handled.
       INT_ASSERT(! (formal->defPoint->parentSymbol != se->parentSymbol &&
@@ -805,7 +809,8 @@ static void replaceErrorFormalWithEnclosingError(SymExpr* se);
 
 static void
 replaceIteratorFormals(FnSymbol* iterator, Symbol* ic,
-                       std::vector<SymExpr*> & symExprs) {
+                       std::vector<SymExpr*> & symExprs,
+                       BlockStmt *body) {
   bool throws = iterator->throwsError();
 
   for_vector(SymExpr, se, symExprs) {
@@ -816,7 +821,7 @@ replaceIteratorFormals(FnSymbol* iterator, Symbol* ic,
       replaceErrorFormalWithEnclosingError(se);
     // if se was not replaced by the above call...
     if (se->inTree() && ! isPrimIRFieldByFormalArg(se))
-      replaceIteratorFormalsWithIteratorFields(iterator, ic, se);
+      replaceIteratorFormalsWithIteratorFields(iterator, ic, se, body);
   }
 }
 
@@ -1355,7 +1360,7 @@ createIteratorFn(FnSymbol* iterator, CallExpr* iteratorFnCall, Symbol* index,
   ArgSymbol* icArg = new ArgSymbol(blankIntentForType(ic->type), "_ic", ic->type);
   iteratorFn->insertFormalAtTail(icArg);
 
-  replaceIteratorFormals(iterator, icArg, symExprs);
+  replaceIteratorFormals(iterator, icArg, symExprs, iteratorFn->body);
 
   ArgSymbol* loopBodyFnIDArg = new ArgSymbol(INTENT_CONST_IN, "_loopBodyFnID", dtInt[INT_SIZE_DEFAULT]);
   iteratorFn->insertFormalAtTail(loopBodyFnIDArg);
@@ -1374,7 +1379,7 @@ createIteratorFn(FnSymbol* iterator, CallExpr* iteratorFnCall, Symbol* index,
 
 /// \param call A for loop block primitive.
 static void
-expandRecursiveIteratorInline(ForLoop* forLoop)
+expandRecursiveIteratorInline(ForLoop* forLoop, SymbolMap *map)
 {
   SET_LINENO(forLoop);
 
@@ -1422,7 +1427,7 @@ expandRecursiveIteratorInline(ForLoop* forLoop)
 
   // Copy the body of forLoop into the (new) loop body function
   // and remove forLoop.
-  loopBodyFn->insertAtTail(forLoop->copyBody());
+  loopBodyFn->insertAtTail(forLoop->copyBody(map));
   forLoop->remove();
 
   // Now populate the loop body function.
@@ -1541,6 +1546,7 @@ static void processShadowVariables(ForLoop* forLoop, SymbolMap *map) {
       case TFI_CONST:
         INT_ASSERT(false);
 
+      case TFI_CONST_IN:
       case TFI_IN:
         {
         // If we have a variable with an 'in' intent for a foreach loop we'll
@@ -1562,28 +1568,39 @@ static void processShadowVariables(ForLoop* forLoop, SymbolMap *map) {
 
         VarSymbol* capturedSvar = new VarSymbol(astr("cap_", svar->name), svar->type);
         forLoop->insertBefore(new DefExpr(capturedSvar));
-        forLoop->insertBefore(new CallExpr(PRIM_MOVE, capturedSvar, svar->outerVarSE->symbol()));
+
+        CallExpr *initMove = toCallExpr(svar->initBlock()->body.first());
+        SymbolMap map1;
+        map1.put(svar->ParentvarForIN(), svar->outerVarSE->symbol());
+        Expr *copiedInitialization = initMove->get(2)->copy(&map1);
+        forLoop->insertBefore(new CallExpr(PRIM_MOVE, capturedSvar, copiedInitialization));
+
+        SymbolMap map2;
+        map2.put(svar->ParentvarForIN(), capturedSvar);
+        Expr *copiedInitialization2 = initMove->get(2)->copy(&map2);
+        (void)copiedInitialization2;
 
         VarSymbol* taskIndVar = new VarSymbol(astr("taskInd_", svar->name), svar->type);
         taskIndVar->addFlag(FLAG_TASK_PRIVATE_VARIABLE);
         forLoop->insertBefore(new DefExpr(taskIndVar));
         forLoop->insertBefore(new CallExpr(
             PRIM_MOVE, taskIndVar,
-            new CallExpr(PRIM_TASK_INDEPENDENT_SVAR_CAPTURE, capturedSvar)));
+            new CallExpr(PRIM_TASK_INDEPENDENT_SVAR_CAPTURE, copiedInitialization->copy())));
 
         map->put(svar, taskIndVar);
         }
         break;
 
-      case TFI_CONST_IN:
+      case TFI_IN_PARENT:
       case TFI_REF:
       case TFI_CONST_REF:
-      case TFI_REDUCE_OP:
+        map->put(svar, svar->outerVarSym());
+        continue;
+
+     case TFI_REDUCE_OP:
         // to be implemented
         INT_ASSERT(false);
-
-      case TFI_IN_PARENT:
-        continue;
+        break;
 
       case TFI_REDUCE:
       case TFI_REDUCE_PARENT_AS:
@@ -1636,7 +1653,7 @@ static bool expandIteratorInline(ForLoop* forLoop)
       // test/library/standard/FileSystem/filerator/bradc/findfiles-par.chpl
       return false;
     } else {
-      expandRecursiveIteratorInline(forLoop);
+      expandRecursiveIteratorInline(forLoop, &map);
       INT_ASSERT(!forLoop->inTree());
       return true;
     }
@@ -1663,7 +1680,7 @@ static bool expandIteratorInline(ForLoop* forLoop)
 
     std::vector<SymExpr*> symExprs;
     collectSymExprs(ibody, symExprs);
-    replaceIteratorFormals(iterator, ic, symExprs);
+    replaceIteratorFormals(iterator, ic, symExprs, ibody);
 
     // We can return true if forLoop has been removed from the tree.
     INT_ASSERT(!forLoop->inTree());
@@ -2681,11 +2698,14 @@ expandForLoop(ForLoop* forLoop) {
     if (index != gNone)
       forLoop->insertAtHead(index->defPoint->remove());
 
+    SymbolMap map;
+    processShadowVariables(forLoop, &map);
+
     // NOAKES 2014/11/19: An error occurs if the replacement is moved to
     // earlier in the pass.  I have yet to identify the issue but suspect
     // that doing the copy too soon causes variables to cross from one
     // scope to another if done in mid-transformation.
-    CForLoop* cforLoop = CForLoop::buildWithBodyFrom(forLoop);
+    CForLoop* cforLoop = CForLoop::buildWithBodyFrom(forLoop, map);
 
     addIteratorBreakBlocksJumptable(forLoop, iterator,
                                     (BlockStmt*)cforLoop, iterators);
