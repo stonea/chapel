@@ -587,8 +587,6 @@ static ShadowVarSymbol* create_IN_Parentvar(LoopWithShadowVarsInterface* fs,
   INP->outerVarSE = new SymExpr(INPovar);
   insert_help(INP->outerVarSE, NULL, INP);
 
-  std::cout << "INP in tree? " << INP->inTree() << std::endl;
-
   return INP;
 }
 

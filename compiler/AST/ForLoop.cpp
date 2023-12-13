@@ -428,6 +428,9 @@ ForLoop* ForLoop::copyInner(SymbolMap* map)
 {
   ForLoop*   retval         = new ForLoop();
 
+  for_alist(expr, fShadowVars)
+    retval->fShadowVars.insertAtTail(COPY_INT(expr));
+
   retval->astloc            = astloc;
   retval->blockTag          = blockTag;
 
