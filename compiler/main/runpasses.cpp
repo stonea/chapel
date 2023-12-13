@@ -231,6 +231,8 @@ void runPasses(PhaseTracker& tracker) {
   teardownLogfiles();
 }
 
+#include "view.h"
+
 static void runPass(PhaseTracker& tracker, size_t passIndex) {
   PassInfo* info = &sPassList[passIndex];
 
@@ -245,9 +247,21 @@ static void runPass(PhaseTracker& tracker, size_t passIndex) {
 
   (*(info->passFunction))();
 
+  if(lastNodeIDUsed() > 1644340) {
+    std::cout << "PASS: " << info->name << "\t" << passIndex << std::endl;
+    nprint_view(aid(1644340));
+  }
+
+
   //
   // Statistics and logging
   //
+
+//  breakOnID = 1572860;
+//  breakOnID = 1899561;
+//  breakOnID = 1644340;
+
+  breakOnID = 2179135;
 
   if (fPrintStatistics[0] != '\0')
     printStatistics(info->name);

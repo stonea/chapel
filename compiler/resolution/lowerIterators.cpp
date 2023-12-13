@@ -1541,6 +1541,7 @@ static void processShadowVariables(ForLoop* forLoop, SymbolMap *map) {
       case TFI_CONST:
         INT_ASSERT(false);
 
+      case TFI_CONST_IN:
       case TFI_IN:
         {
         // If we have a variable with an 'in' intent for a foreach loop we'll
@@ -1575,14 +1576,16 @@ static void processShadowVariables(ForLoop* forLoop, SymbolMap *map) {
         }
         break;
 
-      case TFI_CONST_IN:
+      case TFI_IN_PARENT:
       case TFI_REF:
       case TFI_CONST_REF:
-      case TFI_REDUCE_OP:
+        map->put(svar, svar->outerVarSym());
+        continue;
+
+     case TFI_REDUCE_OP:
         // to be implemented
         INT_ASSERT(false);
 
-      case TFI_IN_PARENT:
         continue;
 
       case TFI_REDUCE:
@@ -3141,8 +3144,14 @@ void lowerIterators() {
   }
 
   for_alive_in_expanding_Vec(BlockStmt, block, gBlockStmts) {
-    if (ForLoop* loop = toForLoop(block))
+    if (ForLoop* loop = toForLoop(block)) {
+      if(loop->id == 1642094) {
+        static int z = 0;
+        z = z + 1;
+      }
       expandForLoop(loop);
+      std::cout << "After loop " << loop->id << "\t" << aid(1644340)->inTree() << std::endl;
+    }
   }
 
   if (fVerify) {
