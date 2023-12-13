@@ -406,6 +406,7 @@ ForLoop::ForLoop() : LoopStmt(0)
   mZippered = false;
   mLoweredForall = false;
   mIsForExpr = false;
+  fShadowVars.parent = this;
 }
 
 ForLoop::ForLoop(VarSymbol* index,
