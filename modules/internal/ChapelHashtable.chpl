@@ -380,7 +380,7 @@ module ChapelHashtable {
       var currentSlot = chpl__defaultHashWrapper(key):uint;
       const mask = numSlots-1;
 
-      foreach probe in 1..numSlots {
+      for probe in 1..numSlots {
         var uprobe = probe:uint;
 
         yield (currentSlot&mask):int;
