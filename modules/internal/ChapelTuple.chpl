@@ -256,7 +256,7 @@ module ChapelTuple {
 
     var fThis = followThis(0);
 
-    foreach i in fThis {
+    foreach i in fThis with (ref this) {
       yield this(i);
     }
   }
