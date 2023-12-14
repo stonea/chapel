@@ -10632,9 +10632,10 @@ static LoopWithShadowVarsInterface*
   // intents to work for 'foreach' loops is a bit of a work in progress and
   // for the time being I would like to keep the behavior of loops that
   // don't have a 'with' clause unchanged.
-  if(pfl && pfl->isOrderIndependent() && se == pfl->indexGet()
-     /*&& pfl->getModule()->modTag == MOD_USER*/ ) {
-     /*(pfl->shadowVariables().length > 0)*/
+  if(pfl && pfl->isOrderIndependent() && se == pfl->indexGet() &&
+     !pfl->shouldExemptFromImplicitIntents()
+     /*&& pfl->getModule()->modTag == MOD_USER &&
+     pfl->shadowVariables().length > 0*/) {
     return pfl;
   }
   return nullptr;
@@ -10648,6 +10649,11 @@ Expr* resolveExpr(Expr* expr) {
     gdbShouldBreakHere();
 
   SET_LINENO(expr);
+
+  if(expr->id == 2188185) {
+    static int z = 0;
+    z = z + 1;
+  }
 
   if (isContextCallExpr(expr) == true) {
     retval = expr;
