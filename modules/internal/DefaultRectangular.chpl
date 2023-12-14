@@ -1205,7 +1205,7 @@ module DefaultRectangular {
         chpl_debug_writeln("*** In defRectArr simple-dd standalone iterator");
       }
       foreach i in dom.these(tag, tasksPerLocale,
-                         ignoreRunning, minIndicesPerTask) {
+                         ignoreRunning, minIndicesPerTask) with (ref this) {
         yield dsiAccess(i);
       }
     }
@@ -1682,7 +1682,7 @@ module DefaultRectangular {
         yield info.getDataElem(dataIdx);
       }
     } else {
-      foreach elem in chpl__serialViewIterHelper(arr, viewDom) do yield elem;
+      foreach elem in chpl__serialViewIterHelper(arr, viewDom) with (ref arr, ref viewDom) do yield elem;
     }
   }
 
@@ -1691,7 +1691,7 @@ module DefaultRectangular {
   }
 
   iter chpl__serialViewIterHelper(arr, viewDom) ref {
-    foreach i in viewDom {
+    foreach i in viewDom with (ref arr, ref viewDom) {
       const dataIdx = if arr.isReindexArrayView() then chpl_reindexConvertIdx(i, arr.dom, arr.downdom)
                       else if arr.isRankChangeArrayView() then chpl_rankChangeConvertIdx(i, arr.collapsedDim, arr.idx)
                       else i;
