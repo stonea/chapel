@@ -376,6 +376,7 @@ buildFollowLoop(VarSymbol* iter,
                                        /*isLoweredForall*/ false,
                                        forallExpr);
   followBody->orderIndependentSet(true);
+  followBody->exemptFromImplicitIntents();
 
   // not needed:
   //destructureIndices(followBody, indices, new SymExpr(followIdx), false);
@@ -1613,8 +1614,8 @@ Expr* replaceForWithForallIfNeeded(ForLoop* forLoop) {
     return forLoop;
 
   // Exempt foreach loops ???
-  if(forLoop->isOrderIndependent())
-    return forLoop;
+//  if(forLoop->isOrderIndependent())
+//    return forLoop;
 
   // Yes, it is a parallel for-loop. Replace it.
   ForallStmt* fs = doReplaceWithForall(forLoop);
