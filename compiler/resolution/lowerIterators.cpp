@@ -2690,11 +2690,14 @@ expandForLoop(ForLoop* forLoop) {
     if (index != gNone)
       forLoop->insertAtHead(index->defPoint->remove());
 
+    SymbolMap map;
+    processShadowVariables(forLoop, &map);
+
     // NOAKES 2014/11/19: An error occurs if the replacement is moved to
     // earlier in the pass.  I have yet to identify the issue but suspect
     // that doing the copy too soon causes variables to cross from one
     // scope to another if done in mid-transformation.
-    CForLoop* cforLoop = CForLoop::buildWithBodyFrom(forLoop);
+    CForLoop* cforLoop = CForLoop::buildWithBodyFrom(forLoop, map);
 
     addIteratorBreakBlocksJumptable(forLoop, iterator,
                                     (BlockStmt*)cforLoop, iterators);
