@@ -72,9 +72,14 @@ BlockStmt* CForLoop::buildCForLoop(CallExpr* call, BlockStmt* body, LLVMMetadata
   return retval;
 }
 
-CForLoop* CForLoop::buildWithBodyFrom(ForLoop* forLoop)
-{
+CForLoop* CForLoop::buildWithBodyFrom(ForLoop* forLoop) {
   SymbolMap map;
+  return buildWithBodyFrom(forLoop, map);
+}
+
+CForLoop* CForLoop::buildWithBodyFrom(ForLoop* forLoop, SymbolMap &map)
+{
+  //SymbolMap map;
   CForLoop* retval = new CForLoop();
 
   retval->astloc            = forLoop->astloc;
