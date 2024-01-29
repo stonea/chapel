@@ -1673,6 +1673,7 @@ module DefaultRectangular {
         yield info.getDataElem(dataIdx);
       }
     } else {
+      // **AIS** Also confused if this is really necessary, run paratests to check and see if it is.
       foreach elem in chpl__serialViewIterHelper(arr, viewDom) with (ref arr, ref viewDom) do yield elem;
     }
   }
@@ -1682,7 +1683,8 @@ module DefaultRectangular {
   }
 
   iter chpl__serialViewIterHelper(arr, viewDom) ref {
-    foreach i in viewDom with (ref arr, ref viewDom) {
+    foreach i in viewDom with (ref arr, ref viewDom) { // **AIS** Not sure if this is necessary
+                                                       // check with paratests to see if that's the case.
       const dataIdx = if arr.isReindexArrayView() then chpl_reindexConvertIdx(i, arr.dom, arr.downdom)
                       else if arr.isRankChangeArrayView() then chpl_rankChangeConvertIdx(i, arr.collapsedDim, arr.idx)
                       else i;

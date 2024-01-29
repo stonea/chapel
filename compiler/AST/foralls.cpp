@@ -1614,8 +1614,8 @@ Expr* replaceForWithForallIfNeeded(ForLoop* forLoop) {
     return forLoop;
 
   // Exempt foreach loops ???
-//  if(forLoop->isOrderIndependent())
-//    return forLoop;
+  if(forLoop->isOrderIndependent())
+    return forLoop;
 
   // Yes, it is a parallel for-loop. Replace it.
   ForallStmt* fs = doReplaceWithForall(forLoop);
