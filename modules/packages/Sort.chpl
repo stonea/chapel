@@ -2917,6 +2917,325 @@ module TwoArrayDistributedPartitioning {
     }
   }
 
+  // Stores the data in dst in buckets according to the bucketizer.
+  // (e.g. sorted by the next digit in radix sort)
+  // Counts per bin are stored in state.counts. Other data in
+  // state is used locally by this routine or used elsewhere
+  proc bucketize(start_n: int, end_n: int, ref dst:[], src:[],
+                 ref state: TwoArrayBucketizerSharedState,
+                 criterion, startbit:int) {
+
+    if debug then
+      writeln("bucketize ", start_n..end_n, " startbit=", startbit);
+
+    const nBuckets = state.bucketizer.getNumBuckets();
+    const n = end_n - start_n + 1;
+    const nTasks = if n >= state.nTasks then state.nTasks else 1;
+    assert(nTasks > 0);
+
+    if n == 0 {
+      state.counts = 0;
+      return;
+    }
+
+    // Divide the input into nTasks chunks.
+    const countsSize = nTasks * nBuckets;
+    const blockSize = divCeil(n, nTasks);
+    const nBlocks = divCeil(n, blockSize);
+
+    // Count
+    coforall tid in 0..#nTasks with (ref state) {
+      var start = start_n + tid * blockSize;
+      var end = start + blockSize - 1;
+      if end > end_n {
+        end = end_n;
+      }
+
+      if debug then
+        writeln("tid ", tid, " considering ", start..end);
+
+      ref counts = state.localState[tid].localCounts;
+      for bin in 0..#nBuckets {
+        counts[bin] = 0;
+      }
+      for (i,bin) in state.bucketizer.classify(src, start, end,
+                                               criterion, startbit) {
+        counts[bin] += 1;
+      }
+      // Now store the counts into the global counts array
+      foreach bin in 0..#nBuckets with (ref state) {
+        state.globalCounts[bin*nTasks + tid] = counts[bin];
+      }
+    }
+
+    // Step 2: scan
+    state.globalEnds = (+ scan state.globalCounts) + start_n;
+
+    if debug {
+      for bin in 0..#nBuckets {
+        for tid in 0..#nTasks {
+          var gb = bin*nTasks+tid;
+          if state.globalCounts[gb] != 0 {
+            writeln("tid ", tid, " count[", bin, "] = ", state.globalCounts[gb],
+                    " end = ", state.globalEnds[gb] - 1);
+          }
+        }
+      }
+    }
+
+    // Step 3: distribute
+    coforall tid in 0..#nTasks with (ref state) {
+      var start = start_n + tid * blockSize;
+      var end = start + blockSize - 1;
+      if end > end_n {
+        end = end_n;
+      }
+
+      ref nextOffsets = state.localState[tid].localCounts;
+      // initialize nextOffsets
+      for bin in 0..#nBuckets {
+        var globalBin = bin*nTasks+tid;
+        nextOffsets[bin] = if globalBin > 0
+                           then state.globalEnds[globalBin-1]
+                           else start_n;
+        if debug {
+          if state.globalCounts[globalBin] != 0 {
+            writeln("tid ", tid, " nextOffsets[", bin, "] = ", nextOffsets[bin]);
+          }
+        }
+      }
+
+      for (i,bin) in state.bucketizer.classify(src, start, end,
+                                               criterion, startbit) {
+        // Store it in the right bin
+        ref next = nextOffsets[bin];
+        if debug {
+          writeln("tid ", tid, " dst[", next, "] = src[", i, "] bin ", bin);
+        }
+        ShallowCopy.shallowCopy(dst, next, src, i, 1);
+        next += 1;
+      }
+    }
+
+    // Compute the total counts
+    ref counts = state.counts;
+    forall bin in 0..#nBuckets with (ref counts) {
+      var total = 0;
+      for tid in 0..#nTasks {
+        total += state.globalCounts[bin*nTasks + tid];
+      }
+      counts[bin] = total;
+    }
+  }
+  proc testBucketize(start_n: int, end_n: int, ref dst:[], src:[],
+                     bucketizer, criterion, startbit:int) {
+
+    var state = new TwoArrayBucketizerSharedState(bucketizer=bucketizer);
+
+    bucketize(start_n, end_n, dst, src, state, criterion, startbit);
+
+    return state.counts;
+  }
+
+
+  private proc partitioningSortWithScratchSpaceHandleSampling(
+          start_n:int, end_n:int, ref A:[], ref Scratch:[],
+          ref state: TwoArrayBucketizerSharedState,
+          criterion, startbit:int):void {
+    // If we are doing a sample sort, we need to gather a fresh sample.
+    // (Otherwise we'll never be able to solve recursive subproblems,
+    //  as if in quicksort we never chose a new pivot).
+    if isSubtype(state.bucketizer.type, SampleSortHelp.SampleBucketizer) {
+      var n = 1 + end_n - start_n;
+      var logNumBuckets = SampleSortHelp.computeLogBucketSize(n);
+      var numBuckets = 1 << logNumBuckets;
+      var sampleStep = SampleSortHelp.chooseSampleStep(n, logNumBuckets);
+      var sampleSize = sampleStep * numBuckets - 1;
+
+      if sampleSize >= n {
+        if debug then
+          writeln("Reducing sample size because it was too big");
+        sampleSize = max(1, n/2);
+      }
+
+      // select the sample
+      SampleSortHelp.putRandomSampleAtArrayStart(start_n, end_n, A, sampleSize);
+
+      if debug then
+        writeln("recursing to sort the sample");
+
+      // sort the sample
+
+
+      // TODO: make it adjustable from the settings
+      if sampleSize <= 1024*1024 {
+        // base case sort, parallel OK
+        msbRadixSort(A, start_n, start_n + sampleSize - 1,
+                     criterion,
+                     startbit, state.endbit,
+                     settings=new MSBRadixSortSettings());
+      } else {
+        partitioningSortWithScratchSpace(start_n, start_n + sampleSize - 1,
+                                         A, Scratch,
+                                         state, criterion, startbit);
+      }
+      if debug {
+        RadixSortHelp.checkSorted(start_n, start_n + sampleSize - 1, A, criterion, startbit);
+      }
+
+      createSplittersFromSample(A,
+                                state.bucketizer, criterion,
+                                start_n, sampleSize, sampleStep, numBuckets);
+      if debug {
+        writeln("sample bucketizer ", state.bucketizer);
+        writef("A %i %i A=%xt\n", start_n, end_n, A[start_n..end_n]);
+      }
+    }
+
+  }
+
+  // Sorts the data in A.
+  proc partitioningSortWithScratchSpace(
+          start_n:int, end_n:int, ref A:[], ref Scratch:[],
+          ref state: TwoArrayBucketizerSharedState,
+          criterion, startbit:int):void {
+
+    if startbit > state.endbit then
+      return;
+
+    if end_n - start_n < state.baseCaseSize {
+      ShellSort.shellSort(A, criterion, start=start_n, end=end_n);
+      return;
+    }
+
+    if debug {
+      writeln("partitioningSortWithScratchSpace(", start_n, ",", end_n, ")");
+      writef("A %i %i A=%xt\n", start_n, end_n, A[start_n..end_n]);
+    }
+
+
+    const n = (end_n - start_n + 1);
+    const maxSequentialSize = max(n / state.nTasks,
+                                  state.nTasks*state.sequentialSizePerTask);
+
+    state.bigTasks.pushBack(new TwoArraySortTask(start_n, n, startbit, inA=true, doSort=true));
+    assert(state.bigTasks.size == 1);
+    assert(state.smallTasks.size == 0);
+
+    while !state.bigTasks.isEmpty() {
+      const task = state.bigTasks.popBack();
+      const taskEnd = task.start + task.size - 1;
+
+      assert(task.doSort);
+
+      if debug then {
+        writeln("doing big task ", task.start..taskEnd);
+      }
+
+      if task.inA {
+        partitioningSortWithScratchSpaceHandleSampling(
+              task.start, taskEnd, A, Scratch,
+              state, criterion, task.startbit);
+
+        // Count and partition
+        bucketize(task.start, taskEnd, Scratch, A, state,
+                  criterion, task.startbit);
+        // bucketized data now in Scratch
+        if debug {
+          writef("pb %i %i Scratch=%xt\n", task.start, taskEnd, Scratch[task.start..taskEnd]);
+        }
+      } else {
+        partitioningSortWithScratchSpaceHandleSampling(
+              task.start, taskEnd, Scratch, A,
+              state, criterion, task.startbit);
+
+        // Count and partition
+        bucketize(task.start, taskEnd, A, Scratch, state,
+                  criterion, task.startbit);
+        // bucketized data now in A
+        if debug {
+          writef("pb %i %i A=%xt\n", task.start, taskEnd, A[task.start..taskEnd]);
+        }
+      }
+      const nowInA = !task.inA;
+
+      // Compute the bucket ends
+      state.ends = (+ scan state.counts) + task.start;
+
+      // enqueue any sorting tasks not yet completed
+      const nBuckets = state.bucketizer.getNumBuckets();
+      for bin in 0..#nBuckets {
+        const binSize = state.counts[bin];
+        const binStart = state.ends[bin] - binSize;
+        const binEnd = binStart + binSize - 1;
+        const binStartBit = state.bucketizer.getNextStartBit(task.startbit);
+
+        const sortit = state.bucketizer.getBinsToRecursivelySort().contains(bin);
+
+        if binSize == 0 {
+          // Do nothing
+        } else if !nowInA && !sortit {
+          // Enqueue a small task to do the copy.
+          // TODO: handle large copies in big tasks, or enqueue several tasks here
+          state.smallTasks.pushBack(
+            new TwoArraySortTask(binStart, binSize, binStartBit, nowInA, sortit));
+
+        } else if binStartBit > state.endbit ||
+                  binStart >= binEnd ||
+                  binSize <= maxSequentialSize {
+          if debug && binSize > 0 {
+            writeln("handling bin ", bin, " ", binStart..binEnd, " as small");
+          }
+
+          // Enqueue a small task to sort and possibly copy.
+          state.smallTasks.pushBack(
+            new TwoArraySortTask(binStart, binSize, binStartBit, nowInA, sortit));
+
+        } else {
+          if debug && binSize > 0 {
+            writeln("handling bin ", bin, " ", binStart..binEnd, " as big");
+          }
+
+          // Enqueue a big task
+          state.bigTasks.pushBack(
+            new TwoArraySortTask(binStart, binSize, binStartBit, nowInA, sortit));
+        }
+      }
+    }
+
+    // Now handle any small tasks.
+
+    // TODO: sort small tasks by size
+
+    forall task in state.smallTasks with (ref A) {
+      const size = task.size;
+      const taskEnd = task.start + size - 1;
+      if size > 0 {
+        if !task.inA {
+          ShallowCopy.shallowCopy(A, task.start, Scratch, task.start, size);
+        }
+
+        if debug {
+          writef("doing small task %i %i A=%xt\n", task.start, taskEnd, A[task.start..taskEnd]);
+        }
+
+        if task.doSort {
+          // Sort it serially.
+          msbRadixSort(A, task.start, taskEnd,
+                       criterion,
+                       task.startbit, state.endbit,
+                       settings=new MSBRadixSortSettings(alwaysSerial=true));
+        }
+      }
+    }
+
+    if debug {
+      writef("ps %i %i A=%xt\n", start_n, end_n, A[start_n..end_n]);
+      writef("ps %i %i Scratch=%xt\n", start_n, end_n, Scratch[start_n..end_n]);
+      RadixSortHelp.checkSorted(start_n, end_n, A, criterion, startbit);
+    }
+  }
+
   private proc distributedPartitioningSortWithScratchSpaceBaseCase(
           start_n:int, end_n:int, ref A:[], ref Scratch:[],
           ref compat: TwoArrayBucketizerSharedState,
