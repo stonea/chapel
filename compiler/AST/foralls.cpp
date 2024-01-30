@@ -1613,9 +1613,13 @@ Expr* replaceForWithForallIfNeeded(ForLoop* forLoop) {
     // Not a parallel for-loop. Leave it unchanged.
     return forLoop;
 
-  // Exempt foreach loops ???
-  if(forLoop->isOrderIndependent())
-    return forLoop;
+  // If I exempt foreach loops then this test fails: arrays/bradc/workarounds/arrayOfArray-workaround.chpl
+  // 
+  //if(forLoop->isOrderIndependent()) {
+    //return forLoop;
+    //static int z = 0;
+    //z = z + 1;
+  //}
 
   // Yes, it is a parallel for-loop. Replace it.
   ForallStmt* fs = doReplaceWithForall(forLoop);
