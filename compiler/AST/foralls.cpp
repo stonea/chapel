@@ -1600,6 +1600,10 @@ static ForallStmt* doReplaceWithForall(ForLoop* src)
   return dest;
 }
 
+bool shouldReplaceForLoopWithForall(ForLoop *forLoop) {
+  return invokesParallelIterator(forLoop);
+}
+
 //
 // Replace a parallel ForLoop over a parallel iterator with a ForallStmt.
 // Otherwise we may get data races, ex. on shadow variable(s) 'sum' here:
@@ -1609,12 +1613,13 @@ static ForallStmt* doReplaceWithForall(ForLoop* src)
 //   }
 //
 Expr* replaceForWithForallIfNeeded(ForLoop* forLoop) {
-  if (!invokesParallelIterator(forLoop))
+  if (!shouldReplaceForLoopWithForall(forLoop)) {
     // Not a parallel for-loop. Leave it unchanged.
     return forLoop;
+  }
 
   // If I exempt foreach loops then this test fails: arrays/bradc/workarounds/arrayOfArray-workaround.chpl
-  // 
+  // If I fail to exempt it ....
   //if(forLoop->isOrderIndependent()) {
     //return forLoop;
     //static int z = 0;
