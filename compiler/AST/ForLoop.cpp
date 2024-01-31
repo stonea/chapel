@@ -200,6 +200,10 @@ BlockStmt* ForLoop::doBuildForLoop(Expr*      indices,
     loop->orderIndependentSet(true);
   }
 
+  if (!isForeach || isLoweredForall) {
+    loop->exemptFromImplicitIntents();
+  }
+
   // Unzippered loop, treat all objects (including tuples) the same
   if (zippered == false) {
     iterInit = new CallExpr(PRIM_MOVE, iterator, new CallExpr("_getIterator",    iteratorExpr));
