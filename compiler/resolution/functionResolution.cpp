@@ -10685,7 +10685,12 @@ Expr* resolveExpr(Expr* expr) {
     else if(LoopWithShadowVarsInterface *loop =
       isForeachWhoseShadowVarsShouldBeResolved(se))
     {
-      setupAndResolveShadowVars(loop);
+      // If this is a loop that we'll convert into a forall
+      // then ignore this for the time being (we'll process
+      // implicit shadow variables for the forall later)
+      if(!shouldReplaceForLoopWithForall(toForLoop(loop->asExpr()))) {
+        setupAndResolveShadowVars(loop);
+      }
       retval = resolveExprPhase2(expr, fn, expr);
     } else if (isMentionOfFnTriggeringCapture(se)) {
       auto fn = toFnSymbol(se->symbol());
