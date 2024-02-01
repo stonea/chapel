@@ -1101,6 +1101,10 @@ jacobi:
     - Denormalize the test in CondStmts (#12867)
   01/26/21:
     - Automatically aggregate some communication in foralls (#16965)
+  01/22/24:
+    - A Second attempt to enable compiler driver on by default (#23930)
+  01/29/24:
+    - Fix maximum AST size reporting in driver mode (#24287)
 
 knucleotide: &knucleotide-base
   10/17/15:
@@ -2430,7 +2434,8 @@ arkouda: &arkouda-base
     - Closes 2873 Short strings optimization for multicol groupby (Bears-R-Us/arkouda#2877)
   01/07/24:
     - Array API infrastructure and partial implementation (Bears-R-Us/arkouda#2865)
-
+  01/12/24:
+    - Closes 2901 Fix performance regression due to setting ndim field in sym entry (Bears-R-Us/arkouda#2902)
 
 arkouda-string:
   <<: *arkouda-base
