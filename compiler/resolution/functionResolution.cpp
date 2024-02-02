@@ -10627,6 +10627,7 @@ static LoopWithShadowVarsInterface*
      !pfl->shouldExemptFromImplicitIntents()
      /*&& pfl->getModule()->modTag == MOD_USER &&
      pfl->shadowVariables().length > 0*/) {
+
     return pfl;
   }
   return nullptr;
