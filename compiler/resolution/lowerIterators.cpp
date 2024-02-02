@@ -1380,7 +1380,7 @@ createIteratorFn(FnSymbol* iterator, CallExpr* iteratorFnCall, Symbol* index,
 
 /// \param call A for loop block primitive.
 static void
-expandRecursiveIteratorInline(ForLoop* forLoop)
+expandRecursiveIteratorInline(ForLoop* forLoop, SymbolMap *map)
 {
   SET_LINENO(forLoop);
 
@@ -1428,7 +1428,7 @@ expandRecursiveIteratorInline(ForLoop* forLoop)
 
   // Copy the body of forLoop into the (new) loop body function
   // and remove forLoop.
-  loopBodyFn->insertAtTail(forLoop->copyBody());
+  loopBodyFn->insertAtTail(forLoop->copyBody(map));
   forLoop->remove();
 
   // Now populate the loop body function.
@@ -1645,7 +1645,7 @@ static bool expandIteratorInline(ForLoop* forLoop)
       // test/library/standard/FileSystem/filerator/bradc/findfiles-par.chpl
       return false;
     } else {
-      expandRecursiveIteratorInline(forLoop);
+      expandRecursiveIteratorInline(forLoop, &map);
       INT_ASSERT(!forLoop->inTree());
       return true;
     }
