@@ -1569,14 +1569,33 @@ static void processShadowVariables(ForLoop* forLoop, SymbolMap *map) {
 
         VarSymbol* capturedSvar = new VarSymbol(astr("cap_", svar->name), svar->type);
         forLoop->insertBefore(new DefExpr(capturedSvar));
-        forLoop->insertBefore(new CallExpr(PRIM_MOVE, capturedSvar, svar->outerVarSE->symbol()));
+
+        CallExpr *initMove = toCallExpr(svar->initBlock()->body.first());
+        SymbolMap map1;
+        map1.put(svar->ParentvarForIN(), svar->outerVarSE->symbol());
+        Expr *copiedInitialization = initMove->get(2)->copy(&map1);
+        forLoop->insertBefore(new CallExpr(PRIM_MOVE, capturedSvar, copiedInitialization));
+        //forLoop->insertBefore(new CallExpr(PRIM_MOVE, capturedSvar, svar->outerVarSE->symbol()));
+
+        SymbolMap map2;
+        map2.put(svar->ParentvarForIN(), capturedSvar);
+        Expr *copiedInitialization2 = initMove->get(2)->copy(&map2);
+        (void)copiedInitialization2;
 
         VarSymbol* taskIndVar = new VarSymbol(astr("taskInd_", svar->name), svar->type);
         taskIndVar->addFlag(FLAG_TASK_PRIVATE_VARIABLE);
         forLoop->insertBefore(new DefExpr(taskIndVar));
+        //forLoop->insertBefore(new CallExpr(
+        //    PRIM_MOVE, taskIndVar,
+        //    new CallExpr(PRIM_TASK_INDEPENDENT_SVAR_CAPTURE, capturedSvar)));
+        //forLoop->insertBefore(new CallExpr(
+        //    PRIM_MOVE, taskIndVar,
+        //    new CallExpr(PRIM_TASK_INDEPENDENT_SVAR_CAPTURE, copiedInitialization2)));
+        
+        // *AIS* wrong, wrong, wrong we should be copying cap_
         forLoop->insertBefore(new CallExpr(
             PRIM_MOVE, taskIndVar,
-            new CallExpr(PRIM_TASK_INDEPENDENT_SVAR_CAPTURE, capturedSvar)));
+            new CallExpr(PRIM_TASK_INDEPENDENT_SVAR_CAPTURE, copiedInitialization->copy())));
 
         map->put(svar, taskIndVar);
         }
@@ -1591,8 +1610,7 @@ static void processShadowVariables(ForLoop* forLoop, SymbolMap *map) {
      case TFI_REDUCE_OP:
         // to be implemented
         INT_ASSERT(false);
-
-        continue;
+        break;
 
       case TFI_REDUCE:
       case TFI_REDUCE_PARENT_AS:
