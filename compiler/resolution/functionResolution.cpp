@@ -10642,11 +10642,6 @@ Expr* resolveExpr(Expr* expr) {
 
   SET_LINENO(expr);
 
-  if(expr->id == 2188185) {
-    static int z = 0;
-    z = z + 1;
-  }
-
   if (isContextCallExpr(expr) == true) {
     retval = expr;
 
@@ -10685,9 +10680,9 @@ Expr* resolveExpr(Expr* expr) {
       // If this is a loop that we'll convert into a forall
       // then ignore this for the time being (we'll process
       // implicit shadow variables for the forall later)
-      if(!shouldReplaceForLoopWithForall(toForLoop(loop->asExpr()))) {
+//      if(!shouldReplaceForLoopWithForall(toForLoop(loop->asExpr()))) { *AIS*
         setupAndResolveShadowVars(loop);
-      }
+//      }
       retval = resolveExprPhase2(expr, fn, expr);
     } else if (isMentionOfFnTriggeringCapture(se)) {
       auto fn = toFnSymbol(se->symbol());
