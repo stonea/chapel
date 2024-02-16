@@ -948,11 +948,6 @@ static astlocT* resolveUnresolvedSymExpr(UnresolvedSymExpr* usymExpr,
       return NULL;
   }
 
-  if(usymExpr->id == 114181) {
-    static int z = 0;
-    z = z + 1;
-  }
-
   astlocT* renameLoc = NULL;
   Symbol* sym = lookupAndCount(name, usymExpr, nSymbols, returnRename,
                                &renameLoc);

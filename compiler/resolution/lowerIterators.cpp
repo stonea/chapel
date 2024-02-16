@@ -769,7 +769,6 @@ replaceIteratorFormalsWithIteratorFields(FnSymbol* iterator, Symbol* ic,
       Expr* stmt = se->getStmtExpr();
 
       if(toShadowVarSymbol(se->parentSymbol)) {
-        //stmt = svarSym->getFunction()->body->getFirstExpr();
         stmt = body->getFirstExpr();
       }
 
@@ -1575,7 +1574,6 @@ static void processShadowVariables(ForLoop* forLoop, SymbolMap *map) {
         map1.put(svar->ParentvarForIN(), svar->outerVarSE->symbol());
         Expr *copiedInitialization = initMove->get(2)->copy(&map1);
         forLoop->insertBefore(new CallExpr(PRIM_MOVE, capturedSvar, copiedInitialization));
-        //forLoop->insertBefore(new CallExpr(PRIM_MOVE, capturedSvar, svar->outerVarSE->symbol()));
 
         SymbolMap map2;
         map2.put(svar->ParentvarForIN(), capturedSvar);
@@ -1585,14 +1583,6 @@ static void processShadowVariables(ForLoop* forLoop, SymbolMap *map) {
         VarSymbol* taskIndVar = new VarSymbol(astr("taskInd_", svar->name), svar->type);
         taskIndVar->addFlag(FLAG_TASK_PRIVATE_VARIABLE);
         forLoop->insertBefore(new DefExpr(taskIndVar));
-        //forLoop->insertBefore(new CallExpr(
-        //    PRIM_MOVE, taskIndVar,
-        //    new CallExpr(PRIM_TASK_INDEPENDENT_SVAR_CAPTURE, capturedSvar)));
-        //forLoop->insertBefore(new CallExpr(
-        //    PRIM_MOVE, taskIndVar,
-        //    new CallExpr(PRIM_TASK_INDEPENDENT_SVAR_CAPTURE, copiedInitialization2)));
-        
-        // *AIS* wrong, wrong, wrong we should be copying cap_
         forLoop->insertBefore(new CallExpr(
             PRIM_MOVE, taskIndVar,
             new CallExpr(PRIM_TASK_INDEPENDENT_SVAR_CAPTURE, copiedInitialization->copy())));

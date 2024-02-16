@@ -59,8 +59,6 @@
 #include <ostream>
 #include <stack>
 
-static bool theHammer = false;
-
 class FnSymbol;
 
 // some prototypes
@@ -638,11 +636,6 @@ llvm::StoreInst* codegenStoreLLVM(GenRet val,
     // e.g. T3 = alloca i8;
     //      T3 = (T == T2);   // not actual LLVM syntax
     // in LLVM, boolean type is i1
-    //
-    if(theHammer) {
-      static int z = 0;
-      z = z + 1;
-    }
 
     llvm::Value* v = convertValueToType(val.val, storeType, !val.isUnsigned);
     INT_ASSERT(v);
@@ -6561,12 +6554,6 @@ GenRet CallExpr::codegenPrimMove() {
       from.mustPointOutsideOrderIndependentLoop;
   } else {
     GenRet from = get(2);
-    if(id == 2191624) {
-      static int z = 0;
-      z = z + 1;
-      theHammer = true;
-    }
-
     codegenAssign(get(1), from);
     mustPointOutsideOrderIndependentLoop =
       from.mustPointOutsideOrderIndependentLoop;

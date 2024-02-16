@@ -85,17 +85,12 @@ void RemoveUnnecessaryAutoCopyCalls::process(FnSymbol* fn)
     Type* lhsType = NULL;
     Type* rhsType = actual->typeInfo();
 
-    CallExpr* move = toCallExpr(call->parentExpr);
-    if(move->isPrimitive(PRIM_TASK_INDEPENDENT_SVAR_CAPTURE)) {
+    CallExpr* callParent = toCallExpr(call->parentExpr);
+    if(callParent->isPrimitive(PRIM_TASK_INDEPENDENT_SVAR_CAPTURE)) {
       continue;
     }
-
-    if(!isMoveOrAssign(move)) {
-      static int z = 0;
-      z = z + 1;
-    }
-    INT_ASSERT(isMoveOrAssign(move));
-    lhsType = move->get(1)->typeInfo();
+    INT_ASSERT(isMoveOrAssign(callParent));
+    lhsType = callParent->get(1)->typeInfo();
 
     SET_LINENO(call);
 
