@@ -10680,9 +10680,9 @@ Expr* resolveExpr(Expr* expr) {
       // If this is a loop that we'll convert into a forall
       // then ignore this for the time being (we'll process
       // implicit shadow variables for the forall later)
-//      if(!shouldReplaceForLoopWithForall(toForLoop(loop->asExpr()))) { *AIS*
+      if(!shouldReplaceForLoopWithForall(toForLoop(loop->asExpr()))) { //*AIS* to see fail: arrays/bradc/workarounds/arrayOfArray-workaround.chpl
         setupAndResolveShadowVars(loop);
-//      }
+      }
       retval = resolveExprPhase2(expr, fn, expr);
     } else if (isMentionOfFnTriggeringCapture(se)) {
       auto fn = toFnSymbol(se->symbol());
