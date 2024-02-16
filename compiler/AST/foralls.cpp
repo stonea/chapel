@@ -376,7 +376,7 @@ buildFollowLoop(VarSymbol* iter,
                                        /*isLoweredForall*/ false,
                                        forallExpr);
   followBody->orderIndependentSet(true);
-  followBody->exemptFromImplicitIntents();
+//  followBody->exemptFromImplicitIntents(); **AIS** ???
 
   // not needed:
   //destructureIndices(followBody, indices, new SymExpr(followIdx), false);
