@@ -10625,7 +10625,7 @@ static LoopWithShadowVarsInterface*
 {
   ForLoop* pfl = toForLoop(se->parentExpr);
   if(pfl && pfl->isOrderIndependent() && se == pfl->indexGet() &&
-     !pfl->shouldExemptFromImplicitIntents())
+     !pfl->isExemptFromImplicitIntents())
   {
     return pfl;
   }
