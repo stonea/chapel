@@ -200,7 +200,8 @@ BlockStmt* ForLoop::doBuildForLoop(Expr*      indices,
     loop->orderIndependentSet(true);
   }
 
-  if (!isForeach || isLoweredForall || isForExpr) {
+  // We want to apply implicit intents to foreach loops
+  if (!isForeach /*|| isLoweredForall || isForExpr*/) {
     loop->exemptFromImplicitIntents();
   }
 
