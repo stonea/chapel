@@ -99,12 +99,10 @@ void RemoveUnnecessaryAutoCopyCalls::process(FnSymbol* fn)
     //
     // These are not unnecessary auto copies so we skip processing them.
     if (callParent->isPrimitive(PRIM_TASK_INDEPENDENT_SVAR_CAPTURE)) {
-      lhsType = callParent->parentExpr->typeInfo();
-      continue;
-    } else {
-      INT_ASSERT(isMoveOrAssign(callParent));
-      lhsType = callParent->get(1)->typeInfo();
+      callParent = toCallExpr(callParent->parentExpr);
     }
+    INT_ASSERT(isMoveOrAssign(callParent));
+    lhsType = callParent->get(1)->typeInfo();
 
     SET_LINENO(call);
 
