@@ -86,11 +86,25 @@ void RemoveUnnecessaryAutoCopyCalls::process(FnSymbol* fn)
     Type* rhsType = actual->typeInfo();
 
     CallExpr* callParent = toCallExpr(call->parentExpr);
-//    if(callParent->isPrimitive(PRIM_TASK_INDEPENDENT_SVAR_CAPTURE)) {
-//      continue;
-//    }
-    INT_ASSERT(isMoveOrAssign(callParent));
-    lhsType = callParent->get(1)->typeInfo();
+
+    // When processing 'in' intent variables passed to foreach loops, we
+    // created a task independent captured version of the variable. The
+    // exact way to do that depends on whether the loop is ultimately
+    // cpu or gpu bound so at this point of compilation we represent
+    // this using an assignment to PRIM_TASK_INDEPENDENT_SVAR_CAPTURE.
+    // In cases where the 'in' intent'ed variable is an object we
+    // may have AST like this:
+    //
+    //  task_ind_x = PRIM_TASK_INDEPENDENT_SVAR_CAPTURE(chpl__initCopy(x))
+    //
+    // These are not unnecessary auto copies so we skip processing them.
+    if (callParent->isPrimitive(PRIM_TASK_INDEPENDENT_SVAR_CAPTURE)) {
+      lhsType = callParent->parentExpr->typeInfo();
+      continue;
+    } else {
+      INT_ASSERT(isMoveOrAssign(callParent));
+      lhsType = callParent->get(1)->typeInfo();
+    }
 
     SET_LINENO(call);
 
