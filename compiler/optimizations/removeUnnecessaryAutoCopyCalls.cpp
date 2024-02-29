@@ -96,8 +96,10 @@ void RemoveUnnecessaryAutoCopyCalls::process(FnSymbol* fn)
     // may have AST like this:
     //
     //  task_ind_x = PRIM_TASK_INDEPENDENT_SVAR_CAPTURE(chpl__initCopy(x))
-    //
-    // These are not unnecessary auto copies so we skip processing them.
+    //  
+    // To proceed, we basically ignore the primitive on the RHS of the
+    // assignment and process as if it were written
+    // `task_ind_x = chpl_initCopy(x)`.
     if (callParent->isPrimitive(PRIM_TASK_INDEPENDENT_SVAR_CAPTURE)) {
       callParent = toCallExpr(callParent->parentExpr);
     }
