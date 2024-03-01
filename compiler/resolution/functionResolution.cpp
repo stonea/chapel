@@ -10627,7 +10627,7 @@ static LoopWithShadowVarsInterface*
   if(pfl && pfl->isOrderIndependent() && se == pfl->indexGet() &&
      !pfl->isExemptFromImplicitIntents())
   {
-    return pfl;
+     return pfl;
   }
   return nullptr;
 }
@@ -10679,7 +10679,9 @@ Expr* resolveExpr(Expr* expr) {
       // If this is a loop that we'll convert into a forall
       // then ignore this for the time being (we'll process
       // implicit shadow variables for the forall later)
-      if(!shouldReplaceForLoopWithForall(toForLoop(loop->asExpr()))) { //*AIS* to see fail: arrays/bradc/workarounds/arrayOfArray-workaround.chpl
+      // If you want a test that will fail in the absence of this see
+      // arrays/bradc/workarounds/arrayOfArray-workaround.chpl
+      if (!shouldReplaceForLoopWithForall(toForLoop(loop->asExpr()))) {
         setupAndResolveShadowVars(loop);
       }
       retval = resolveExprPhase2(expr, fn, expr);
