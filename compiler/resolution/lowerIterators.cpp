@@ -768,9 +768,9 @@ replaceIteratorFormalsWithIteratorFields(FnSymbol* iterator, Symbol* ic,
       // it is replaced by the field once the iterator class is created
       Expr* stmt = se->getStmtExpr();
 
-//      if(toShadowVarSymbol(se->parentSymbol)) {
-//        stmt = body->getFirstExpr();
-//      }
+      if(toShadowVarSymbol(se->parentSymbol)) {
+        stmt = body->getFirstExpr();
+      }
 
       // Error variable arguments should have already been handled.
       INT_ASSERT(! (formal->defPoint->parentSymbol != se->parentSymbol &&
