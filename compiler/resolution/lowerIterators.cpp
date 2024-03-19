@@ -1581,40 +1581,73 @@ static void processShadowVariables(ForLoop* forLoop, SymbolMap *map) {
         //          (SymExpr 'fn chpl__initCopy')
         //          (SymExpr 'const-val INP_this')))
         //
-        // But we rather than getting a copy of INP_this we want to get a copy of
+        // But rather than getting a copy of INP_this we want to get a copy of
         // the outer variable that the shadow variable is shadowing (i.e.
         // outerVarSE).
         //
         CallExpr *initMove = toCallExpr(svar->initBlock()->body.first());
-        SymbolMap map1;
-        Symbol* outerVarSym = svar->outerVarSE->symbol();
+        if(initMove->isPrimitive(PRIM_MOVE)) {
+          SymbolMap map1;
+          Symbol* outerVarSym = svar->outerVarSE->symbol();
 
-        // When the shadow variable is owned/shared, we may have created a
-        // borrow for it. In that case, we'll need to find that borrow as the
-        // outerVar
-        if (DefExpr* prevDef = toDefExpr(svar->defPoint->prev)) {
-          if (ShadowVarSymbol* castTemp = toShadowVarSymbol(prevDef->sym)) {
-            if (castTemp->isCompilerAdded()) {
-              Symbol* castOuter = castTemp->outerVarSE->symbol();
-              if (castOuter->hasFlag(FLAG_TFI_BORROW_TEMP)) {
-                outerVarSym = castOuter;
+          // When the shadow variable is owned/shared, we may have created a
+          // borrow for it. In that case, we'll need to find that borrow as the
+          // outerVar
+          if (DefExpr* prevDef = toDefExpr(svar->defPoint->prev)) {
+            if (ShadowVarSymbol* castTemp = toShadowVarSymbol(prevDef->sym)) {
+              if (castTemp->isCompilerAdded()) {
+                Symbol* castOuter = castTemp->outerVarSE->symbol();
+                if (castOuter->hasFlag(FLAG_TFI_BORROW_TEMP)) {
+                  outerVarSym = castOuter;
+                }
               }
             }
           }
+
+          map1.put(svar->ParentvarForIN(), outerVarSym);
+          Expr *copiedInitialization = initMove->get(2)->copy(&map1);
+          forLoop->insertBefore(new CallExpr(PRIM_MOVE, capturedSvar, copiedInitialization));
+
+          VarSymbol* taskIndVar = new VarSymbol(astr("taskInd_", svar->name), svar->type);
+          taskIndVar->addFlag(FLAG_TASK_PRIVATE_VARIABLE);
+          forLoop->insertBefore(new DefExpr(taskIndVar));
+          forLoop->insertBefore(new CallExpr(
+              PRIM_MOVE, taskIndVar,
+              new CallExpr(PRIM_TASK_PRIVATE_SVAR_CAPTURE, copiedInitialization->copy())));
+
+          map->put(svar, taskIndVar);
+        } else {
+          // We are given:
+          //   (CallExpr
+          //      (fn init =)
+          //      (val x)
+          //      (INP_x))
+          //
+          // We want:
+          // 
+          //   init=(capX, x);
+          //   PRIM_TASK_PRIVATE_SVAR_CAPTURE(init=(taskInd_x, capX));
+
+          SymbolMap map1;
+          Symbol* outerVarSym = svar->outerVarSE->symbol();
+          map1.put(svar->ParentvarForIN(), outerVarSym);
+          map1.put(svar, capturedSvar);
+          Expr *copiedInitialization = initMove->copy(&map1);
+          forLoop->insertBefore(copiedInitialization);
+
+          VarSymbol* taskIndVar = new VarSymbol(astr("taskInd_", svar->name), svar->type);
+          taskIndVar->addFlag(FLAG_TASK_PRIVATE_VARIABLE);
+          forLoop->insertBefore(new DefExpr(taskIndVar));
+
+          SymbolMap map2;
+          map2.put(svar->ParentvarForIN(), capturedSvar);
+          map2.put(svar, taskIndVar);
+          Expr *copiedInitialization2 = initMove->copy(&map2);
+          forLoop->insertBefore(
+              new CallExpr(PRIM_TASK_PRIVATE_SVAR_CAPTURE, copiedInitialization2));
+
+          map->put(svar, taskIndVar);
         }
-
-        map1.put(svar->ParentvarForIN(), outerVarSym);
-        Expr *copiedInitialization = initMove->get(2)->copy(&map1);
-        forLoop->insertBefore(new CallExpr(PRIM_MOVE, capturedSvar, copiedInitialization));
-
-        VarSymbol* taskIndVar = new VarSymbol(astr("taskInd_", svar->name), svar->type);
-        taskIndVar->addFlag(FLAG_TASK_PRIVATE_VARIABLE);
-        forLoop->insertBefore(new DefExpr(taskIndVar));
-        forLoop->insertBefore(new CallExpr(
-            PRIM_MOVE, taskIndVar,
-            new CallExpr(PRIM_TASK_PRIVATE_SVAR_CAPTURE, copiedInitialization->copy())));
-
-        map->put(svar, taskIndVar);
         }
         break;
 
