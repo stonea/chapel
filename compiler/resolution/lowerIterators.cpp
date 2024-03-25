@@ -1550,28 +1550,30 @@ static void processShadowVariables(ForLoop* forLoop, SymbolMap *map) {
       case TFI_CONST_IN:
       case TFI_IN:
         {
-        // If we have a variable with an 'in' intent for a foreach loop we'll
-        // want to capture its value before we start executing the loop. We'll
-        // use this copied version to give an initial value to thread-private
-        // versions of the variable.  How many thread private variables we
-        // should have and how to initialize them is something handled by later
-        // passes since at this point we don't know if this loop will be
-        // vectorized or gpuized, so in the meantime we model this as an
-        // assignment to a primitive and leave it to future passes (like
-        // gpuTransforms) to rewrite things as appropriate.
-        // IOW: coming out of this case we'll add something that looks like this:
+        // If we have a variable with an 'in' intent for a foreach loop we
+        // need to create task private copies of the variable. We assume
+        // that the user will not introduce a race condition involving modifying
+        // the outside variable while we create these copies.
+        // 
+        // The exact way to create these task private copies will depend on if
+        // the loop is vectorized or gpuized or not so rather than deal with
+        // this during iterator lowering we wrap a piece of code demonstrating
+        // how to copy the in intent'd variable in a primitive like this:
         //
-        //   var capX = x;
-        //   var taskIndX = PRIM_TASK_PRIVATE_SVAR_CAPTURE(capX);
-        //   # note: there's also a flag on taskIndX marking it as being a "task"-independent variable
+        //   var taskIndX = PRIM_TASK_PRIVATE_SVAR_CAPTURE(x);
+        //   # note: there's also a flag on taskIndX marking it as being a
+        //   "task"-independent variable
 
         SET_LINENO(forLoop);
 
-        VarSymbol* capturedSvar = new VarSymbol(astr("cap_", svar->name), svar->type);
-        forLoop->insertBefore(new DefExpr(capturedSvar));
+//        VarSymbol* capturedSvar = new VarSymbol(astr("cap_", svar->name), svar->type);
+//        forLoop->insertBefore(new DefExpr(capturedSvar));
 
-        // Shadow variables have an "initBlock", we want to use this block to
-        // get a copy of the variable. An example of svar->initBlock() might
+        // In reality, the way we copy a variable may be more complicated than
+        // a simple assignment (for example if the variable is an object).
+        //
+        // Shadow variables have an "initBlock", we can use this to figure out
+        // how to copy of the variable. An example of svar->initBlock() might
         // look like this:
         //
         //  (BlockStmt
@@ -1584,7 +1586,7 @@ static void processShadowVariables(ForLoop* forLoop, SymbolMap *map) {
         // But rather than getting a copy of INP_this we want to get a copy of
         // the outer variable that the shadow variable is shadowing (i.e.
         // outerVarSE).
-        //
+        
         CallExpr *initMove = toCallExpr(svar->initBlock()->body.first());
         if(initMove->isPrimitive(PRIM_MOVE)) {
           SymbolMap map1;
@@ -1606,14 +1608,14 @@ static void processShadowVariables(ForLoop* forLoop, SymbolMap *map) {
 
           map1.put(svar->ParentvarForIN(), outerVarSym);
           Expr *copiedInitialization = initMove->get(2)->copy(&map1);
-          forLoop->insertBefore(new CallExpr(PRIM_MOVE, capturedSvar, copiedInitialization));
+//          forLoop->insertBefore(new CallExpr(PRIM_MOVE, capturedSvar, copiedInitialization));
 
           VarSymbol* taskIndVar = new VarSymbol(astr("taskInd_", svar->name), svar->type);
           taskIndVar->addFlag(FLAG_TASK_PRIVATE_VARIABLE);
           forLoop->insertBefore(new DefExpr(taskIndVar));
           forLoop->insertBefore(new CallExpr(
               PRIM_MOVE, taskIndVar,
-              new CallExpr(PRIM_TASK_PRIVATE_SVAR_CAPTURE, copiedInitialization->copy())));
+              new CallExpr(PRIM_TASK_PRIVATE_SVAR_CAPTURE, copiedInitialization)));
 
           map->put(svar, taskIndVar);
         } else {
@@ -1628,19 +1630,21 @@ static void processShadowVariables(ForLoop* forLoop, SymbolMap *map) {
           //   init=(capX, x);
           //   PRIM_TASK_PRIVATE_SVAR_CAPTURE(init=(taskInd_x, capX));
 
-          SymbolMap map1;
-          Symbol* outerVarSym = svar->outerVarSE->symbol();
-          map1.put(svar->ParentvarForIN(), outerVarSym);
-          map1.put(svar, capturedSvar);
-          Expr *copiedInitialization = initMove->copy(&map1);
-          forLoop->insertBefore(copiedInitialization);
+//          SymbolMap map1;
+//          Symbol* outerVarSym = svar->outerVarSE->symbol();
+//          map1.put(svar->ParentvarForIN(), outerVarSym);
+//          map1.put(svar, capturedSvar);
+//          Expr *copiedInitialization = initMove->copy(&map1);
+//          forLoop->insertBefore(copiedInitialization);
 
           VarSymbol* taskIndVar = new VarSymbol(astr("taskInd_", svar->name), svar->type);
           taskIndVar->addFlag(FLAG_TASK_PRIVATE_VARIABLE);
           forLoop->insertBefore(new DefExpr(taskIndVar));
 
           SymbolMap map2;
-          map2.put(svar->ParentvarForIN(), capturedSvar);
+//          map2.put(svar->ParentvarForIN(), capturedSvar);
+          Symbol* outerVarSym = svar->outerVarSE->symbol();
+          map2.put(svar->ParentvarForIN(), outerVarSym);
           map2.put(svar, taskIndVar);
           Expr *copiedInitialization2 = initMove->copy(&map2);
           forLoop->insertBefore(
