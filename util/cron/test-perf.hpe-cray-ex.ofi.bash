@@ -16,6 +16,8 @@ export CHPL_TEST_PERF_SUBDIR="hpe-cray-ex"
 export CHPL_TEST_PERF_CONFIG_NAME='16-node-hpe-cray-ex'
 export CHPL_NIGHTLY_TEST_CONFIG_NAME="perf.hpe-cray-ex.ofi"
 
+export CHPL_NIGHTLY_TEST_DIRS="/library/standard/BigInteger"
+
 nightly_args="${nightly_args} -no-buildcheck"
 perf_args="-numtrials 1"
 perf_hpe_cray_ex_args="-startdate 06/25/24"
