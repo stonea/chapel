@@ -1098,7 +1098,7 @@ class GpuKernel {
   void generateOobCond();
   void generatePostBody();
   void markGPUSubCalls(FnSymbol* fn);
-  Symbol* addKernelArgument(Symbol* symInLoop);
+  Symbol* addKernelArgument(Symbol* symInLoop, bool checkIntent = true);
   Symbol* addLocalVariable(Symbol* symInLoop);
 
   void incReductionBufs() { nReductionBufs_ += 1; }
@@ -1403,10 +1403,11 @@ CallExpr* KernelArg::generatePrimGpuBlockReduce(Symbol* blockSize) const {
   return nullptr;
 }
 
-Symbol* GpuKernel::addKernelArgument(Symbol* symInLoop) {
+Symbol* GpuKernel::addKernelArgument(Symbol* symInLoop, bool checkIntent) {
   // we don't currently support 'ref'-intent'd scalars in gpuizable
   // loops
-  if (!isAggregateType(symInLoop->getValType()) &&
+  if (checkIntent &&
+      !isAggregateType(symInLoop->getValType()) &&
       !symInLoop->hasFlag(FLAG_TASK_PRIVATE_VARIABLE) &&
       !symInLoop->isConstValWillNotChange() &&
       symInLoop->getModule()->modTag == MOD_USER)
@@ -1500,7 +1501,7 @@ void GpuKernel::generateIndexComputation() {
       PRIM_ADD, tempVar, varThreadIdxX));
     fn_->insertAtTail(c2);
 
-    Symbol* startOffset = addKernelArgument(lowerBound);
+    Symbol* startOffset = addKernelArgument(lowerBound, false);
     VarSymbol* index = insertNewVarAndDef(fn_->body, "chpl_simt_index",
                                           dtInt[INT_SIZE_64]);
     fn_->insertAtTail(new CallExpr(PRIM_MOVE, index, new CallExpr(
@@ -1524,7 +1525,7 @@ void GpuKernel::generateIndexComputation() {
  *
  */
 void GpuKernel::generateOobCond() {
-  Symbol* localUpperBound = addKernelArgument(gpuLoop.upperBound());
+  Symbol* localUpperBound = addKernelArgument(gpuLoop.upperBound(), false);
 
   VarSymbol* isInBounds = new VarSymbol("chpl_is_in_bounds", dtBool);
   fn_->insertAtTail(new DefExpr(isInBounds));
