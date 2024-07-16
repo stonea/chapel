@@ -1297,7 +1297,6 @@ KernelArg::KernelArg(Symbol* symInLoop, GpuKernel* kernel) :
   IntentTag intent = symInLoop->isRef() ? INTENT_REF : INTENT_IN;
   this->formal_ = new ArgSymbol(intent, symInLoop->name, symType);
 
-
   if (isClass(symValType) ||
       (!symInLoop->isRef() && !isAggregateType(symValType))) {
     // class: must be on GPU memory
@@ -1405,6 +1404,18 @@ CallExpr* KernelArg::generatePrimGpuBlockReduce(Symbol* blockSize) const {
 }
 
 Symbol* GpuKernel::addKernelArgument(Symbol* symInLoop) {
+  // we don't currently support 'ref'-intent'd scalars in gpuizable
+  // loops
+  if (!isAggregateType(symInLoop->getValType()) &&
+      !symInLoop->hasFlag(FLAG_TASK_PRIVATE_VARIABLE) &&
+      !symInLoop->isConstValWillNotChange() &&
+      symInLoop->getModule()->modTag == MOD_USER)
+  {
+    this->gpuLoop.reportNotGpuizable(symInLoop, "instance of scalar with ref intent");
+    this->lateGpuizationFailure_ = true;
+    return nullptr;
+  }
+
   KernelArg arg(symInLoop, this);
 
   if (!arg.isEligible()) {
