@@ -1023,7 +1023,7 @@ class KernelArg {
     ReductionInfo redInfo_;
 
   public:
-    KernelArg(Symbol* symInLoop, GpuKernel* kernel);
+    KernelArg(Symbol* symInLoop, GpuKernel* kernel, bool checkIntent);
     int8_t kind() const { return kind_; }
     ArgSymbol* formal() const { return formal_; }
     Type* getType() const { return actual_->typeInfo(); }
@@ -1070,6 +1070,7 @@ class GpuKernel {
   std::string name_;
 
   int nReductionBufs_ = 0;
+  int nHostRegisteredVars_ = 0;
 
   BlockStmt* userBody_; // where the loop's body goes
   BlockStmt* postBody_; // executed by all GPU threads (even if oob) at the end
@@ -1085,6 +1086,8 @@ class GpuKernel {
   BlockStmt* gpuPrimitivesBlock() const { return gpuPrimitivesBlock_; }
   Symbol* blockSize() const {return blockSize_; }
   int nReductionBufs() const {return nReductionBufs_; }
+  int nHostRegisteredVars() const {return nHostRegisteredVars_; }
+  void incNumHostRegisteredVars() { nHostRegisteredVars_ += 1; }
 
   private:
   void buildStubOutlinedFunction(DefExpr* insertionPoint);
@@ -1288,7 +1291,7 @@ FnSymbol* KernelArg::generateFinalReductionWrapper() {
   return ret;
 }
 
-KernelArg::KernelArg(Symbol* symInLoop, GpuKernel* kernel) :
+KernelArg::KernelArg(Symbol* symInLoop, GpuKernel* kernel, bool checkIntent) :
   actual_(symInLoop), kernel_(kernel) {
 
   Type* symType = symInLoop->typeInfo();
@@ -1297,7 +1300,15 @@ KernelArg::KernelArg(Symbol* symInLoop, GpuKernel* kernel) :
   IntentTag intent = symInLoop->isRef() ? INTENT_REF : INTENT_IN;
   this->formal_ = new ArgSymbol(intent, symInLoop->name, symType);
 
-  if (isClass(symValType) ||
+  if (checkIntent &&
+      !isAggregateType(symInLoop->getValType()) &&
+      !symInLoop->hasFlag(FLAG_TASK_PRIVATE_VARIABLE) &&
+      !symInLoop->isConstValWillNotChange() &&
+      symInLoop->getModule()->modTag == MOD_USER)
+  {
+    this->kind_ = GpuArgKind::ADDROF | GpuArgKind::HOST_REGISTER;
+    kernel->incNumHostRegisteredVars();
+  } else if (isClass(symValType) ||
       (!symInLoop->isRef() && !isAggregateType(symValType))) {
     // class: must be on GPU memory
     // scalar: can be passed as an argument directly
@@ -1404,9 +1415,17 @@ CallExpr* KernelArg::generatePrimGpuBlockReduce(Symbol* blockSize) const {
 }
 
 Symbol* GpuKernel::addKernelArgument(Symbol* symInLoop, bool checkIntent) {
+  KernelArg arg(symInLoop, this, checkIntent);
+
+  if (!arg.isEligible()) {
+    this->gpuLoop.reportNotGpuizable(symInLoop, "unsupported reduction");
+    this->lateGpuizationFailure_ = true;
+    return nullptr;
+  }
+
   // we don't currently support 'ref'-intent'd scalars in gpuizable
   // loops
-  if (checkIntent &&
+/*  if (checkIntent &&
       !isAggregateType(symInLoop->getValType()) &&
       !symInLoop->hasFlag(FLAG_TASK_PRIVATE_VARIABLE) &&
       !symInLoop->isConstValWillNotChange() &&
@@ -1415,38 +1434,29 @@ Symbol* GpuKernel::addKernelArgument(Symbol* symInLoop, bool checkIntent) {
     this->gpuLoop.reportNotGpuizable(symInLoop, "instance of scalar with ref intent");
     this->lateGpuizationFailure_ = true;
     return nullptr;
+  }*/
+
+  ArgSymbol* formal = arg.formal();
+  INT_ASSERT(formal);
+
+  fn_->insertFormalAtTail(formal);
+  copyMap_.put(symInLoop, formal);
+
+  // if reduction variable, add an additional argument for the buffer
+  if (ArgSymbol* reduceBuffer = arg.reduceBuffer()) {
+    fn_->insertFormalAtTail(reduceBuffer);
+    this->incReductionBufs();
   }
 
-  KernelArg arg(symInLoop, this);
-
-  if (!arg.isEligible()) {
-    this->gpuLoop.reportNotGpuizable(symInLoop, "unsupported reduction");
-    this->lateGpuizationFailure_ = true;
-    return nullptr;
+  // if reduction variable, add the function definiton for the final reduction
+  // wrapper
+  if (FnSymbol* reduceWrapper = arg.reduceWrapper()) {
+    fn_->defPoint->insertBefore(new DefExpr(reduceWrapper));
   }
-  else {
-    ArgSymbol* formal = arg.formal();
-    INT_ASSERT(formal);
 
-    fn_->insertFormalAtTail(formal);
-    copyMap_.put(symInLoop, formal);
+  kernelActuals_.push_back(arg);
 
-    // if reduction variable, add an additional argument for the buffer
-    if (ArgSymbol* reduceBuffer = arg.reduceBuffer()) {
-      fn_->insertFormalAtTail(reduceBuffer);
-      this->incReductionBufs();
-    }
-
-    // if reduction variable, add the function definiton for the final reduction
-    // wrapper
-    if (FnSymbol* reduceWrapper = arg.reduceWrapper()) {
-      fn_->defPoint->insertBefore(new DefExpr(reduceWrapper));
-    }
-
-    kernelActuals_.push_back(arg);
-
-    return formal;
-  }
+  return formal;
 }
 
 Symbol* GpuKernel::addLocalVariable(Symbol* symInLoop) {
@@ -1972,6 +1982,7 @@ static void generateGPUKernelCall(const GpuizableLoop &gpuLoop,
   initCfgCall->insertAtTail(new_IntSymbol(kernel.kernelActuals().size()));
   initCfgCall->insertAtTail(new_IntSymbol(gpuLoop.pidGets().size()));
   initCfgCall->insertAtTail(new_IntSymbol(kernel.nReductionBufs()));
+  initCfgCall->insertAtTail(new_IntSymbol(kernel.nHostRegisteredVars()));
   gpuBlock->insertAtTail(new CallExpr(PRIM_MOVE, cfg, initCfgCall));
 
   // first, add pids

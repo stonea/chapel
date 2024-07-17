@@ -379,4 +379,9 @@ bool chpl_gpu_impl_can_sort(void){
   return true;
 }
 
+void chpl_gpu_impl_host_register(void* var, size_t size) {
+  printf("Host register %p\n", var);
+  cudaHostRegister(var, size, cudaHostRegisterPortable);
+}
+
 #endif // HAS_GPU_LOCALE
