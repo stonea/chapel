@@ -77,6 +77,7 @@ bool chpl_gpu_impl_can_reduce(void);
 bool chpl_gpu_impl_can_sort(void);
 
 void chpl_gpu_impl_host_register(void* var, size_t size);
+void chpl_gpu_impl_host_unregister(void* var);
 
 #define DECL_ONE_REDUCE_IMPL(chpl_kind, data_type) \
 void chpl_gpu_impl_##chpl_kind##_reduce_##data_type(data_type* data, int n,\

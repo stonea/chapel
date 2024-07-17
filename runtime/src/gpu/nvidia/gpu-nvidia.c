@@ -380,8 +380,11 @@ bool chpl_gpu_impl_can_sort(void){
 }
 
 void chpl_gpu_impl_host_register(void* var, size_t size) {
-  printf("Host register %p\n", var);
-  cudaHostRegister(var, size, cudaHostRegisterPortable);
+  cuMemHostRegister(var, size, CU_MEMHOSTREGISTER_PORTABLE);
+}
+
+void chpl_gpu_impl_host_unregister(void* var) {
+  cuMemHostUnregister(var);
 }
 
 #endif // HAS_GPU_LOCALE

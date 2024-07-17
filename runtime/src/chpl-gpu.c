@@ -256,6 +256,7 @@ typedef struct kernel_cfg_s {
   int cur_param;
   void*** kernel_params;
   int n_host_registered;
+  int cur_host_registered_var;
   void** host_registered_vars;
 
   // Keep track of kernel parameters we dynamically allocate memory for so
@@ -337,12 +338,11 @@ static void cfg_init(kernel_cfg* cfg, const char* fn_name,
   cfg->reduce_vars = chpl_mem_alloc(cfg->n_reduce_vars * sizeof(reduce_var),
                                     CHPL_RT_MD_GPU_KERNEL_PARAM_BUFF, ln, fn);
 
-  printf("Num host registered vars = %d\n", n_host_registered_vars);
   cfg->n_host_registered = n_host_registered_vars;
+  cfg->cur_host_registered_var = 0;
   cfg->host_registered_vars = chpl_mem_alloc(
     cfg->n_host_registered * sizeof(void*), CHPL_RT_MD_GPU_KERNEL_PARAM_BUFF,
     ln, fn);
-  assert(cfg->host_registered_vars);
 }
 
 static void cfg_init_dims_1d(kernel_cfg* cfg, int64_t num_threads,
@@ -629,9 +629,10 @@ void chpl_gpu_deinit_kernel_cfg(void* _cfg) {
   }
   chpl_mem_free(cfg->reduce_vars, cfg->ln, cfg->fn);
 
-/*  if(cfg->host_registered_vars) {
-    chpl_gpu_mem_free(cfg->host_registered_vars, cfg->ln, cfg->fn);
-  }*/
+  for (int i=0 ; i<cfg->n_reduce_vars ; i++) {
+    chpl_gpu_impl_host_unregister(cfg->host_registered_vars[i]);
+  }
+  chpl_mem_free(cfg->host_registered_vars, cfg->ln, cfg->fn);
 
   chpl_mem_free(cfg, ((kernel_cfg*)cfg)->ln, ((kernel_cfg*)cfg)->fn);
   CHPL_GPU_DEBUG("Deinitialized kernel config\n");
@@ -700,10 +701,7 @@ void chpl_gpu_arg_reduce(void* _cfg, void* arg, size_t elem_size,
 void chpl_gpu_arg_host_register(void* _cfg, void* arg, size_t size) {
   kernel_cfg* cfg = (kernel_cfg*)_cfg;
   cfg_add_direct_param(cfg, arg);
-  const int i = cfg->cur_param-1;
-  chpl_gpu_impl_host_register(*(cfg->kernel_params[i]), sizeof(char)*8);
-  printf("register: %p size = %zu\n", arg, size);
-  //chpl_gpu_impl_host_register(arg, sizeof(char)*8);
+  chpl_gpu_impl_host_register(*((void**)arg), sizeof(char)*8);
   CHPL_GPU_DEBUG("\tAdded ref intent param (at %d): %p\n", cfg->cur_param,  arg);
 }
 
